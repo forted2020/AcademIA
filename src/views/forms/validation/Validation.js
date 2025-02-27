@@ -36,7 +36,7 @@ const CustomStyles = () => {
       onSubmit={handleSubmit}
     >
       <CCol md={4}>
-        <CFormLabel htmlFor="validationCustom01">Email</CFormLabel>
+        <CFormLabel htmlFor="validationCustom01">Emailllll</CFormLabel>
         <CFormInput type="text" id="validationCustom01" defaultValue="Mark" required />
         <CFormFeedback valid>Looks good!</CFormFeedback>
       </CCol>

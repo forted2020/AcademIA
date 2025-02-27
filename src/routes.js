@@ -1,5 +1,9 @@
 import React from 'react'
 
+import MiPagina from './views/MiPagina'
+import UserList from './views/users/UserList';
+
+
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -97,6 +101,8 @@ const routes = [
   { path: '/notifications/modals', name: 'Modals', element: Modals },
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
+  { path: '/mi-pagina', name: 'Mi Página', element: MiPagina }, // Nueva página
+  { path: '/users', name: 'Usuarios', element: UserList },  // Nueva ruta
 ]
 
 export default routes

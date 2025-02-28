@@ -1,11 +1,11 @@
 import React, {useState} from 'react'
 import { CButton, CCol, CForm, CFormCheck, CFormInput, CFormSelect } from '@coreui/react'
 import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
-import FormAltaUsuario from '../components/FormAltaUsuario'; // Importa el componente TextInput FormAltaUsuario.js
+import FormAltaUsuario from '../../components/FormAltaUsuario'; // Importa el componente TextInput FormAltaUsuario.js
 
 
 
-const MiPagina = () => {
+const Usuarios = () => {
   
   const [visibleXL, setVisibleXL] = useState(false)
 
@@ -75,4 +75,4 @@ const MiPagina = () => {
   )
 }
 
-export default MiPagina
+export default Usuarios

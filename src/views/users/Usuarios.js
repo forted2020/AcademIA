@@ -67,6 +67,8 @@ const Dashboard = () => {
   const [selected, setSelected] = useState([]) // Estado para manejar checkboxes
   const [selectAll, setSelectAll] = useState(false) // Estado del checkbox general
 
+  const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda
+
   //Leemos los datos de data/datos.json
   // Usamos useEffect para obtener los datos una vez que el componente se haya montado
   useEffect(() => {
@@ -87,7 +89,8 @@ const Dashboard = () => {
   const handleSelectAll = () => {
     if (!selectAll) {
       // Seleccionar todos: agregar todos los IDs al array
-      const allIds = tableExample.map(item => item.id)
+      //const allIds = tableExample.map(item => item.id) // Búsqueda dinámica. Se comentó
+      const allIds = filteredTable.map(item => item.id); // Búsqueda dinámica. Usamos la tabla filtrada
       setSelected(allIds)
     } else {
       // Deseleccionar todos: vaciar el array
@@ -122,6 +125,14 @@ const Dashboard = () => {
       }
     }
   }
+
+  // Búsqueda dinámica. Filtrar la tabla según el término de búsqueda
+  const filteredTable = tableExample.filter(item =>
+    item.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.user.domicilio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.user.telefono.includes(searchTerm)
+  );
 
 
 
@@ -161,6 +172,8 @@ const Dashboard = () => {
                     placeholder="Ingrese el texo a buscar" 
                     aria-label="Username" 
                     aria-describedby="basic-addon1"
+                    value={searchTerm} // Búsqueda dinámica. Vinculamos el valor del input al estado
+                    onChange={(e) => setSearchTerm(e.target.value)} // Búsqueda dinámica. Actualizamos el estado al escribir
                     
                   />
                 </CInputGroup>
@@ -218,8 +231,9 @@ const Dashboard = () => {
 
                 <CTableBody>
                   
-                  {tableExample.map((item, index) => (
-                    <CTableRow v-for="item in tableItems" key={index}>
+                  {filteredTable.map((item) => ( // Búsqueda dinámica. Usamos filteredTable en lugar de tableExample
+                  //{tableExample.map((item, index) => (
+                    <CTableRow v-for="item in tableItems" key={item.id}>
                      <CTableDataCell className="text-center py-2">
                         
                         <CFormCheck 

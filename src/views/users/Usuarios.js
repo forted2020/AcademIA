@@ -155,9 +155,14 @@ const Dashboard = () => {
 
             <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
               <div>
-                <CInputGroup className="mb-0">
+                <CInputGroup className="shadow-sm border-0"> {/* Sombra y sin borde */}
                   <CInputGroupText id="basic-addon1">Buscar</CInputGroupText>
-                  <CFormInput placeholder="Ingrese el texo a buscar" aria-label="Username" aria-describedby="basic-addon1" />
+                  <CFormInput 
+                    placeholder="Ingrese el texo a buscar" 
+                    aria-label="Username" 
+                    aria-describedby="basic-addon1"
+                    
+                  />
                 </CInputGroup>
               </div>
             </CCol>
@@ -165,43 +170,46 @@ const Dashboard = () => {
           </CRow>
         </CCardFooter >
 
-        <CCardBody>
+        <CCardBody >
           
-              <CTable align="middle" className="mb-0 border" hover responsive>
+              <CTable 
+                align="middle" 
+                className="mb-3 border shadow-sm"  /* Ajusto margen y agrego sombra */
+                hover 
+                responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
                     
-                    <CTableHeaderCell className="bg-body-tertiary text-center">
+                    <CTableHeaderCell className="bg-body-tertiary text-center py-2">
                       <CFormCheck 
-                        
                         id="selectAll"
                         checked={selectAll}
                         label=""                  /*Falta borde negro*/
                         aria-label="Marcar todos"
-
+                        className="border-0"  /* Quito borde para diseño minimalista */
                         onChange={handleSelectAll} // Manejar selección general
 
                         />
 
                     </CTableHeaderCell>
                     
-                    <CTableHeaderCell className="bg-body-tertiary">
+                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
                       Nombre y Apellido
                     </CTableHeaderCell>
 
-                    <CTableHeaderCell className="bg-body-tertiary text-left">
+                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
                       Email
                     </CTableHeaderCell>
 
-                    <CTableHeaderCell className="bg-body-tertiary">
+                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
                       Domicilio
                     </CTableHeaderCell>
                     
-                    <CTableHeaderCell className="bg-body-tertiary text-left">
+                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
                       Teléfono
                     </CTableHeaderCell>
                     
-                    <CTableHeaderCell className="bg-body-tertiary text-center" >
+                    <CTableHeaderCell className="bg-body-tertiary py-2 text-center" >
                       Acción
                     </CTableHeaderCell>
 
@@ -212,55 +220,62 @@ const Dashboard = () => {
                   
                   {tableExample.map((item, index) => (
                     <CTableRow v-for="item in tableItems" key={index}>
-                     <CTableDataCell className="text-center">
+                     <CTableDataCell className="text-center py-2">
                         
                         <CFormCheck 
-                          id={`${item.id}`}
+                          id={`checkbox-${item.id}`}  /* ID único */
                           checked={selected.includes(item.id)}  // Controlamos el estado
                           onChange={(e) => {handleSelect(item.id)
                           }}
                         />
-                      </CTableDataCell>
+                        </CTableDataCell>
                       
-                      <CTableDataCell className="text-left">
-                        <div>{item.user.name}</div>
-                      </CTableDataCell>
-                      
-                      <CTableDataCell className="text-left">
-                        <div>{item.user.email}</div>
-                      </CTableDataCell>
-                      
-                      <CTableDataCell className="text-left">
-                        <div>{item.user.domicilio}</div>                     
-                      </CTableDataCell>
+                        <CTableDataCell className="text-left py-2">
+                          {item.user.name}
+                        </CTableDataCell>
+                          
+                        <CTableDataCell className="text-left py-2">
+                          {item.user.email}
+                        </CTableDataCell>
+                          
+                        <CTableDataCell className="text-left py-2">
+                          {item.user.domicilio}                     
+                        </CTableDataCell>
+
+                        <CTableDataCell className="text-left py-2">
+                          {item.user.telefono}
+                        </CTableDataCell>
                                             
-                      <CTableDataCell className="text-left">
-                        <div>{item.user.telefono}</div>
-                      </CTableDataCell>
-                                            
-                      <CTableDataCell className="text-center">
-                        <a href="#editEmployeeModal" class="edit"
-                          icon={cilPencil}
-                          data-toggle="modal" ><i class="material-icons" 
-                          data-toggle="tooltip" title="Edit">
-                              <CIcon icon={cilPencil} size="l"/>
-                          </i>
+                        <CTableDataCell className="text-center" py-2>
+                        <div className="d-flex justify-content-center gap-3"> {/* Contenedor flexible para íconos */}
+                        <a
+                          href="#editEmployeeModal"
+                          className="text-muted"  /* Color base */
+                          data-toggle="modal"
+                          title="Editar"
+                        >
+                          <CIcon 
+                            icon={cilPencil} 
+                            size="lg" 
+                            className="hover:text-primary"  /* Efecto hover */
+                          />
+
                         </a>
 
-                        <a href="#editEmployeeModal" class="delete"
-                          icon={cilTrash}
-                          data-toggle="modal" ><i class="material-icons" 
-                          data-toggle="tooltip" title="Borrar">
-                              <CIcon icon={cilTrash} size="l"/>
-                          </i>
+                        <a
+                          href="#deleteEmployeeModal"
+                          className="text-muted"  /* Color base */
+                          data-toggle="modal"
+                          title="Borrar"
+                        >
+                          <CIcon 
+                            icon={cilTrash} 
+                            size="lg" 
+                            className="hover:text-danger"  /* Efecto hover */
+                          />
                         </a>
-
-
-
-							          <a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete"></i></a>
-
-
-                      </CTableDataCell>
+                      </div>
+                    </CTableDataCell>
                     
                     
                     </CTableRow>
@@ -270,10 +285,6 @@ const Dashboard = () => {
             </CCardBody>
 
 
-        
-
-
-        
         <CCardBody>
 
         </CCardBody>

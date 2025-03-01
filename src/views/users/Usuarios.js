@@ -1,62 +1,14 @@
 import React,  { useState, useEffect }  from 'react'
 import classNames from 'classnames'
 
-import {
-  CAvatar,
-  CButton,
-  CButtonGroup,
-  CCard,
-  CCardBody,
-  CCardFooter,
-  CCardHeader,
-  CCol,
-  CProgress,
-  CRow,
-  CTable,
-  CTableBody,
-  CTableDataCell,
-  CTableHead,
-  CTableHeaderCell,
-  CTableRow,
-  CFormCheck,
-  CFormInput,
-  CFormLabel,
-  CFormTextarea,
-  CInputGroup,
-   CInputGroupText 
+import { CAvatar, CButton, CButtonGroup, CCard, CCardBody, CCardFooter, CCardHeader, CCol, CProgress, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CFormLabel, CFormTextarea, CInputGroup,  CInputGroupText} from '@coreui/react'
 
-} from '@coreui/react'
-
-import {
-  cibCcAmex,
-  cibCcApplePay,
-  cibCcMastercard,
-  cibCcPaypal,
-  cibCcStripe,
-  cibCcVisa,
-  cibGoogle,
-  cibFacebook,
-  cibLinkedin,
-  cifBr,
-  cifEs,
-  cifFr,
-  cifIn,
-  cifPl,
-  cifUs,
-  cibTwitter,
-  cilCloudDownload,
-  cilPeople,
-  cilUser,
-  cilUserFemale,
-  cilTrash,
-  cilPencil,
-} from '@coreui/icons'
+import { cibCcAmex, cibCcApplePay, cibCcMastercard, cibCcPaypal, cibCcStripe, cibCcVisa, cibGoogle, cibFacebook, cibLinkedin, cifBr, cifEs, cifFr, cifIn, cifPl, cifUs, cibTwitter, cilCloudDownload, cilPeople, cilUser, cilUserFemale, cilTrash, cilPencil} from '@coreui/icons'
 
 import { CIcon } from '@coreui/icons-react';
-import { cilList, cilShieldAlt } from '@coreui/icons';
 
-
-
+import FormAltaUsuario from '../../components/FormAltaUsuario'; // Importa el componente TextInput FormAltaUsuario.js
+import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 
 
 
@@ -68,6 +20,8 @@ const Dashboard = () => {
   const [selectAll, setSelectAll] = useState(false) // Estado del checkbox general
 
   const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda
+
+  const [visibleXL, setVisibleXL] = useState(false)
 
   //Leemos los datos de data/datos.json
   // Usamos useEffect para obtener los datos una vez que el componente se haya montado
@@ -134,23 +88,54 @@ const Dashboard = () => {
     item.user.telefono.includes(searchTerm)
   );
 
+  
 
 
   return (
     <>
      
       <CCard className="mb-4">
-        <CCardBody>
-          <CRow>
-            <CCol sm={5}>
-              <h4 id="traffico" className="card-title mb-0">
+        <CCardBody className="p-3">        {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+          <CRow className=  "justify-content-between align-items-center"> {/* Fila en la grilla. Organiza las CCol hor. */  }
+            
+            <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
+              <h4 id="titulo" className="card-title mb-0">
                 Administración de Usuarios
               </h4>
               <div className="small text-body-secondary"> Administradores del sistema</div>
             </CCol>
+
+            <CCol xs={12} sm="auto">  {/* Columna para el botón Agregar Usuario */}
+              <CButton 
+                type="submit"
+                color="primary" 
+                className="shadow-sm" 
+                size="sm"
+                onClick={() => setVisibleXL(!visibleXL)}
+              >
+              Nuevo
+              </CButton>
+            </CCol>
+
+            <CModal
+        size="xl"
+        visible={visibleXL}
+        onClose={() => setVisibleXL(false)}
+        aria-labelledby="OptionalSizesExample1"
+      >
+        <CModalHeader>
+          <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+        <FormAltaUsuario id="modalInput1" label="Nuevo Campo 1" placeholder="Escribe algo aquí..." />
+
+
+        </CModalBody>
+      </CModal>
+
+
             
           </CRow>
-          
         </CCardBody>
         
         <CCardFooter className="px-4 py-3 bg-light"> {/* Fondo claro y padding */}

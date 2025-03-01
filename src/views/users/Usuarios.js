@@ -1,4 +1,4 @@
-import React from 'react'
+import React,  { useState, useEffect }  from 'react'
 import classNames from 'classnames'
 
 import {
@@ -19,6 +19,11 @@ import {
   CTableHeaderCell,
   CTableRow,
   CFormCheck,
+  CFormInput,
+  CFormLabel,
+  CFormTextarea,
+  CInputGroup,
+   CInputGroupText 
 
 } from '@coreui/react'
 
@@ -53,70 +58,72 @@ import { cilList, cilShieldAlt } from '@coreui/icons';
 
 
 
-import avatar1 from 'src/assets/images/avatars/1.jpg'
-import avatar2 from 'src/assets/images/avatars/2.jpg'
-import avatar3 from 'src/assets/images/avatars/3.jpg'
-import avatar4 from 'src/assets/images/avatars/4.jpg'
-import avatar5 from 'src/assets/images/avatars/5.jpg'
-import avatar6 from 'src/assets/images/avatars/6.jpg'
-
-/*
-import WidgetsBrand from '../widgets/WidgetsBrand'
-import WidgetsDropdown from '../widgets/WidgetsDropdown'
-import MainChart from './MainChart'
-*/
 
 
 const Dashboard = () => {
-  const progressExample = [
-    { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
-    { title: 'Unique', value: '24.093 Users', percent: 20, color: 'info' },
-    { title: 'Pageviews', value: '78.706 Views', percent: 60, color: 'warning' },
-    { title: 'New Users', value: '22.123 Users', percent: 80, color: 'danger' },
-    { title: 'Bounce Rate', value: 'Average Rate', percent: 40.15, color: 'primary' },
-  ]
 
-  const progressGroupExample1 = [
-    { title: 'Monday', value1: 34, value2: 78 },
-    { title: 'Tuesday', value1: 56, value2: 94 },
-    { title: 'Wednesday', value1: 12, value2: 67 },
-    { title: 'Thursday', value1: 43, value2: 91 },
-    { title: 'Friday', value1: 22, value2: 73 },
-    { title: 'Saturday', value1: 53, value2: 82 },
-    { title: 'Sunday', value1: 9, value2: 69 },
-  ]
+  const [tableExample, setTableExample] = useState([]);
+  
+  const [selected, setSelected] = useState([]) // Estado para manejar checkboxes
+  const [selectAll, setSelectAll] = useState(false) // Estado del checkbox general
 
-  const progressGroupExample2 = [
-    { title: 'Male', icon: cilUser, value: 53 },
-    { title: 'Female', icon: cilUserFemale, value: 43 },
-  ]
+  //Leemos los datos de data/datos.json
+  // Usamos useEffect para obtener los datos una vez que el componente se haya montado
+  useEffect(() => {
+    // Realizar la solicitud fetch
+    fetch('../../../data/datos.json')
+      .then(response => response.json())  // Convertimos la respuesta a formato JSON
+      .then(data => {
+        setTableExample(data);  // Guardamos los datos en el estado
+      })
+      .catch(error => {
+        console.error('Error al cargar los datos:', error);
+      });
+  }, []);  // El array vacío significa que esto solo se ejecuta al montar el componente
+  
 
-  const progressGroupExample3 = [
-    { title: 'Organic Search', icon: cibGoogle, percent: 56, value: '191,235' },
-    { title: 'Facebook', icon: cibFacebook, percent: 15, value: '51,223' },
-    { title: 'Twitter', icon: cibTwitter, percent: 11, value: '37,564' },
-    { title: 'LinkedIn', icon: cibLinkedin, percent: 8, value: '27,319' },
-  ]
 
-  const tableExample = [
-    {
-      user: {
-        name: 'Ruiz Miguel Maximiliano',
-        email: 'maxiruiz@Gmail.com',
-        domicilio: 'Uruguay 257',
-        telefono: '343-4516844',
-      },
-    },
-    {
-      user: {
-        name: 'García, Ana Laura',
-        email: 'algarcia@hotmail.com',
-        domicilio: 'Las Flores 123',
-        telefono: '343-4123456',
-      },
-    },
+  // Manejar el checkbox principal (Seleccionar/Deseleccionar todos)
+  const handleSelectAll = () => {
+    if (!selectAll) {
+      // Seleccionar todos: agregar todos los IDs al array
+      const allIds = tableExample.map(item => item.id)
+      setSelected(allIds)
+    } else {
+      // Deseleccionar todos: vaciar el array
+      setSelected([])
+    }
+    console.log(selected);
+    setSelectAll(!selectAll)
+    console.log(selected);
+  }
+
+  // Manejar selección individual de cada checkbox
+  const handleSelect = (id) => {
     
-  ]
+    if (selected.includes(id)) {
+       // Si ya está seleccionado, lo quitamos
+      setSelected(selected.filter(item => item !== id))
+      
+      // Si después de quitar quedan menos que todos, desmarcamos selectAll
+      if (selected.length - 1 < tableExample.length) {
+        setSelectAll(false)
+      }
+
+    } else {
+
+      // Si no está seleccionado, lo agregamos
+      const newSelected = [...selected, id]
+      setSelected(newSelected)
+      
+      // Si ahora están todos seleccionados, marcamos selectAll
+      if (newSelected.length === tableExample.length) {
+        setSelectAll(true)
+      }
+    }
+  }
+
+
 
   return (
     <>
@@ -134,38 +141,48 @@ const Dashboard = () => {
           </CRow>
           
         </CCardBody>
-        <CCardFooter>
+        
+        <CCardFooter className="px-4 py-3 bg-light"> {/* Fondo claro y padding */}
           <CRow
-            xs={{ cols: 1, gutter: 4 }}
+            xs={{ cols: 1, gutter: 2 }}
             sm={{ cols: 2 }}
-            lg={{ cols: 4 }}
-            xl={{ cols: 5 }}
-            className="mb-2 text-center"
-          >
-          
-          <div>
-          .
-          .
-          
-          </div>
-          
-          
-          
-          </CRow>
+            lg={{ cols: 3 }}
+            className="justify-content-en"
+            >
+            
+            <CCol></CCol>
+            <CCol></CCol>
 
+            <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
+              <div>
+                <CInputGroup className="mb-0">
+                  <CInputGroupText id="basic-addon1">Buscar</CInputGroupText>
+                  <CFormInput placeholder="Ingrese el texo a buscar" aria-label="Username" aria-describedby="basic-addon1" />
+                </CInputGroup>
+              </div>
+            </CCol>
+
+          </CRow>
         </CCardFooter >
 
         <CCardBody>
-              
-
-              
-
+          
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
                     
                     <CTableHeaderCell className="bg-body-tertiary text-center">
-                      <CFormCheck id="flexCheckDefault" label=""/> {/*Falta borde negro*/}
+                      <CFormCheck 
+                        
+                        id="selectAll"
+                        checked={selectAll}
+                        label=""                  /*Falta borde negro*/
+                        aria-label="Marcar todos"
+
+                        onChange={handleSelectAll} // Manejar selección general
+
+                        />
+
                     </CTableHeaderCell>
                     
                     <CTableHeaderCell className="bg-body-tertiary">
@@ -184,7 +201,7 @@ const Dashboard = () => {
                       Teléfono
                     </CTableHeaderCell>
                     
-                    <CTableHeaderCell className="bg-body-tertiary">
+                    <CTableHeaderCell className="bg-body-tertiary text-center" >
                       Acción
                     </CTableHeaderCell>
 
@@ -195,9 +212,14 @@ const Dashboard = () => {
                   
                   {tableExample.map((item, index) => (
                     <CTableRow v-for="item in tableItems" key={index}>
-                      
-                      <CTableDataCell className="text-center">
-                        <CFormCheck id="flexCheckDefault" label=""/>
+                     <CTableDataCell className="text-center">
+                        
+                        <CFormCheck 
+                          id={`${item.id}`}
+                          checked={selected.includes(item.id)}  // Controlamos el estado
+                          onChange={(e) => {handleSelect(item.id)
+                          }}
+                        />
                       </CTableDataCell>
                       
                       <CTableDataCell className="text-left">
@@ -216,21 +238,26 @@ const Dashboard = () => {
                         <div>{item.user.telefono}</div>
                       </CTableDataCell>
                                             
-                      <CTableDataCell>
-                      
-
-                        <CIcon icon={cilPencil} size="s" data-bs-toggle="tooltip" data-toggle="modal"/>
-                        <CIcon icon={cilTrash} size="s" data-bs-toggle="tooltip"/> 
-                        
+                      <CTableDataCell className="text-center">
                         <a href="#editEmployeeModal" class="edit"
                           icon={cilPencil}
                           data-toggle="modal" ><i class="material-icons" 
                           data-toggle="tooltip" title="Edit">
-                              <CIcon icon={cilPencil} size="l"/>;
+                              <CIcon icon={cilPencil} size="l"/>
                           </i>
                         </a>
 
-							<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete"></i></a>
+                        <a href="#editEmployeeModal" class="delete"
+                          icon={cilTrash}
+                          data-toggle="modal" ><i class="material-icons" 
+                          data-toggle="tooltip" title="Borrar">
+                              <CIcon icon={cilTrash} size="l"/>
+                          </i>
+                        </a>
+
+
+
+							          <a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete"></i></a>
 
 
                       </CTableDataCell>

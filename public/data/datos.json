@@ -1,0 +1,185 @@
+[
+    {
+      "id": 1,
+      "user": {
+        "name": "Ruiz Miguel Maximiliano",
+        "email": "maxiruiz@Gmail.com",
+        "domicilio": "Uruguay 257",
+        "telefono": "343-4516844"
+      }
+    },
+    {
+      "id": 2,
+      "user": {
+        "name": "García, Ana Laura",
+        "email": "algarcia@hotmail.com",
+        "domicilio": "Las Flores 123",
+        "telefono": "343-4123456"
+      }
+    },
+    {
+        "id": 3,
+        "user": {
+          "name": "Martínez, José Luis",
+          "email": "josemartinez@gmail.com",
+          "domicilio": "Rivadavia 456",
+          "telefono": "343-5647890"
+        }
+      },
+      {
+        "id": 4,
+        "user": {
+          "name": "Pérez, Mariana",
+          "email": "mariaperez@outlook.com",
+          "domicilio": "Alvear 789",
+          "telefono": "343-5764321"
+        }
+      },
+      {
+        "id": 5,
+        "user": {
+          "name": "López, Carlos Alberto",
+          "email": "clopez@yahoo.com",
+          "domicilio": "Callejón 321",
+          "telefono": "343-5456789"
+        }
+      },
+      {
+        "id": 6,
+        "user": {
+          "name": "Sánchez, Silvia Beatriz",
+          "email": "silviasanchez@hotmail.com",
+          "domicilio": "Viamonte 654",
+          "telefono": "343-5678901"
+        }
+      },
+      {
+        "id": 7,
+        "user": {
+          "name": "González, Rodrigo",
+          "email": "rodrigonzalez@live.com",
+          "domicilio": "Sarmiento 890",
+          "telefono": "343-4329876"
+        }
+      },
+      {
+        "id": 8,
+        "user": {
+          "name": "Torres, Marcela",
+          "email": "marcelatorres@msn.com",
+          "domicilio": "San Martín 123",
+          "telefono": "343-6543210"
+        }
+      },
+      {
+        "id": 9,
+        "user": {
+          "name": "Romero, Sergio",
+          "email": "sergioromero@aol.com",
+          "domicilio": "Avenida 12 de Octubre 789",
+          "telefono": "343-6754321"
+        }
+      },
+      {
+        "id": 10,
+        "user": {
+          "name": "Fernández, Carolina",
+          "email": "carolinafernandez@gmail.com",
+          "domicilio": "Juan B. Justo 567",
+          "telefono": "343-6549870"
+        }
+      },
+      {
+        "id": 11,
+        "user": {
+          "name": "Díaz, Pablo Javier",
+          "email": "pablodias@icloud.com",
+          "domicilio": "Moreno 234",
+          "telefono": "343-5649021"
+        }
+      },
+      {
+        "id": 12,
+        "user": {
+          "name": "Hernández, Laura",
+          "email": "laurahernandez@outlook.com",
+          "domicilio": "Paso 1234",
+          "telefono": "343-4321098"
+        }
+      },
+      {
+        "id": 13,
+        "user": {
+          "name": "Vega, Jorge Luis",
+          "email": "jorgevega@hotmail.com",
+          "domicilio": "Mitre 123",
+          "telefono": "343-5432109"
+        }
+      },
+      {
+        "id": 14,
+        "user": {
+          "name": "Gutiérrez, Marta",
+          "email": "martagutierrez@yahoo.com",
+          "domicilio": "Salta 678",
+          "telefono": "343-6548321"
+        }
+      },
+      {
+        "id": 15,
+        "user": {
+          "name": "Jiménez, Gabriel",
+          "email": "gabrieljimenez@live.com",
+          "domicilio": "Chacabuco 234",
+          "telefono": "343-5676543"
+        }
+      },
+      {
+        "id": 16,
+        "user": {
+          "name": "Álvarez, Lucía",
+          "email": "luciaalvarez@msn.com",
+          "domicilio": "Catamarca 901",
+          "telefono": "343-4327654"
+        }
+      },
+      {
+        "id": 17,
+        "user": {
+          "name": "Ríos, Nicolás",
+          "email": "nicolasrios@aol.com",
+          "domicilio": "Entre Ríos 654",
+          "telefono": "343-5438765"
+        }
+      },
+      {
+        "id": 18,
+        "user": {
+          "name": "Castro, Ana",
+          "email": "anacastro@gmail.com",
+          "domicilio": "Avellaneda 789",
+          "telefono": "343-6543456"
+        }
+      },
+      {
+        "id": 19,
+        "user": {
+          "name": "Morales, Juan",
+          "email": "juanmorales@icloud.com",
+          "domicilio": "Lavalle 432",
+          "telefono": "343-4325678"
+        }
+      },
+      {
+        "id": 20,
+        "user": {
+          "name": "Bravo, María José",
+          "email": "mariajosebravo@yahoo.com",
+          "domicilio": "Perón 234",
+          "telefono": "343-5434567"
+        }
+      }
+      
+
+]
+    

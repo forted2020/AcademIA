@@ -111,7 +111,7 @@ const routes = [
 
 
   { path: '/Usuarios', name: 'Usuarios', element: Usuarios }, // Nueva página
-  { path: '/Usuario', name: 'Usuario', element: UserList },  // Nueva ruta
+  /*{ path: '/Usuario', name: 'Usuario', element: UserList },  // Nueva ruta*/
 ]
 
 export default routes

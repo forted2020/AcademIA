@@ -19,24 +19,18 @@ import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 const _nav = [
   {
-    component: 'CNavTitle',
+    component: CNavTitle,
     name: 'Administración',
   },
 
   {
-    component: 'CNavItem',
+    component: CNavItem,
     name: 'Usuarios',
     to: '/Usuarios',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },  
 
-  {
-    component: 'CNavItem',
-    name: 'UsuariosLista',
-    to: '/UserList',
-    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-  },  
-
+  
  
 ]
 

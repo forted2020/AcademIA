@@ -1,7 +1,7 @@
 import React,  { useState, useEffect }  from 'react'
 import classNames from 'classnames'
 
-import { CAvatar, CButton, CButtonGroup, CCard, CCardBody, CCardFooter, CCardHeader, CCol, CProgress, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CFormLabel, CFormTextarea, CInputGroup,  CInputGroupText, CContainer} from '@coreui/react'
+import { CAvatar, CButton, CButtonGroup, CCard, CCardBody, CCardFooter, CCardHeader, CCol, CProgress, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CFormLabel, CFormTextarea, CInputGroup,  CInputGroupText, CContainer, CModalFooter} from '@coreui/react'
 
 import { cibCcAmex, cibCcApplePay, cibCcMastercard, cibCcPaypal, cibCcStripe, cibCcVisa, cibGoogle, cibFacebook, cibLinkedin, cifBr, cifEs, cifFr, cifIn, cifPl, cifUs, cibTwitter, cilCloudDownload, cilPeople, cilUser, cilUserFemale, cilTrash, cilPencil} from '@coreui/icons'
 
@@ -45,6 +45,8 @@ const Dashboard = () => {
   const [visibleXL, setVisibleXL] = useState(false)
 
   const [filename, setFilename] = useState('');
+
+  const [modalOpen, setModalOpen] = useState(false);
   
   // Leer nombre de archivo
   const getFileName = () => {
@@ -119,8 +121,20 @@ const Dashboard = () => {
     item.user.domicilio.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.user.telefono.includes(searchTerm)
   );
+  
+  // Manejador del boton de Exportar
+  const handleExportClick = () =>{
+    setModalOpen(true)
+  }
+  
+  // Manejador del boton de Cerrar Exportar
+  const handleCloseModal = () =>{
+    setModalOpen(false)
+  }
 
 
+ 
+  
   return (
     <CContainer>
      
@@ -197,51 +211,93 @@ const Dashboard = () => {
               </CCol>
             </CRow>
 
-            <CRow className="justify-content-end py-1">
+                {/* ----------  Modal para exportar a CSV --------------- */}
+                <CModal visible={modalOpen} onClose={() => {
+                    setModalOpen(false)
+                    setFilename('')                         // Al cerrar la modal, borro el input del nombre del archivo
+                    }
+                  }
+                >
+                  <CModalHeader>
+                    <CModalTitle>Exportar archivo CSV</CModalTitle>
+                  </CModalHeader>
+                  
+                  <CModalBody>
+                    <CFormInput
+                      md={4} 
+                      type="text"
+                      placeholder="Nombre del archivo"
+                      value={filename}
+                      onChange={(e) => setFilename(e.target.value)}
+                      className="shadow-sm"  />
+                  </CModalBody>
+                    
+                  <CModalFooter>
+                    <CSVLink
+                      headers={csvHeaders}
+                      data={csvData}
+                      filename={getFileName()}
+                      className="btn btn-primary"
+                      onClick={handleCloseModal} // Cerrar el modal después de exportar
+                    >
+                      Exportar
+                    </CSVLink>
+                    
+                    <CButton color="secondary" onClick={handleCloseModal}> {/* Botón para cancelar y cerrar el modal */}
+                      Cancelar
+                    </CButton>
+                  </CModalFooter>
                 
-                <CCol></CCol>
+                </CModal>
+                {/* ----------  Fin Modal para exportar a CSV --------------- */}
 
-                <CCol>
-                  <CFormInput
-                    md={4} 
-                    type="text"
-                    placeholder="Nombre del archivo"
-                    value={filename}
-                    onChange={(e) => setFilename(e.target.value)}
-                    className="shadow-sm"  />              
-                </CCol>
-                
-                <CCol  md={4}  className='text-end' >
-                  <CSVLink
-                    headers={csvHeaders}
-                    data={filteredTable}
-                    filename={getFileName()}
-                    className="text-decoration-none"  >
-                      <CButton 
-                        type="button"
-                        color="secondary" 
-                        className="shadow-sm px-2 py-1"
-                        variant="outline"
-                        size="sm"
-                        style={{ fontSize: '0.75rem' }} 
-                        >
-                          Expotar
-                      </CButton>
-                  </CSVLink> 
-                </CCol>  
             
-            </CRow>
-
-
           </CCardFooter >
 
-        <CCardBody >
-          
+        <CCardBody className="justify-content-center py-1 ">
+
+          <CRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 ">
+                  
+            <CCol  md={4}  className='text-end px-0 ' >
+              <div className='d-flex justify-content-end gap-2'>
+                {/* ----------  Botón para imprimir --------------- */}
+                <CButton 
+                  type="button"
+                  color="secondary" 
+                  className="shadow-sm px-2 py-1 me-0"
+                  variant="outline"
+                  size="sm"
+                  style={{ fontSize: '0.75rem' }}
+                  //onClick = {() => handleExportClick()}
+                  >
+                    Imprimir
+                </CButton>
+                {/* ----------  Fin Botón para imprimir  --------------- */}
+
+
+                {/* ----------  Botón para exportar a CSV --------------- */}
+                <CButton 
+                  type="button"
+                  color="secondary" 
+                  className="shadow-sm px-2 py-1"
+                  variant="outline"
+                  size="sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick = {() => handleExportClick()}
+                  >
+                    Expotar
+                </CButton>
+                {/* ----------  Fin Botón para exportar a CSV --------------- */}
+              </div>  
+            </CCol>  
+          </CRow>
+
               <CTable 
                 align="middle" 
                 className="mb-3 border shadow-sm"  /* Ajusto margen y agrego sombra */
                 hover 
                 responsive>
+                
                 <CTableHead className="text-nowrap">
                   <CTableRow>
                     

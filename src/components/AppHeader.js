@@ -131,9 +131,13 @@ const AppHeader = () => {
           <AppHeaderDropdown />
         </CHeaderNav>
       </CContainer>
-      <CContainer className="px-4" fluid>
+      
+      {/* Se deshabilita el CContainer del Breacrumb
+      <CContainer className="px-4" fluid> 
         <AppBreadcrumb />
       </CContainer>
+      */}
+    
     </CHeader>
   )
 }

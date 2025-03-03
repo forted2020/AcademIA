@@ -12,6 +12,12 @@ import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 
 import { CSVLink } from "react-csv";
 
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import ReactPDF from '@react-pdf/renderer';
+
+
+
+
 
 // Datos ficticios para los encabezados
 const csvHeaders = [
@@ -131,6 +137,46 @@ const Dashboard = () => {
   const handleCloseModal = () =>{
     setModalOpen(false)
   }
+
+// ----------------- react-pdf -------------------------------
+
+  // Crea el estilo
+  const styles = StyleSheet.create({
+    page: {
+      flexDirection: 'row',
+      backgroundColor: '#E4E4E4'
+    },
+    section: {
+      margin: 10,
+      padding: 10,
+      flexGrow: 1
+    }
+  });
+
+// Crea los componentes del documento
+const MyDocument = () => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text>Section #1</Text>
+      </View>
+      <View style={styles.section}>
+        <Text>Section #2</Text>
+      </View>
+    </Page>
+  </Document>
+);
+
+ // Manejador del boton de IMprimir
+ const handlePrintButton = () =>{
+  //setPrintPDF(false)
+    ReactPDF.render(<MyDocument />, `example.pdf`);
+ 
+
+}
+
+
+  // ----------------- react-pdf -------------------------------
 
 
  
@@ -268,7 +314,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   style={{ fontSize: '0.75rem' }}
-                  //onClick = {() => handleExportClick()}
+                  onClick = {() => handlePrintButton()}
                   >
                     Imprimir
                 </CButton>

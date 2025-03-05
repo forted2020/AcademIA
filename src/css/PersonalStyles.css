@@ -1,0 +1,26 @@
+.scrollable-table-body {
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+    width: 100% !important; /* Forzamos el ancho con !important para evitar sobrescrituras */
+  }
+
+  /* Ajustar las filas y celdas para que mantengan el diseño tabular */
+.scrollable-table-body tr {
+    display: table; /* Restaura el comportamiento de tabla para las filas */
+    width: 100%; /* Ocupa todo el ancho */
+    table-layout: fixed; /* Evita que las celdas se desajusten */
+  }
+  
+  /* Ajustar las celdas para que respeten el ancho */
+  .scrollable-table-body td,
+  .scrollable-table-body th {
+    word-wrap: break-word; /* Evita desbordamiento horizontal */
+    white-space: normal;
+  }
+
+  /* Asegurar que el contenedor responsive no limite el ancho */
+.table-responsive {
+    width: 100% !important;
+    overflow-x: auto; /* Para scroll horizontal si es necesario en pantallas pequeñas */
+  }

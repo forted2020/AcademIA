@@ -99,8 +99,7 @@ const Dashboard = () => {
   const handleSelect = (id) => {
     
     if (selected.includes(id)) {
-       
-      // Si ya está seleccionado, lo quitamos
+       // Si ya está seleccionado, lo quitamos
       setSelected(selected.filter(item => item !== id))
       
       // Si después de quitar quedan menos que todos, desmarcamos selectAll

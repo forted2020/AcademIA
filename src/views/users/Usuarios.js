@@ -22,6 +22,7 @@ import {
   useReactTable,
   getPaginationRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
 } from '@tanstack/react-table'
 
 
@@ -34,6 +35,7 @@ const columns = [
         header: 'Nombre',
         cell: info => info.getValue(),  // Cómo se muestra el valor en la celda
         enableSorting: true,
+        filterFn: 'includesString',
       }
   ),
 
@@ -41,18 +43,21 @@ const columns = [
     header: () => <span>Mail</span>,
     cell: info => <i>{info.getValue()}</i>,
     enableSorting: true,
+    filterFn: 'includesString',
   }),
 
   columnHelper.accessor('domicilio', {
     header: () => 'Domicilio',
     cell: info => info.getValue(),
     enableSorting: true,
+    filterFn: 'includesString',
   }),
 
   columnHelper.accessor('telefono', {
     header: () => <span>Teléfono</span>,
     cell: info => info.getValue(),
     enableSorting: true,
+    filterFn: 'includesString',
   }),
 
   columnHelper.display({
@@ -97,14 +102,15 @@ const columns = [
         </a>
       </div>)
     },
-    enableSorting: false, // Se deshabilita el ordenamiento en la columna 'actions' (no tiene datos ordenables)
+    enableSorting: false, // Se deshabilita el ordenamiento en esta columna ('actions').
+    enableColumnFilter: false, // Se deshabilita el filtrado 
   })
 ];
 
 
 const Dashboard = () => {
 
-  const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda global
   const [visibleXL, setVisibleXL] = useState(false)
   const [modalOpen, setModalOpen] = useState(false);
   
@@ -146,12 +152,18 @@ const Dashboard = () => {
     columns,                      // Columnas definidas anteriormente
     getCoreRowModel: getCoreRowModel(),   // función de TanStack. Genera el modelo básico de filas
     getPaginationRowModel: getPaginationRowModel(), // Activa la paginación, divide filas en páginas según pageSize y pageIndex.
+    
     getSortedRowModel: getSortedRowModel(), // Activar ordenamiento
     onPaginationChange: setPagination, // Actualiza el estado de paginación al cambiar de página
     onSortingChange: setSorting, // Actualizar estado de ordenamiento
+
+    getFilteredRowModel: getFilteredRowModel(), // Activar filtrado
+    onGlobalFilterChange: setSearchTerm, // Actualizar el filtro global
+
     state: { 
-      pagination,   // Pasa el estado de paginación a TanStack, par aque sepa que pagina mostrar
+      pagination,   // Pasa el estado de paginación a TanStack, para que sepa que pagina mostrar
       sorting,  // Pasar el estado de ordenamiento
+      globalFilter: searchTerm, // Pasar el filtro global al estado
     }, 
   });
     

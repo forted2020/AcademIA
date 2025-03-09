@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { CButton, CCard, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CInputGroup,  CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot} from '@coreui/react'
 
-import { cilTrash, cilPencil} from '@coreui/icons'
+import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical} from '@coreui/icons'
 
 import { CIcon } from '@coreui/icons-react';
 
@@ -96,7 +96,8 @@ const columns = [
           />
         </a>
       </div>)
-    }
+    },
+    enableSorting: false, // Se deshabilita el ordenamiento en la columna 'actions' (no tiene datos ordenables)
   })
 ];
 
@@ -123,10 +124,7 @@ const Dashboard = () => {
       
   }, []);  // El array vacío significa que esto solo se ejecuta al montar el componente
   
-  
-
   /*  ---------------------  Paginación  -----------------------  */
-
   // Estado de paginación
   // "pagination" le dice a TanStack Table cómo dividirla en páginas.
   const [pagination, setPagination] = useState({
@@ -134,8 +132,12 @@ const Dashboard = () => {
     pageSize: 10,  // Número de filas por página (muestra 2 filas por página)
   });
 
+  /*  ---------------------  Ordenamiento  -----------------------  */
+  //  Estado para el ordenamiento
+  const [sorting, setSorting] = useState([]); // "sorting" es un array de objetos como id de la columna y dirección. Se inicializa vacío.
 
-  // Configuración de la tabla. 
+
+  /*  ---------------------  Configuración de la tabla  -----------------------  */
   // Instancia de la tabla (useReactTable) es el "cerebro" de TanStack Table. 
   // La variable "table" (creada con useReactTable) contiene toda la lógica y los métodos para manejar la tabla, 
   // como paginación, filas, y renderizado.
@@ -144,12 +146,15 @@ const Dashboard = () => {
     columns,                      // Columnas definidas anteriormente
     getCoreRowModel: getCoreRowModel(),   // función de TanStack. Genera el modelo básico de filas
     getPaginationRowModel: getPaginationRowModel(), // Activa la paginación, divide filas en páginas según pageSize y pageIndex.
+    getSortedRowModel: getSortedRowModel(), // Activar ordenamiento
     onPaginationChange: setPagination, // Actualiza el estado de paginación al cambiar de página
-    state: { pagination}, // Pasa el estado de paginación a TanStack, par aque sepa que pagina mostrar
+    onSortingChange: setSorting, // Actualizar estado de ordenamiento
+    state: { 
+      pagination,   // Pasa el estado de paginación a TanStack, par aque sepa que pagina mostrar
+      sorting,  // Pasar el estado de ordenamiento
+    }, 
   });
     
-
-
 
   return (
     <CContainer>
@@ -239,8 +244,19 @@ const Dashboard = () => {
               {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
                 <CTableRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 " key={headerGroup.id}>
                   {headerGroup.headers.map(column => (       // Recorre las columnas y devuelve un array de los headers
-                    <CTableHeaderCell key={column.id}>
+                    <CTableHeaderCell 
+                      key={column.id}
+                      onClick={column.column.getToggleSortingHandler()} // encabezado clicable para ordenar
+                      style={{ cursor: column.column.getCanSort() ? 'pointer' : 'default' }} // Cursor pointer si es ordenable
+                    >
                       {flexRender(column.column.columnDef.header, column.getContext())} {/*Renderiza los header con flexRender*/}
+                      { column.column.getCanSort() ? {        // Si la columna no es ordenable, no muestra icono
+                          asc: <CIcon icon={cilArrowTop} size="sm"/> , // Ascendente cilSortAlphaUp cilSortNumericUp cilArrowTop
+                          desc: <CIcon icon={cilArrowBottom} size="sm"/>, // Descendente cilSortAlphaDown cilSortNumericDown cilArrowBottom
+                        } [column.column.getIsSorted()] || <CIcon icon= {cilSwapVertical} className="text-body-secondary" />
+                        : null 
+                      }             
+                      
                     </CTableHeaderCell>
                   ))}
                 </CTableRow>

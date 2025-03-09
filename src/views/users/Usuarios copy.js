@@ -1,9 +1,9 @@
 import React,  { useState, useEffect }  from 'react'
 import classNames from 'classnames'
 
-import { CAvatar, CButton, CButtonGroup, CCard, CCardBody, CCardFooter, CCardHeader, CCol, CProgress, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CFormLabel, CFormTextarea, CInputGroup,  CInputGroupText, CContainer} from '@coreui/react'
+import { CButton, CCard, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CInputGroup,  CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot} from '@coreui/react'
 
-import { cibCcAmex, cibCcApplePay, cibCcMastercard, cibCcPaypal, cibCcStripe, cibCcVisa, cibGoogle, cibFacebook, cibLinkedin, cifBr, cifEs, cifFr, cifIn, cifPl, cifUs, cibTwitter, cilCloudDownload, cilPeople, cilUser, cilUserFemale, cilTrash, cilPencil} from '@coreui/icons'
+import { cilTrash, cilPencil} from '@coreui/icons'
 
 import { CIcon } from '@coreui/icons-react';
 
@@ -11,6 +11,14 @@ import FormAltaUsuario from '../../components/FormAltaUsuario'; // Importa el co
 import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 
 import { CSVLink } from "react-csv";
+
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import ReactPDF from '@react-pdf/renderer';
+
+
+
+
+
 
 
 // Datos ficticios para los encabezados
@@ -45,6 +53,18 @@ const Dashboard = () => {
   const [visibleXL, setVisibleXL] = useState(false)
 
   const [filename, setFilename] = useState('');
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Array de Encabezado de la tabla 
+  const [tableHead, setTableHead] = useState([
+    {id: 1, head: {Nombre: 'Nombre y Apellido', visible: true}},
+    {id: 2, head: {Nombre: 'Email', visible: true}},
+    {id: 3, head: {Nombre: 'Domicilio', visible: true}},
+    {id: 4, head: {Nombre: 'Teléfono', visible: true}},
+    {id: 5, head: {Nombre: 'Acción', visible: true}},  
+
+  ])
   
   // Leer nombre de archivo
   const getFileName = () => {
@@ -91,7 +111,8 @@ const Dashboard = () => {
   const handleSelect = (id) => {
     
     if (selected.includes(id)) {
-       // Si ya está seleccionado, lo quitamos
+       
+      // Si ya está seleccionado, lo quitamos
       setSelected(selected.filter(item => item !== id))
       
       // Si después de quitar quedan menos que todos, desmarcamos selectAll
@@ -119,8 +140,60 @@ const Dashboard = () => {
     item.user.domicilio.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.user.telefono.includes(searchTerm)
   );
+  
+  // Manejador del boton de Exportar
+  const handleExportClick = () =>{
+    setModalOpen(true)
+  }
+  
+  // Manejador del boton de Cerrar Exportar
+  const handleCloseModal = () =>{
+    setModalOpen(false)
+  }
+
+// ----------------- react-pdf -------------------------------
+
+  // Crea el estilo
+  const styles = StyleSheet.create({
+    page: {
+      flexDirection: 'row',
+      backgroundColor: '#E4E4E4'
+    },
+    section: {
+      margin: 10,
+      padding: 10,
+      flexGrow: 1
+    }
+  });
+
+// Crea los componentes del documento
+const MyDocument = () => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text>Section #1</Text>
+      </View>
+      <View style={styles.section}>
+        <Text>Section #2</Text>
+      </View>
+    </Page>
+  </Document>
+);
+
+ // Manejador del boton de IMprimir
+ const handlePrintButton = () =>{
+  //setPrintPDF(false)
+    ReactPDF.render(<MyDocument />, `example.pdf`);
+ 
+
+}
 
 
+  // ----------------- react-pdf -------------------------------
+
+
+ 
+  
   return (
     <CContainer>
      
@@ -197,52 +270,95 @@ const Dashboard = () => {
               </CCol>
             </CRow>
 
-            <CRow className="justify-content-end py-1">
+                {/* ----------  Modal para exportar a CSV --------------- */}
+                <CModal visible={modalOpen} onClose={() => {
+                    setModalOpen(false)
+                    setFilename('')                         // Al cerrar la modal, borro el input del nombre del archivo
+                    }
+                  }
+                >
+                  <CModalHeader>
+                    <CModalTitle>Exportar archivo CSV</CModalTitle>
+                  </CModalHeader>
+                  
+                  <CModalBody>
+                    <CFormInput
+                      md={4} 
+                      type="text"
+                      placeholder="Nombre del archivo"
+                      value={filename}
+                      onChange={(e) => setFilename(e.target.value)}
+                      className="shadow-sm"  />
+                  </CModalBody>
+                    
+                  <CModalFooter>
+                    <CSVLink
+                      headers={csvHeaders}
+                      data={csvData}
+                      filename={getFileName()}
+                      className="btn btn-primary"
+                      onClick={handleCloseModal} // Cerrar el modal después de exportar
+                    >
+                      Exportar
+                    </CSVLink>
+                    
+                    <CButton color="secondary" onClick={handleCloseModal}> {/* Botón para cancelar y cerrar el modal */}
+                      Cancelar
+                    </CButton>
+                  </CModalFooter>
                 
-                <CCol></CCol>
+                </CModal>
+                {/* ----------  Fin Modal para exportar a CSV --------------- */}
 
-                <CCol>
-                  <CFormInput
-                    md={4} 
-                    type="text"
-                    placeholder="Nombre del archivo"
-                    value={filename}
-                    onChange={(e) => setFilename(e.target.value)}
-                    className="shadow-sm"  />              
-                </CCol>
-                
-                <CCol  md={4}  className='text-end' >
-                  <CSVLink
-                    headers={csvHeaders}
-                    data={filteredTable}
-                    filename={getFileName()}
-                    className="text-decoration-none"  >
-                      <CButton 
-                        type="button"
-                        color="secondary" 
-                        className="shadow-sm px-2 py-1"
-                        variant="outline"
-                        size="sm"
-                        style={{ fontSize: '0.75rem' }} 
-                        >
-                          Expotar
-                      </CButton>
-                  </CSVLink> 
-                </CCol>  
             
-            </CRow>
-
-
           </CCardFooter >
 
-        <CCardBody >
-          
+        <CCardBody className="justify-content-center py-1 ">
+
+          <CRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 ">
+                  
+            <CCol  md={4}  className='text-end px-0 ' >
+              <div className='d-flex justify-content-end gap-2'>
+                {/* ----------  Botón para imprimir --------------- */}
+                <CButton 
+                  type="button"
+                  color="secondary" 
+                  className="shadow-sm px-2 py-1 me-0"
+                  variant="outline"
+                  size="sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick = {() => handlePrintButton()}
+                  >
+                    Imprimir
+                </CButton>
+                {/* ----------  Fin Botón para imprimir  --------------- */}
+
+
+                {/* ----------  Botón para exportar a CSV --------------- */}
+                <CButton 
+                  type="button"
+                  color="secondary" 
+                  className="shadow-sm px-2 py-1"
+                  variant="outline"
+                  size="sm"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick = {() => handleExportClick()}
+                  >
+                    Expotar
+                </CButton>
+                {/* ----------  Fin Botón para exportar a CSV --------------- */}
+              </div>  
+            </CCol>  
+          </CRow>
+
               <CTable 
                 align="middle" 
                 className="mb-3 border shadow-sm"  /* Ajusto margen y agrego sombra */
                 hover 
                 responsive>
+                
                 <CTableHead className="text-nowrap">
+                  
                   <CTableRow>
                     
                     <CTableHeaderCell className="bg-body-tertiary text-center py-2">
@@ -253,38 +369,26 @@ const Dashboard = () => {
                         aria-label="Marcar todos"
                         className="border-0"  /* Quito borde para diseño minimalista */
                         onChange={handleSelectAll} // Manejar selección general
-
-                        />
-
-                    </CTableHeaderCell>
-                    
-                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
-                      Nombre y Apellido
+                       />
                     </CTableHeaderCell>
 
-                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
-                      Email
-                    </CTableHeaderCell>
-
-                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
-                      Domicilio
-                    </CTableHeaderCell>
-                    
-                    <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
-                      Teléfono
-                    </CTableHeaderCell>
-                    
-                    <CTableHeaderCell className="bg-body-tertiary py-2 text-center" >
-                      Acción
-                    </CTableHeaderCell>
+                    {tableHead.map((hCol) => hCol.head.visible ? (
+                      <>
+                        <CTableHeaderCell className="bg-body-tertiary py-2 text-left">
+                          {hCol.head.Nombre}
+                        </CTableHeaderCell>
+                      </>
+                    ): null
+                    )}
 
                   </CTableRow>
+                  
                 </CTableHead>
 
                 <CTableBody>
                   
                   {filteredTable.map((item) => ( // Búsqueda dinámica. Usamos filteredTable en lugar de tableExample
-                  //{tableExample.map((item, index) => (
+                    //{tableExample.map((item, index) => (
                     <CTableRow v-for="item in tableItems" key={item.id}>
                      <CTableDataCell className="text-center py-2">
                         
@@ -314,12 +418,15 @@ const Dashboard = () => {
                                             
                         <CTableDataCell className="text-center" py-2>
                         <div className="d-flex justify-content-center gap-3"> {/* Contenedor flexible para íconos */}
+                        
                         <a
                           href="#editEmployeeModal"
                           className="text-muted"  /* Color base */
                           data-toggle="modal"
                           title="Editar"
                         >
+
+                          
                           <CIcon 
                             icon={cilPencil} 
                             size="lg" 
@@ -347,13 +454,25 @@ const Dashboard = () => {
                     </CTableRow>
                   ))}
                 </CTableBody>
+                
               </CTable>
+            
+              <div>
+                <CPagination align="end" size="sm" aria-label="Page navigation">
+                  <CPaginationItem aria-label="Previous" disabled>
+                    <span aria-hidden="true">&laquo;</span>
+                  </CPaginationItem>
+                  <CPaginationItem active>1</CPaginationItem>
+                  <CPaginationItem>2</CPaginationItem>
+                  <CPaginationItem>3</CPaginationItem>
+                  <CPaginationItem aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </CPaginationItem>
+                </CPagination>
+              </div>
+
             </CCardBody>
-
-
-        <CCardBody>
-
-        </CCardBody>
+                    
 
       </CCard>
            

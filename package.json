@@ -28,6 +28,7 @@
     "@coreui/utils": "^2.0.2",
     "@popperjs/core": "^2.11.8",
     "@react-pdf/renderer": "^4.2.4",
+    "@tanstack/react-table": "^8.21.2",
     "chart.js": "^4.4.7",
     "classnames": "^2.5.1",
     "core-js": "^3.40.0",

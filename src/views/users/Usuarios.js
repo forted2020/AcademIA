@@ -1,7 +1,7 @@
 import React,  { useState, useEffect }  from 'react'
 import classNames from 'classnames'
 
-import { CButton, CCard, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormCheck, CFormInput, CInputGroup,  CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot} from '@coreui/react'
+import { CButton, CCard, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CInputGroup,  CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot} from '@coreui/react'
 
 import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical} from '@coreui/icons'
 
@@ -109,12 +109,18 @@ const columns = [
 
 
 const Dashboard = () => {
+  const [tableData, setTableData] = useState([])
 
   const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda global
-  const [visibleXL, setVisibleXL] = useState(false)
+  const [visibleXL, setVisibleXL] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   
-  const [tableData, setTableData] = useState([]);   // En este estado se guardan los datos (data) leídos desde datos.json  
+
+  const [filterColumn1, setFilterColumn1] = useState('name'); // Columna predeterminada para el primer filtro
+  const [filterValue1, setFilterValue1] = useState(''); // Valor del primer filtro
+  const [filterColumn2, setFilterColumn2] = useState('domicilio'); // Columna predeterminada para el segundo filtro
+  const [filterValue2, setFilterValue2] = useState(''); // Valor del segundo filtro
+  const [columnFilters, setColumnFilters] = useState([]); // Estado de filtros para TanStack
     
   //Leemos los datos de data/datos.json
   useEffect(() => {
@@ -142,6 +148,20 @@ const Dashboard = () => {
   //  Estado para el ordenamiento
   const [sorting, setSorting] = useState([]); // "sorting" es un array de objetos como id de la columna y dirección. Se inicializa vacío.
 
+  /*  ---------------------  Filtro -----------------------  */
+  // Función para aplicar filtros al hacer clic en "Buscar"
+  const applyFilters = () => {
+    const filters = [];
+    if (filterValue1) {
+      filters.push({ id: filterColumn1, value: filterValue1 });
+    }
+    if (filterValue2) {
+      filters.push({ id: filterColumn2, value: filterValue2 });
+    }
+    setColumnFilters(filters); // Actualiza los filtros en TanStack
+  };
+
+
 
   /*  ---------------------  Configuración de la tabla  -----------------------  */
   // Instancia de la tabla (useReactTable) es el "cerebro" de TanStack Table. 
@@ -150,20 +170,23 @@ const Dashboard = () => {
   const table = useReactTable({
     data: tableData,              // Datos de la tabla, obtenidos de datos.json 
     columns,                      // Columnas definidas anteriormente
+    
     getCoreRowModel: getCoreRowModel(),   // función de TanStack. Genera el modelo básico de filas
     getPaginationRowModel: getPaginationRowModel(), // Activa la paginación, divide filas en páginas según pageSize y pageIndex.
+    onPaginationChange: setPagination, // Actualiza el estado de paginación al cambiar de página    
     
     getSortedRowModel: getSortedRowModel(), // Activar ordenamiento
-    onPaginationChange: setPagination, // Actualiza el estado de paginación al cambiar de página
     onSortingChange: setSorting, // Actualizar estado de ordenamiento
 
     getFilteredRowModel: getFilteredRowModel(), // Activar filtrado
-    onGlobalFilterChange: setSearchTerm, // Actualizar el filtro global
+    onGlobalFilterChange: setSearchTerm, // Actualiza el filtro global
+    onColumnFiltersChange: setColumnFilters, // Actualiza filtros por columna
 
     state: { 
       pagination,   // Pasa el estado de paginación a TanStack, para que sepa que pagina mostrar
       sorting,  // Pasar el estado de ordenamiento
       globalFilter: searchTerm, // Pasar el filtro global al estado
+      columnFilters, // Pasar filtros por columna
     }, 
   });
     
@@ -219,7 +242,51 @@ const Dashboard = () => {
               className="justify-content-en"
               >
               
-              <CCol></CCol>
+              <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
+                <div  className=" py-1 " >
+                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                    <CInputGroupText>Filtrar por</CInputGroupText>
+                    <CFormSelect
+                      value={filterColumn1}
+                      onChange={(e) => setFilterColumn1(e.target.value)}
+                      className="form-select"
+                    >
+                      <option value="name">Nombre</option>
+                      <option value="email">Mail</option>
+                      <option value="domicilio">Domicilio</option>
+                      <option value="telefono">Teléfono</option>
+                    </CFormSelect>
+                    <CFormInput
+                      placeholder="Valor a buscar"
+                      value={filterValue1}
+                      onChange={(e) => setFilterValue1(e.target.value)}
+                    />
+                  </CInputGroup >
+
+                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
+                    <CInputGroupText>Filtrar por</CInputGroupText>
+                    <CFormSelect
+                      value={filterColumn2}
+                      onChange={(e) => setFilterColumn2(e.target.value)}
+                      className="form-select"
+                    >
+                      <option value="name">Nombre</option>
+                      <option value="email">Mail</option>
+                      <option value="domicilio">Domicilio</option>
+                      <option value="telefono">Teléfono</option>
+                    </CFormSelect>
+                    <CFormInput
+                      placeholder="Valor a buscar"
+                      value={filterValue2}
+                      onChange={(e) => setFilterValue2(e.target.value)}
+                    />
+                  </CInputGroup>
+                  <CButton color="primary" size="sm" onClick={applyFilters}>
+                    Filtrar
+                  </CButton>
+                </div>
+              </CCol>
+
               <CCol></CCol>
 
               <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
@@ -251,7 +318,7 @@ const Dashboard = () => {
           
           {/* ----------------------------------- TABLA ----------------------------------- */}
 
-          <CTable>
+          <CTable hover responsive  >
             <CTableHead className="px-4 py-2 bg-primary">
               {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
                 <CTableRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 " key={headerGroup.id}>

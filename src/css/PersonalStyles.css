@@ -24,3 +24,22 @@
     width: 100% !important;
     overflow-x: auto; /* Para scroll horizontal si es necesario en pantallas pequeñas */
   }
+
+
+/* Estilo para print */
+
+@media print {
+  /* Oculta todo excepto la tabla */
+  body * {
+    visibility: hidden;
+  }
+  #mainTable, #mainTable * {
+    visibility: visible;
+  }
+  #mainTable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

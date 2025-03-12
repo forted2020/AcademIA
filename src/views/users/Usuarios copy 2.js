@@ -159,20 +159,13 @@ const MyDocument = ({ table, format = 'compact' }) => {
 };
 
 
-// Función para generar y descargar el PDF. Devuelve el blob
-const generatePDF = async (table, format = 'compact', download = false) => {
+// Función para generar y descargar el PDF. 
+const generatePDF = async (table, format = 'compact') => {
   const doc = <MyDocument table={table} />;
   const asPdf = pdf([]); // Crear instancia de PDF
   asPdf.updateContainer(doc); // Añadir el documento
   const blob = await asPdf.toBlob(); // Generar el PDF como Blob
-
-  // Si download es true, descarga el archivo
-  if (download) {
-    saveAs(blob, 'tabla_filtrada.pdf'); // Descargar el archivo
-  }
-
-  return blob; // Siempre devuelve el Blob
-  
+  saveAs(blob, 'tabla_filtrada.pdf'); // Descargar el archivo
 }
 
 
@@ -260,31 +253,20 @@ const Dashboard = () => {
   });
 
   const handleExportClick= () => {
-    generatePDF(table, 'compact', true);
+    generatePDF(table, 'compact');
   }
 
+  // const MyDocument = ({ table, format = 'compact' }) => {
+  const handlePrintButton = async (table) => {
   
-    const handlePrintButton = async (table) => {
-  
-    // Usa generatePDF para obtener el Blob, sin descargar
-    const blob = await generatePDF(table, 'compact', false); // false para no descargar
-    const pdfUrl = URL.createObjectURL(blob); // Crea una URL temporal
-
-    // Abre la URL en una nueva ventana (window.print imprime una ventana)
-    const printWindow = window.open(pdfUrl, '_blank', 'height=600,width=800');
-
-    // Espera a que cargue y dispare la impresión
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      // Opcional: printWindow.close(); // Cierra después de imprimir
-      
-    };
-
-    // Limpia la URL después de un tiempo
-    setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-  };
-
+   // Genera el PDF usando la función generatePDF ya definida (para generar el PDF)
+  const blob = await generatePDFBlob(table); // Nueva función auxiliar para obtener solo el Blob
+  const pdfUrl = URL.createObjectURL(blob); // Crea una URL temporal para el Blob
+    
+    
+    
+    window.print();
+  }
   
  
     
@@ -418,7 +400,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   style={{ fontSize: '0.75rem' }}
-                  onClick = {() => handlePrintButton(table)}
+                  onClick = {() => handlePrintButton()}
                   //onClick = {() => window.print()}
                   >
                     Imprimir

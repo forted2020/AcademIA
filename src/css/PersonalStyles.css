@@ -43,3 +43,46 @@
     width: 100%;
   }
 }
+
+/* Estilos para Accordeon*/
+.custom-accordion {
+  background-color: #f8f9fa; /* Fondo gris claro */
+  color: #333; /* Color de texto oscuro */
+  /*border: 2px solid #007bff; /* Borde azul */
+  border-radius: 1px; /* Bordes redondeados */
+}
+
+.custom-accordion .accordion-button {
+  padding: 0.75rem 1.5rem; /* Padding del botón */
+  background-color: #e9ecef; /* Fondo del botón */
+  color: #495057; /* Color del texto del botón */
+}
+
+.custom-accordion .accordion-button:not(.collapsed) {
+  background-color: #cce5ff; /* Fondo del botón activo */
+  color: #0056b3; /* Color del texto activo */
+}
+
+.custom-accordion .accordion-body {
+  padding: 0.5rem 0.5rem; /* Padding del cuerpo */
+}
+
+/* PersonalStyles.css */
+.small-accordion .accordion-button {
+  padding: 0.25rem 0.5rem !important; /* Padding pequeño, forzado */
+  font-size: 0.9rem !important;     /* Texto más pequeño (14px) */
+  line-height: 1.2 !important;        /* Compacta la altura */
+  border: border-light!important; 
+}
+
+.small-accordion .accordion-button::after {
+  width: 0.75rem !important;          /* Ícono más pequeño */
+  height: 0.75rem !important;
+  background-size: 0.75rem !important; /* Escala el ícono */
+}
+
+.small-accordion .accordion-button:not(.collapsed)::after {
+  width: 0.75rem !important;          /* Ícono activo más pequeño */
+  height: 0.75rem !important;
+  background-size: 0.75rem !important;
+}

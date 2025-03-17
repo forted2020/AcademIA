@@ -21,7 +21,7 @@ import ReactDOM from 'react-dom';
 
 import { compactStyles,detailedStyles } from '../dashboard/pdfFormats/pdfStyles';
 
-import '../../css/PersonalStyles.css'  
+import '../../css/PersonalStyles.css'   /* Oculta todo excepto la tabla */
 
 
 import {
@@ -357,103 +357,121 @@ const Dashboard = () => {
         {/* ----------  /HEAD --------------- */}
 
         {/* ----------  BODY --------------- */}
-        <CCardBody className="p-4 border border-light">
+        <CCardBody className="p-1 ">
+          <div className="mx-0 my-0 px-0 py-1 mb-0 bg-light">
 
-          {/* ---------------------  Controles de paginación ------------------------- */}
-        
-          
-          <CAccordion flush className="small-accordion mb-4 "
-            activeItemKey={0}
-            >
+          <CAccordion flush className="small-accordion mb-0">
             <CAccordionItem itemKey={1}>
+              <CRow className=  " align-items-center  justify-content-between bg-light">
+                
+                <CCol lg={6} className= ''>
+                <div className="" >
+                        <CInputGroup className="shadow-sm border-0 ms-1 "  > {/* Sombra y sin borde */}
+                        
+                          <CInputGroupText id="basic-addon1" className="ms-1" >
+                            Buscar
+                          </CInputGroupText>
 
-            <CRow className="justify-content-between mx-1 bg-light p-3  align-items-center">
-              <CCol xs={2} md={2} lg={4} className="bg-light"> 
-                <CAccordionHeader
+                          <CFormInput 
+                            placeholder="Ingrese el texo a buscar"  
+                            aria-label="Username" 
+                            aria-describedby="basic-addon1"
+                            value={searchTerm} // Búsqueda dinámica. Vinculamos el valor del input al estado
+                            onChange={(e) => setSearchTerm(e.target.value)} // Búsqueda dinámica. Actualizamos el estado al escribir
+                          />
+                        </CInputGroup>
+                      </div>
                   
-                  className='bg-transparent fw-semibold d-flex align-items-center'
-                  >
-                    Filtro avanzado</CAccordionHeader>
-              </CCol>
-            
-              <CCol></CCol>
-            
-            <CCol xs={2} md={2} lg={4} className="bg-light "> 
-              <CInputGroup className="input-group-sm">
-                <CInputGroupText id="inputGroup-sizing-sm">
-                  Buscar
-                </CInputGroupText>
-                <CFormInput
-                  type="text"
-                  placeholder="Ingrese el texto a buscar"
-                  aria-label="Sizing example input"
-                  aria-describedby="inputGroup-sizing-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ maxWidth: '200px' }} // Limita el ancho máximo
-                />
-              </CInputGroup>
-              
-
-            </CCol>
-            
-            </CRow>
+                </CCol>
                 
-              <CAccordionBody>
-              <CCol xs={2} md={2} lg={12} className="bg-light  align-items-center"> 
+                <CCol lg={3} className= ''>
                 
-                <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                  <CInputGroupText>Filtrar por</CInputGroupText>
-                  <CFormSelect 
-                    value={filterColumn1}
-                    onChange={(e) => setFilterColumn1(e.target.value)}
-                    className="form-select"
+                  <CAccordionHeader
+                    className="bg-white text-white p-0 d-flex align-items-center"
+                    style={{ height: "15px", fontWeight: "bold" }}
                   >
-                    <option value="name">Nombre</option>
-                    <option value="email">Mail</option>
-                    <option value="domicilio">Domicilio</option>
-                    <option value="telefono">Teléfono</option>
-                  </CFormSelect>
-                  <CFormInput
-                    placeholder="Valor a buscar"
-                    value={filterValue1}
-                    onChange={(e) => setFilterValue1(e.target.value)}
-                  />
-                  </CInputGroup >
 
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      value={filterColumn2}
-                      onChange={(e) => setFilterColumn2(e.target.value)}
-                      className="form-select"
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      placeholder="Valor a buscar"
-                      value={filterValue2}
-                      onChange={(e) => setFilterValue2(e.target.value)}
-                    />
-                  </CInputGroup>
-
-                    <CButton color="primary" size="sm" onClick={applyFilters}>
-                      Filtrar
-                    </CButton>
-
+                    Filtro Avanzado
+                  </CAccordionHeader>
+                
                 </CCol>
               
+              
+              
+              </CRow>
+              
+              <CAccordionBody>
+        
+                <div className="px-3 py-2 border border-bottom bg-light"> {/* Fondo claro y padding */}
+                  <CRow
+                    xs={{ cols: 1, gutter: 2 }}
+                    sm={{ cols: 2 }}
+                    lg={{ cols: 2 }}
+                    className="justify-content-en"
+                    >
+                    
+                    <CCol xs={12} sm={8} md={6} lg={6}> {/* Ancho progresivo */}
+                      <div  className=" py-1 " >
+                        <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                          <CInputGroupText>Filtrar por</CInputGroupText>
+                          <CFormSelect 
+                            value={filterColumn1}
+                            onChange={(e) => setFilterColumn1(e.target.value)}
+                            className="form-select"
+                          >
+                            <option value="name">Nombre</option>
+                            <option value="email">Mail</option>
+                            <option value="domicilio">Domicilio</option>
+                            <option value="telefono">Teléfono</option>
+                          </CFormSelect>
+                          <CFormInput
+                            placeholder="Valor a buscar"
+                            value={filterValue1}
+                            onChange={(e) => setFilterValue1(e.target.value)}
+                          />
+                        </CInputGroup >
+
+                        <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
+                          <CInputGroupText>Filtrar por</CInputGroupText>
+                          <CFormSelect
+                            value={filterColumn2}
+                            onChange={(e) => setFilterColumn2(e.target.value)}
+                            className="form-select"
+                          >
+                            <option value="name">Nombre</option>
+                            <option value="email">Mail</option>
+                            <option value="domicilio">Domicilio</option>
+                            <option value="telefono">Teléfono</option>
+                          </CFormSelect>
+                          <CFormInput
+                            placeholder="Valor a buscar"
+                            value={filterValue2}
+                            onChange={(e) => setFilterValue2(e.target.value)}
+                          />
+                        </CInputGroup>
+
+                        <CButton color="primary" size="sm" onClick={applyFilters}>
+                          Filtrar
+                        </CButton>
+
+
+                      </div>
+                    </CCol>
+
+                    <CCol></CCol>
+
+                    <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
+                      
+                    </CCol>
+                  </CRow>
+                </div>
+          
               </CAccordionBody>
             </CAccordionItem>
-           
           </CAccordion>
-          
+          </div>
 
-          
-          <div></div>
+
           
             <CRow className="justify-content-end mb-3 ">
               <CCol  xs="auto"  className='' >
@@ -496,7 +514,7 @@ const Dashboard = () => {
           {/* ----------------------------------- TABLA ----------------------------------- */}
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
-            <CTable id='mainTable' hover  className="shadow-sm mb-0 border border-light" >
+            <CTable id='mainTable' hover  className="shadow-sm mb-0" >
               <CTableHead className="bg-light" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                 {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
                   <CTableRow key={headerGroup.id}>
@@ -521,12 +539,12 @@ const Dashboard = () => {
                 ))}
               </CTableHead>
 
-              <CTableBody h-100> 
+              <CTableBody >
                 {table.getRowModel().rows.map(row => (    // Devuelve las filas visibles según la paginación actual ("pageSize").
                                                           // rows.map(...) recorre cada fila, y row.getVisibleCells() da las celdas de esa  fila.
                   <CTableRow key={row.id}>
                     {row.getVisibleCells().map(cell => (
-                      <CTableDataCell key={cell.id} className="small text-xs" >
+                      <CTableDataCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante  flexrender) */}
                       </CTableDataCell>
                     ))}

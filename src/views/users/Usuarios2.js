@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CFormCheck, CInputGroup,  CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem,} from '@coreui/react'
 
-import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilPlus, cilSearch} from '@coreui/icons'
+import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical} from '@coreui/icons'
 
 import { CIcon } from '@coreui/icons-react';
 
@@ -21,7 +21,7 @@ import ReactDOM from 'react-dom';
 
 import { compactStyles,detailedStyles } from '../dashboard/pdfFormats/pdfStyles';
 
-import '../../css/PersonalStyles.css'  
+import '../../css/PersonalStyles.css'   /* Oculta todo excepto la tabla */
 
 
 import {
@@ -312,20 +312,20 @@ const Dashboard = () => {
   return (
     <CContainer>
      
-      <CCard className="mb-4 m" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+      <CCard className="mb-4" >
         
         {/* ----------  HEAD --------------- */}
-        <CCardHeader className="py-2 bg-white ">    
-          <CRow className=  "justify-content-between align-items-center py-0 pb-0 " > {/* Fila en la grilla.*/  }
+        <CCardHeader className="py-2 bg-white ">        {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+          <CRow className=  "justify-content-between align-items-center bg-white py-0 pb-0 bg-white " > {/* Fila en la grilla.*/  }
             
-            <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
-              <h4 id="titulo" className="mb-0 ">
+            <CCol xs={12} sm="auto" className=''>    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
+              <h4 id="titulo" className="card-title mb-0 ">
                 Administración de Usuarios
               </h4>
               <div className="small text-body-secondary"> Administradores del sistema</div>
             </CCol>
 
-            <CCol xs={12} sm="auto" className="text-md-end mt-2 mt-md-0">  {/* Columna para el botón Agregar Usuario */}
+            <CCol xs={12} sm="auto" className="align-self-end pb-1">  {/* Columna para el botón Agregar Usuario */}
               <CButton 
                 type="submit"
                 color="primary" 
@@ -333,7 +333,6 @@ const Dashboard = () => {
                 size="sm"
                 onClick={() => setVisibleXL(!visibleXL)}
                 >
-                <CIcon icon={cilPlus} className="me-1" />
                 Nuevo
               </CButton>
             </CCol>
@@ -353,110 +352,124 @@ const Dashboard = () => {
             </CModal>
           
           </CRow>
+
         </CCardHeader>
         {/* ----------  /HEAD --------------- */}
 
         {/* ----------  BODY --------------- */}
-        <CCardBody className="p-4 border border-light">
-
-          {/* ---------------------  Controles de paginación ------------------------- */}
-        
-          
-          <CAccordion flush className="small-accordion mb-4 "
-            activeItemKey={0}
-            >
+        <CCardBody className="border border-secundary ">
+          <div className="mx-0 px-0 my-0 py-0 h-100">
+          <CAccordion activeItemKey={0} flush className="bg-primary text-white">
             <CAccordionItem itemKey={1}>
-
-            <CRow className="justify-content-between mx-1 bg-light p-3  align-items-center">
-              <CCol xs={2} md={2} lg={4} className="bg-light"> 
-                <CAccordionHeader
+              <CRow className=  " align-items-center  justify-content-between bg-light">
+                
+                <CCol lg={6} className= ''>
+                <div  className=" py-0 px-2 " >
+                        <CInputGroup className="shadow-sm border-0 "  > {/* Sombra y sin borde */}
+                          <CInputGroupText id="basic-addon1" >Buscar</CInputGroupText>
+                          <CFormInput 
+                            placeholder="Ingrese el texo a buscar" 
+                            aria-label="Username" 
+                            aria-describedby="basic-addon1"
+                            value={searchTerm} // Búsqueda dinámica. Vinculamos el valor del input al estado
+                            onChange={(e) => setSearchTerm(e.target.value)} // Búsqueda dinámica. Actualizamos el estado al escribir
+                          />
+                        </CInputGroup>
+                      </div>
                   
-                  className='bg-transparent fw-semibold d-flex align-items-center'
-                  >
-                    Filtro avanzado</CAccordionHeader>
-              </CCol>
-            
-              <CCol></CCol>
-            
-            <CCol xs={2} md={2} lg={4} className="bg-light "> 
-              <CInputGroup className="input-group-sm">
-                <CInputGroupText id="inputGroup-sizing-sm">
-                  Buscar
-                </CInputGroupText>
-                <CFormInput
-                  type="text"
-                  placeholder="Ingrese el texto a buscar"
-                  aria-label="Sizing example input"
-                  aria-describedby="inputGroup-sizing-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ maxWidth: '200px' }} // Limita el ancho máximo
-                />
-              </CInputGroup>
-              
-
-            </CCol>
-            
-            </CRow>
+                </CCol>
                 
-              <CAccordionBody>
-              <CCol xs={2} md={2} lg={12} className="bg-light  align-items-center"> 
+                <CCol lg={3} className= ''>
                 
-                <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                  <CInputGroupText>Filtrar por</CInputGroupText>
-                  <CFormSelect 
-                    value={filterColumn1}
-                    onChange={(e) => setFilterColumn1(e.target.value)}
-                    className="form-select"
+                  <CAccordionHeader
+                    className="bg-white text-white p-2 d-flex align-items-center"
+                    style={{ height: "15px", fontWeight: "bold" }}
                   >
-                    <option value="name">Nombre</option>
-                    <option value="email">Mail</option>
-                    <option value="domicilio">Domicilio</option>
-                    <option value="telefono">Teléfono</option>
-                  </CFormSelect>
-                  <CFormInput
-                    placeholder="Valor a buscar"
-                    value={filterValue1}
-                    onChange={(e) => setFilterValue1(e.target.value)}
-                  />
-                  </CInputGroup >
 
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      value={filterColumn2}
-                      onChange={(e) => setFilterColumn2(e.target.value)}
-                      className="form-select"
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      placeholder="Valor a buscar"
-                      value={filterValue2}
-                      onChange={(e) => setFilterValue2(e.target.value)}
-                    />
-                  </CInputGroup>
-
-                    <CButton color="primary" size="sm" onClick={applyFilters}>
-                      Filtrar
-                    </CButton>
-
+                    Filtro Avanzado
+                  </CAccordionHeader>
+                
                 </CCol>
               
+              
+              
+              </CRow>
+              
+              <CAccordionBody>
+        
+                <div className="px-3 py-2 border border-bottom bg-light"> {/* Fondo claro y padding */}
+                  <CRow
+                    xs={{ cols: 1, gutter: 2 }}
+                    sm={{ cols: 2 }}
+                    lg={{ cols: 2 }}
+                    className="justify-content-en"
+                    >
+                    
+                    <CCol xs={12} sm={8} md={6} lg={6}> {/* Ancho progresivo */}
+                      <div  className=" py-1 " >
+                        <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                          <CInputGroupText>Filtrar por</CInputGroupText>
+                          <CFormSelect 
+                            value={filterColumn1}
+                            onChange={(e) => setFilterColumn1(e.target.value)}
+                            className="form-select"
+                          >
+                            <option value="name">Nombre</option>
+                            <option value="email">Mail</option>
+                            <option value="domicilio">Domicilio</option>
+                            <option value="telefono">Teléfono</option>
+                          </CFormSelect>
+                          <CFormInput
+                            placeholder="Valor a buscar"
+                            value={filterValue1}
+                            onChange={(e) => setFilterValue1(e.target.value)}
+                          />
+                        </CInputGroup >
+
+                        <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
+                          <CInputGroupText>Filtrar por</CInputGroupText>
+                          <CFormSelect
+                            value={filterColumn2}
+                            onChange={(e) => setFilterColumn2(e.target.value)}
+                            className="form-select"
+                          >
+                            <option value="name">Nombre</option>
+                            <option value="email">Mail</option>
+                            <option value="domicilio">Domicilio</option>
+                            <option value="telefono">Teléfono</option>
+                          </CFormSelect>
+                          <CFormInput
+                            placeholder="Valor a buscar"
+                            value={filterValue2}
+                            onChange={(e) => setFilterValue2(e.target.value)}
+                          />
+                        </CInputGroup>
+
+                        <CButton color="primary" size="sm" onClick={applyFilters}>
+                          Filtrar
+                        </CButton>
+
+
+                      </div>
+                    </CCol>
+
+                    <CCol></CCol>
+
+                    <CCol xs={12} sm={8} md={6} lg={4}> {/* Ancho progresivo */}
+                      
+                    </CCol>
+                  </CRow>
+                </div>
+          
               </CAccordionBody>
             </CAccordionItem>
-           
           </CAccordion>
-          
+          </div>
 
-          
-          <div></div>
-          
-            <CRow className="justify-content-end mb-3 ">
-              <CCol  xs="auto"  className='' >
+
+          <div className='bg-white'>
+            <CRow className="justify-content-end  ">
+              <CCol  md={4}  className='text-end px-0 ' >
                 <div className='d-flex justify-content-end gap-2'>
                   {/* ----------  Botón para imprimir --------------- */}
                   <CButton 
@@ -490,53 +503,63 @@ const Dashboard = () => {
                 </div>  
               </CCol>  
             </CRow>
+          </div>
             
           
 
+          <div className="justify-content-center py-1 overflow-auto">
+
+          <CRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 ">
+                  
+            <CCol  md={4}  className='text-end px-0 ' >
+            </CCol>  
+
+          </CRow>
+          
           {/* ----------------------------------- TABLA ----------------------------------- */}
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
-            <CTable id='mainTable' hover  className="shadow-sm mb-0 border border-light" >
-              <CTableHead className="bg-light" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
-                  <CTableRow key={headerGroup.id}>
-                      {headerGroup.headers.map(column => (       // Recorre las columnas y devuelve un array de los headers
-                      <CTableHeaderCell 
-                        key={column.id}
-                        onClick={column.column.getToggleSortingHandler()} // encabezado clicable para ordenar
-                        style={{ cursor: column.column.getCanSort() ? 'pointer' : 'default' }} // Cursor pointer si es ordenable
-                        className='bg-light '
-                      >
-                        {flexRender(column.column.columnDef.header, column.getContext())} {/*Renderiza los header con flexRender*/}
-                        { column.column.getCanSort() ? {        // Si la columna no es ordenable, no muestra icono
-                            asc: <CIcon icon={cilArrowTop} size="sm"/> , 
-                            desc: <CIcon icon={cilArrowBottom} size="sm"/>,
-                          } [column.column.getIsSorted()] || <CIcon icon= {cilSwapVertical} className="text-body-secondary" />
-                          : null 
-                        }             
-
-                      </CTableHeaderCell>
+          <CTable id='mainTable' hover responsive className="mb-3 border shadow-sm" >
+            <CTableHead className="px-4 py-2 ">
+              {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
+                <CTableRow className="justify-content-end pt-1 pb-2 mt-1 mb-0 me-0 " key={headerGroup.id}>
+                  {headerGroup.headers.map(column => (       // Recorre las columnas y devuelve un array de los headers
+                    
+                    <CTableHeaderCell 
+                      key={column.id}
+                      onClick={column.column.getToggleSortingHandler()} // encabezado clicable para ordenar
+                      style={{ cursor: column.column.getCanSort() ? 'pointer' : 'default' }} // Cursor pointer si es ordenable
+                      className='bg-light '
+                    >
+                      {flexRender(column.column.columnDef.header, column.getContext())} {/*Renderiza los header con flexRender*/}
+                      { column.column.getCanSort() ? {        // Si la columna no es ordenable, no muestra icono
+                          asc: <CIcon icon={cilArrowTop} size="sm"/> , 
+                          desc: <CIcon icon={cilArrowBottom} size="sm"/>,
+                        } [column.column.getIsSorted()] || <CIcon icon= {cilSwapVertical} className="text-body-secondary" />
+                        : null 
+                      }             
+                      
+                    </CTableHeaderCell>
                   ))}
-                  </CTableRow>
-                ))}
-              </CTableHead>
+                </CTableRow>
+              ))}
+            </CTableHead>
 
-              <CTableBody h-100> 
-                {table.getRowModel().rows.map(row => (    // Devuelve las filas visibles según la paginación actual ("pageSize").
-                                                          // rows.map(...) recorre cada fila, y row.getVisibleCells() da las celdas de esa  fila.
-                  <CTableRow key={row.id}>
-                    {row.getVisibleCells().map(cell => (
-                      <CTableDataCell key={cell.id} className="small text-xs" >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante  flexrender) */}
-                      </CTableDataCell>
-                    ))}
-                  </CTableRow>
-                ))}
-              </CTableBody>
+            <CTableBody >
+              {table.getRowModel().rows.map(row => (    // Devuelve las filas visibles según la paginación actual ("pageSize").
+                                                        // rows.map(...) recorre cada fila, y row.getVisibleCells() da las celdas de esa fila.
+                <CTableRow key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <CTableDataCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante flexrender) */}
+                    </CTableDataCell>
+                  ))}
+                </CTableRow>
+              ))}
+            </CTableBody>
 
 
-              
-            </CTable>
+          
+          </CTable>
           </div>  
         </CCardBody>
         {/* ----------  /BODY --------------- */}
@@ -544,19 +567,11 @@ const Dashboard = () => {
 
         
         {/* ----------  FOOTER --------------- */}
-        <CCardFooter className="bg-white border-top p-3" 
-          style={{ 
-            position: 'sticky',          // Usamos 'sticky' para que se mantenga en el fondo del contenedor padre
-            bottom: 0,                  // Se fija en la parte inferior
-            zIndex: 1,                  // Asegura que esté sobre el contenido desplazable
-            //width: '100%',              // Garantiza que ocupe todo el ancho del contenedor
-            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' // Sombra sutil para diferenciarlo
-          }} 
-        >
-          <CRow className=  "justify-content-between text-muted"> 
+        <CCardFooter className="" >
+          <CRow className=  "justify-content-between"> 
 
             {/* ---------------------  Controles de paginación ------------------------- */}
-            <CCol xs={12} md={4} className="mb-2 mb-md-0" >    
+            <CCol xs= 'auto' className="" >    
               
                 <CPagination align="start" size="sm" aria-label="Page navigation">
                   <CPaginationItem 

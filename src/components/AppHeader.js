@@ -52,17 +52,30 @@ const AppHeader = () => {
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
         <CHeaderNav className="d-none d-md-flex">
+          
           <CNavItem>
             <CNavLink to="/dashboard" as={NavLink}>
               Dashboard
             </CNavLink>
           </CNavItem>
+          
           <CNavItem>
-            <CNavLink href="#">Users</CNavLink>
+            <CNavLink href="#">Usuarios</CNavLink>
           </CNavItem>
+
           <CNavItem>
-            <CNavLink href="#">Settings</CNavLink>
+            <CNavLink to="/usuarios2" as={NavLink}>
+              Usuarios2
+            </CNavLink>
           </CNavItem>
+                    
+          <CNavItem>
+            <CNavLink to="/estilos" as={NavLink}>
+              Estilos
+            </CNavLink>
+          </CNavItem>
+        
+        
         </CHeaderNav>
         <CHeaderNav className="ms-auto">
           <CNavItem>

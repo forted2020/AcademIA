@@ -400,52 +400,109 @@ const Dashboard = () => {
             </CRow>
                 
               <CAccordionBody>
-              <CCol xs={2} md={2} lg={12} className="bg-light  align-items-center"> 
-                
-                <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                  <CInputGroupText>Filtrar por</CInputGroupText>
-                  <CFormSelect 
-                    value={filterColumn1}
-                    onChange={(e) => setFilterColumn1(e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="name">Nombre</option>
-                    <option value="email">Mail</option>
-                    <option value="domicilio">Domicilio</option>
-                    <option value="telefono">Teléfono</option>
-                  </CFormSelect>
-                  <CFormInput
-                    placeholder="Valor a buscar"
-                    value={filterValue1}
-                    onChange={(e) => setFilterValue1(e.target.value)}
-                  />
+              
+                <CRow
+                  className="shadow-sm py-2 border size=sm bg-light"
+                >
+                <CCol xs={6} md={6} lg={6} className="bg-light  align-items-center"> 
+                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                    <CInputGroupText>Filtrar por</CInputGroupText>
+                      <CFormSelect 
+                        className="form-select w-15"
+                        value={filterColumn1}
+                        onChange={(e) => setFilterColumn1(e.target.value)}
+                      >
+                        <option value="name">Nombre</option>
+                        <option value="email">Mail</option>
+                        <option value="domicilio">Domicilio</option>
+                        <option value="telefono">Teléfono</option>
+                      </CFormSelect>
+                        <CFormInput
+                          className="form-input w-25"
+                          placeholder="Valor a buscar"
+                          value={filterValue1}
+                          onChange={(e) => setFilterValue1(e.target.value)}
+                        />
                   </CInputGroup >
 
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm mb-3">
+                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
                     <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      value={filterColumn2}
-                      onChange={(e) => setFilterColumn2(e.target.value)}
-                      className="form-select"
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      placeholder="Valor a buscar"
-                      value={filterValue2}
-                      onChange={(e) => setFilterValue2(e.target.value)}
-                    />
-                  </CInputGroup>
+                      <CFormSelect 
+                        className="w-15"
+                        value={filterColumn1}
+                        onChange={(e) => setFilterColumn1(e.target.value)}
+                      >
+                        <option value="name">Nombre</option>
+                        <option value="email">Mail</option>
+                        <option value="domicilio">Domicilio</option>
+                        <option value="telefono">Teléfono</option>
+                      </CFormSelect>
+                        <CFormInput
+                          className="w-25"
+                          placeholder="Valor a buscar"
+                          value={filterValue1}
+                          onChange={(e) => setFilterValue1(e.target.value)}
+                        />
+                  </CInputGroup >
 
-                    <CButton color="primary" size="sm" onClick={applyFilters}>
-                      Filtrar
-                    </CButton>
+                      <CButton 
+                        color="primary" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={applyFilters}>
+                        Filtrar
+                      </CButton>
 
                 </CCol>
-              
+
+                <CCol xs={6} md={6} lg={6} className="bg-light  align-items-center"> 
+                <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                    <CInputGroupText>Filtrar por</CInputGroupText>
+                      <CFormSelect 
+                        className="form-select w-15"
+                        value={filterColumn1}
+                        onChange={(e) => setFilterColumn1(e.target.value)}
+                      >
+                        <option value="name">Nombre</option>
+                        <option value="email">Mail</option>
+                        <option value="domicilio">Domicilio</option>
+                        <option value="telefono">Teléfono</option>
+                      </CFormSelect>
+                        <CFormInput
+                          className="form-select w-25"
+                          placeholder="Valor a buscar"
+                          value={filterValue1}
+                          onChange={(e) => setFilterValue1(e.target.value)}
+                        />
+                  </CInputGroup >
+
+                    <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
+                    <CInputGroupText>Filtrar por</CInputGroupText>
+                      <CFormSelect 
+                        className="form-select w-15"
+                        value={filterColumn1}
+                        onChange={(e) => setFilterColumn1(e.target.value)}
+                      >
+                        <option value="name">Nombre</option>
+                        <option value="email">Mail</option>
+                        <option value="domicilio">Domicilio</option>
+                        <option value="telefono">Teléfono</option>
+                      </CFormSelect>
+                        <CFormInput
+                          className="form-select w-25"
+                          placeholder="Valor a buscar"
+                          value={filterValue1}
+                          onChange={(e) => setFilterValue1(e.target.value)}
+                        />
+                    </CInputGroup >
+
+
+
+
+                </CCol>
+
+
+                </CRow>
               </CAccordionBody>
             </CAccordionItem>
            

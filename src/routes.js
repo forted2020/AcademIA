@@ -8,7 +8,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 const Usuarios = React.lazy(() => import('../src/views/users/Usuarios'))
-const Usuarios2 = React.lazy(() => import('../src/views/users/Usuarios2'))
+const Usuarios2 = React.lazy(() => import('./views/users/Usuarios2'))
 const Estilos = React.lazy(() => import('../src/views/users/Estilos'))
 
 

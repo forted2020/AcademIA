@@ -2,18 +2,42 @@
 // FormAltaUsuario.js
 
 import React,  { useState, useEffect }  from 'react'
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { CFormInput, CForm, CCol, CRow, CFormSelect, CButton, CContainer, CCard, CCardBody, CCardFooter } from '@coreui/react';
 import { CInputGroup, CInputGroupText,CDropdown,CDropdownMenu, CDropdownItem, CDropdownToggle,} from '@coreui/react';
 
+import { createUser, updateUser, getUser } from '../api/api'
 
 
-const FormAltaUsuario = ({ id, label, placeholder }) => {
+const FormAltaUsuario = ({ label, placeholder,name, password, setName, setPassword, handleSaveUser, editId, resetForm  }) => {
+  
+  const navigate = useNavigate(); // para redirigir al usuario tras guardar los datos
+  const { id } = useParams(); // Obtiene parámetros dinámicos de la URL (el id en este caso) si está presente
   
   const [dataForm, setDataForm] = useState({
     dataNombre: '',
-    domicilio: ''
+    domicilio: '',
+    provincia: '',
+    localidad: '',
+    dni: '',
+    fechaNacimiento: '',
+    email: '',
+    password: '',
   })
+
+// Carga de datos cuando id está presente
+  // Si hay un id en la URL, se llama a getUser(id) para obtener los datos del usuario y llenar el formulario.
+    useEffect(() => {
+    const loadUser = async () => {
+      if (id) {
+        const { data } = await getUser(id);
+        setFormData(data);
+      }
+    };
+    loadUser();
+  }, [id]);
+
   
 
   // Función para manejar los cambios en los inputs
@@ -24,40 +48,68 @@ const FormAltaUsuario = ({ id, label, placeholder }) => {
       [name]: value,   // Actualiza solo el campo correspondiente
     }))}
     
-    // Función para verificar los valores
-    const handleSubmit = (e) => {
+   // Manejar cambios en los campos originales
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setDataForm((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+    // Manejar el envío del formulario
+    const handleSubmit = async (e) => {
       e.preventDefault();
-      console.log('Formulario enviado con los siguientes datos:');
-      console.table(dataForm); // Muestra los datos en una tabla legible
+      console.log('Datos enviados a la API:', dataForm);
+
+      try {
+        if (id) {
+          await updateUser(id, dataForm);
+        } else {
+          await createUser(dataForm);
+        }
+        navigate('/');
+      } catch (error) {
+        alert(error.response?.data?.detail || 'Error al guardar');
+        console.error('Error en la solicitud:', error);
+      }
+      
+      const systemUserData = { name, password }; // Define solo los datos que quieres enviar
+      console.log('Datos enviados a la API:', systemUserData); // Corrige el log
+      console.log('Datos de usuario de sistema:', systemUserData); // Usa la misma variable para consistencia
+      //handleSaveUser(systemUserData); // Envía solo name y password
+
+
     };
+
+
+
+  // Manejar el botón "Cancelar" o "Reiniciar"
+  const handleReset = () => {
+    setDataForm({
+      domicilio: '',
+      provincia: '',
+      localidad: '',
+      dni: '',
+      fechaNacimiento: '',
+      email: '',
+      dataNombre: '',
+      password: ''
+    });
+    if (editId) {
+      resetForm(); // Si está en modo edición, limpia también name y password
+    } else {
+      setName(''); // Limpia los campos de usuario de sistema
+      setPassword('');
+    }
+  };
+
   
- 
-  
-  /*
-  const guardar = () => {
-  //Leemos los datos de data/datos.json
-    useEffect(() => {
-      // Realizar la solicitud fetch
-      fetch('../../../data/datos.json')
-        .then(response => response.json())  // Convertimos la respuesta a formato JSON
-        .then(data => {
-          setTableData(data);  // Actualizamos el estado con los datos cargados
-          })
-        .catch(error => {
-          console.error('Error al cargar los datos:', error);
-          });
-        })}
-  
-  */
-
-
-
-
-
   return (
     <CContainer className="mb-4 ">
       <CCard className="mb-4 ">
-        <CForm className="row g-3 " onSubmit={() => {handleSubmit(); dataForm  }}>    {/* No aplicar estilos al CForm*/}
+      <h2>{id ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
+        <CForm className="row g-3 " onSubmit={() => {handleSubmit}}>    {/* No aplicar estilos al CForm*/}
           
           <CCardBody className="p-3 ">
     
@@ -73,6 +125,20 @@ const FormAltaUsuario = ({ id, label, placeholder }) => {
                 onChange={handleInputNombre} // Actualiza el estado con cada cambio
               />
             </CInputGroup>
+
+            <CInputGroup className="mb-3">
+              <CInputGroupText id="inputGTNombre">Contraseña</CInputGroupText>
+              <CFormInput 
+                placeholder="" 
+                aria-label="Password"
+                name='dataPasswordNombre'
+                aria-describedby="basic-addon1"
+                value={dataForm.password}
+                onChange={handleInputNombre} // Actualiza el estado con cada cambio
+              />
+            </CInputGroup>
+
+
 
             <CInputGroup className="mb-3">
               <CInputGroupText id="inputDomicilio">Domicilio</CInputGroupText>
@@ -111,9 +177,12 @@ const FormAltaUsuario = ({ id, label, placeholder }) => {
               <CInputGroupText id="inputEmail">Email</CInputGroupText>
               <CFormInput placeholder="" aria-label="Email" type="email" aria-describedby="basic-addon1" />
             </CInputGroup>
+          </c-input-group>
 
+          {/* Nueva sección para usuarios de sistema */}
+          <hr /> {/* Separador visual */}
+            <h5>Datos de Usuario de Sistema</h5>
 
-            </c-input-group>
         </CCardBody>
       
 
@@ -129,16 +198,26 @@ const FormAltaUsuario = ({ id, label, placeholder }) => {
                 className="text-white me-2 ms-2 mt-3 mb-3"  
                 color="success" 
                 type="submit"
-                
               >
-                Guardar
+              {/*{editId ? 'Actualizar' : 'Guardar'} */}
+              Guardar
               </CButton>
             
-              <CButton className="text-white me-2 ms-2 mt-3 mb-3" color="danger" type="submit">
+              <CButton 
+                className="text-white me-2 ms-2 mt-3 mb-3" 
+                color="danger" 
+                //onClick={editId ? resetForm : handleReset}
+                onClick={handleReset}
+              >
                 Cancelar
               </CButton>
           
-              <CButton className="me-2 ms-2 mt-3 mb-3" color="secondary" type="reset">
+              <CButton 
+                className="me-2 ms-2 mt-3 mb-3" 
+                color="secondary" 
+                type="reset"
+                onClick={handleReset}
+              >
                 Reiniciar
               </CButton>
             

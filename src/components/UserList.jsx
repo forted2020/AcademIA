@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getUsers, deleteUser } from '../../api/api' 
+import { getUsers, deleteUser } from '../api/api' 
 //  /services/api';
 
 const UserList = () => {
@@ -26,7 +26,7 @@ const UserList = () => {
 
   return (
     <div className="user-list">
-      <h2>Usuarios2</h2>
+      <h2>Usuarios</h2>
       <Link to="/create" className="new-user-link">Nuevo Usuario</Link>
       
       <table>

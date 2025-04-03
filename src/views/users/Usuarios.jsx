@@ -31,6 +31,7 @@ import {
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/api.js'; // Importamos las funciones de la API
 
 import ModalConfirmDel from '../../modals/modalConfirmDel.jsx'; // Importa el modal
+import ModalNewEdit from '../../modals/ModalNewEdit.jsx'; // Importa el modal
 
 
 
@@ -126,8 +127,8 @@ const getColumns = (confirmDelete, handleClickEditar) => {
               <CIcon
                 icon={cilPencil}
                 size="lg"
-                className="fill-gray-500 " 
-                
+                className="fill-gray-500 "
+
               />
             </a>
 
@@ -253,6 +254,7 @@ const Dashboard = () => {
   const [userToDelete, setUserToDelete] = useState(null);      // ID del usuario a eliminar
 
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editModalVisible2, setEditModalVisible2] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
 
   //  --------------------- Obtener datos iniciales   ---------------------    
@@ -280,41 +282,22 @@ const Dashboard = () => {
       setDeleteModalVisible(false);     // Cierra el modal tras eliminar
       setUserToDelete(null);            // Limpia el ID del usuario a eliminar
       console.log(`Usuario con ID ${id} eliminado`);
-    } catch (error) { console.error ('Error al eliminar: ', error )}
+    } catch (error) { console.error('Error al eliminar: ', error) }
   }
 
-  /*  
-  const handleDelete = (id) => {
-    deleteUser(id)
-      .then(() => {
-        setTableData(prevData => prevData.filter(user => user.id !== id));
-        setDeleteModalVisible(false);     // Cierra el modal tras eliminar
-        setUserToDelete(null);            // Limpia el ID del usuario a eliminar
-        console.log(`Usuario con ID ${id} eliminado`);
-      })
-      .catch(error => console.error('Error al eliminar: ', error))
-  }
-  */
 
-  //  ---------------------  Arir el modal de confirmación ---------------------  
+  //  ---------------------  Arir el modal de confirmación de eliminacion de usuario ---------------------  
   const confirmDelete = (id) => {
     setUserToDelete(id); // Guarda el ID del usuario
     setDeleteModalVisible(true); // Muestra el modal
   };
 
 
-  //   ---------------------    Editar el usuario (prellenar formulario)    ---------------------  
+  //   ---------------------    Abrir modal de edición    ---------------------  
   const handleClickEditar = (user) => {
     setUserToEdit(user); // Guardar los datos del usuario a editar
-    setSystemName(user.name);
-    setSystemPassword(user.password);
-    setSystemEditId(user.id);
     setEditModalVisible(true); // Mostrar el modal de edición
   };
-
-
-
-
 
 
 
@@ -425,33 +408,35 @@ const Dashboard = () => {
         setTableData(prev => [...prev, response.data]);
       }
       resetSystemForm();
-      setEditModalVisible(false); // Cerrar modal si está abierto
+      setEditModalVisible2(false); // Cerrar modal si está abierto
     } catch (error) {
       console.error('Error al guardar usuario:', error);
     }
   };
 
-  /*
-  const handleSaveSystemUser = () => {
-    const userData = { name: systemName, password: systemPassword };
-    if (systemEditId) {
-      updateUser(systemEditId, userData)
-        .then(response => {
-          setSystemUsers(systemUsers.map(user => (user.id === systemEditId ? response.data : user)));
-          resetSystemForm();
-        })
-        .catch(error => console.error('Error al actualizar:', error));
-    } else {
-      createUser(userData)
-        .then(response => {
-          setSystemUsers([...systemUsers, response.data]);
-          setTableData(prev => [...prev, response.data]); // Agrega el usuario a la tabla
-          resetSystemForm();
-        })
-        .catch(error => console.error('Error al crear:', error));
+
+  // Guardar usuario (crear o actualizar)
+  const handleSaveUser = async (userData) => {
+    try {
+      if (userToEdit) {
+        const response = await updateUser(userToEdit.id, userData);
+        setTableData(prev =>
+          prev.map(user => (user.id === userToEdit.id ? response.data : user))
+        );
+      } else {
+        const response = await createUser(userData);
+        setTableData(prev => [...prev, response.data]);
+      }
+      setEditModalVisible(false);
+      setUserToEdit(null);
+    } catch (error) {
+      console.error('Error al guardar usuario:', error);
+      alert(error.response?.data?.detail || 'Error al guardar');
     }
   };
-  */
+
+
+
 
 
   const handleEditSystemUser = (user) => {
@@ -494,6 +479,8 @@ const Dashboard = () => {
 
 
   return (
+
+
     <CContainer>
 
       <CCard className="mb-1" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
@@ -521,53 +508,7 @@ const Dashboard = () => {
               </CButton>
             </CCol>
 
-            <CModal
-              size="xl"
-              visible={visibleXL}
-              onClose={() => setVisibleXL(false)}
-              aria-labelledby="OptionalSizesExample1"
-            >
-              <CModalHeader>
-                <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
-              </CModalHeader>
-              <CModalBody>
-                <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
-              </CModalBody>
-            </CModal>
 
-            <CModal
-              size="xl"
-              visible={editModalVisible}
-              onClose={() => {
-                setEditModalVisible(false);
-                resetSystemForm();
-              }}
-              aria-labelledby="EditUserModal"
-            >
-              <CModalHeader>
-                <CModalTitle id="EditUserModal">Editar usuario</CModalTitle>
-              </CModalHeader>
-              <CModalBody>
-                {userToEdit && (
-                  <FormAltaUsuario
-                    initialData={userToEdit}  // Pasa los datos del usuario al formulario
-                    onSubmit={(updateData) => {
-                      updateUser(userToEdit.id, updateData)
-                        .then((response) => {
-                          setTableData((prevData) =>
-                            prevData.map((u) =>
-                              u.id == userToEdit.id ? response.data : u
-                            )
-                          );
-                          setEditModalVisible(false)  // Cierro la modal
-                          setUserToEdit(null);  // limpio el usuario seleccionado
-                        })
-                        .catch((error) => console.error("Error al actualizar:", error));
-                    }}
-                  />
-                )}
-              </CModalBody>
-            </CModal>
 
 
           </CRow>
@@ -658,14 +599,14 @@ const Dashboard = () => {
                   </CInputGroup >
 
                   {/*
-                  <CButton
-                    color="primary"
-                    size="sm"
-                    className="mt-2"
-                    onClick={applyFilters}>
-                    Filtrar
-                  </CButton>
-                  */}
+                    <CButton
+                      color="primary"
+                      size="sm"
+                      className="mt-2"
+                      onClick={applyFilters}>
+                      Filtrar
+                    </CButton>
+                    */}
 
                 </CCol>
 
@@ -800,7 +741,7 @@ const Dashboard = () => {
                   <CTableRow key={row.id}>
                     {row.getVisibleCells().map(cell => (
                       <CTableDataCell key={cell.id} className="small text-xs" >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante  flexrender) */}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante    flexrender) */}
                       </CTableDataCell>
                     ))}
                   </CTableRow>
@@ -892,6 +833,17 @@ const Dashboard = () => {
 
       </CCard>
 
+      {/* Modal Nuevo 
+      <ModalNewEdit
+        visible={visibleXL}
+        onClose={() => setVisibleXL(false)}
+        title="Nuevo usuario"
+        initialData={{ name: '', password: '' }} // Datos vacíos para "Nuevo"
+        onSave={handleSaveUser}
+      />
+      */}
+
+
       {/* Modal de confirmación */}
       <ModalConfirmDel
         visible={deleteModalVisible}
@@ -900,9 +852,96 @@ const Dashboard = () => {
         userId={userToDelete}
       />
 
+      {/* Modal Editar */}
+      <ModalNewEdit
+        visible={editModalVisible}
+        onClose={() => {
+          setEditModalVisible(false);
+          setUserToEdit(null);
+        }}
+        title='Editar usuario'
+        initialData={userToEdit || {
+          name: '',
+          domicilio: '',
+          telefono: '',
+          email: '',
+          password: '',
+        }}
+        onSave={handleSaveUser}
+      />
+
+      {/* Modal Eliminar */}
+      <ModalConfirmDel
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        userId={userToDelete}
+      />
+
+
+      {/*  --------------- Modal Nuevo Usuario ---------------  */}
+      <CModal
+        size="xl"
+        visible={visibleXL}
+        onClose={() => setVisibleXL(false)}
+        aria-labelledby="OptionalSizesExample1"
+      >
+        <CModalHeader>
+          <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
+        </CModalBody>
+      </CModal>
+
+      {/*  --------------- Modal Editar Usuario ---------------  */}
+      <CModal
+        id="EditUserModal"
+        size="xl"
+        visible={editModalVisible2}
+        onClose={() => {
+          setEditModalVisible2(false);
+          resetSystemForm();
+        }}
+        aria-labelledby="EditUserModal"
+      >
+        <CModalHeader>
+        </CModalHeader>
+        <CModalBody>
+          <ModalNewEdit />
+          {/*
+          {userToEdit && (
+            <ModalNewEdit
+              initialData={userToEdit}  // Pasa los datos del usuario al formulario
+              onSubmit={(updateData) => {
+                updateUser(userToEdit.id, updateData)
+                  .then((response) => {
+                    setTableData((prevData) =>
+                      prevData.map((u) =>
+                        u.id == userToEdit.id ? response.data : u
+                      )
+                    );
+                    setEditModalVisible2(false)  // Cierro la modal
+                    setUserToEdit(null);  // limpio el usuario seleccionado
+                  })
+                  .catch((error) => console.error("Error al actualizar:", error));
+              }}
+            />
+          )}
+        */}
+        </CModalBody>
+      </CModal>
+
+
 
     </CContainer>
   )
+
+
 }
+
 
 export default Dashboard

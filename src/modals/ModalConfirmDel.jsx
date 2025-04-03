@@ -12,6 +12,8 @@
 import React from 'react'
 import { CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter, CButton } from '@coreui/react'
 
+
+
 const ModalConfirmDel = ({visible, onClose, onConfirm, userId}) => {
   return (
     <>

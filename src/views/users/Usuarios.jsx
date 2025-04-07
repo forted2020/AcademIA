@@ -344,13 +344,24 @@ const Dashboard = () => {
     if (filterValue2) {
       filters.push({ id: filterColumn2, value: filterValue2 });
     }
+    if (filterValue3) {
+      filters.push({ id: filterColumn3, value: filterValue3 });
+    }
+    if (filterValue4) {
+      filters.push({ id: filterColumn4, value: filterValue4 });
+    }
     setColumnFilters(filters); // Actualiza los filtros en TanStack
   };
 
   // Función para aplicar filtros avanzados de forma dinámica
   useEffect(() => {
     applyFilters();
-  }, [filterValue1, filterColumn1, filterValue2, filterColumn2]);
+  }, [
+      filterValue1, filterColumn1, 
+      filterValue2, filterColumn2,
+      filterValue3, filterColumn3,
+      filterValue4, filterColumn4
+    ]);
 
 
 
@@ -501,7 +512,10 @@ const Dashboard = () => {
                 color="primary"
                 className="shadow-sm"
                 size="sm"
-                onClick={() => setVisibleXL(!visibleXL)}
+                // onClick={() => setVisibleXL(!visibleXL)}
+                // onClick={() => setEditModalVisible2(!editModalVisible2)}
+                onClick={() => handleClickEditar('')}
+                
               >
                 <CIcon icon={cilPlus} className="me-1" />
                 Nuevo
@@ -623,9 +637,8 @@ const Dashboard = () => {
                       <option value="domicilio">Domicilio</option>
                       <option value="telefono">Teléfono</option>
                     </CFormSelect>
-
                     <CFormInput
-                      className="form-select w-25"
+                      className="form-input w-25"
                       placeholder="Valor a buscar"
                       value={filterValue3}
                       onChange={(e) => setFilterValue3(e.target.value)}
@@ -635,7 +648,7 @@ const Dashboard = () => {
                   <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
                     <CInputGroupText>Filtrar por</CInputGroupText>
                     <CFormSelect
-                      className="form-select w-15"
+                      className="w-15"
                       value={filterColumn4}
                       onChange={(e) => setFilterColumn4(e.target.value)}
                     >
@@ -645,17 +658,15 @@ const Dashboard = () => {
                       <option value="telefono">Teléfono</option>
                     </CFormSelect>
                     <CFormInput
-                      className="form-select w-25"
+                      className="w-25"
                       placeholder="Valor a buscar"
                       value={filterValue4}
                       onChange={(e) => setFilterValue4(e.target.value)}
                     />
                   </CInputGroup >
 
-
-
-
                 </CCol>
+                
 
 
               </CRow>
@@ -833,16 +844,6 @@ const Dashboard = () => {
 
       </CCard>
 
-      {/* Modal Nuevo 
-      <ModalNewEdit
-        visible={visibleXL}
-        onClose={() => setVisibleXL(false)}
-        title="Nuevo usuario"
-        initialData={{ name: '', password: '' }} // Datos vacíos para "Nuevo"
-        onSave={handleSaveUser}
-      />
-      */}
-
 
       {/* Modal de confirmación */}
       <ModalConfirmDel
@@ -859,7 +860,8 @@ const Dashboard = () => {
           setEditModalVisible(false);
           setUserToEdit(null);
         }}
-        title='Editar usuario'
+        
+        title={!userToEdit ? 'Nuevo usuario' : 'Editar usuario'}  // ! verifica si userToEdit es "falsy" (null, undefined, '', 0, etc.).
         initialData={userToEdit || {
           name: '',
           domicilio: '',

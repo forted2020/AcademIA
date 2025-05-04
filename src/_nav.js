@@ -1,39 +1,84 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilBell,
-  cilCalculator,
-  cilChartPie,
-  cilCursor,
-  cilDescription,
-  cilDrop,
-  cilExternalLink,
-  cilNotes,
-  cilPencil,
-  cilPuzzle,
-  cilSpeedometer,
-  cilStar,
-  cilUser,
-} from '@coreui/icons'
-import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome } from '@coreui/icons'
+import { CNavItem, CNavTitle, CNavGroup,  } from '@coreui/react'
 
-const _nav = [
-  {
-    component: CNavTitle,
-    name: 'Administración',
-  },
 
-  {
-    component: CNavItem,
-    name: 'Usuarios',
-    to: '/Usuarios',
-    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-  },  
+// Función que genera ítems del menú lateral dinámicamente según tipos_usuario
+const getNavItems = () => {
+  const user = JSON.parse(localStorage.getItem('user')) || { tipos_usuario: [] };
+  const tipos_usuario = user.tipos_usuario || [];
 
- 
+  const navItems = [
+    {
+      component: CNavTitle,
+      name: 'AcademIA',
+    },
+    {
+      component: CNavItem,
+      name: 'Inicio',
+      to: '/inicio',
+      icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
+    },
+    {
+      component: CNavGroup,   // Categoría desplegable
+      name: 'Estudiantes',
+      to: '/estudiante',
+      icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: 'Trayectoria',
+          to: '/estudiante',
+        },
+      ],
+    },
+    {
+      component: CNavItem,
+      name: 'Cerrar Sesión',
+      to: '#',  // No navega, dispara el modal
+      icon: <CIcon icon={cilAccountLogout} customClassName="nav-icon" />,
+      onClick: () => window.dispatchEvent(new CustomEvent('logout-request')),   // Dispara evento personalizado
+    },
+  ];
 
   
- 
-]
+  if (tipos_usuario.includes('ADM')) {
+    navItems.splice(2, 0, { // Inserta Usuarios después de AcademIA y antes de Estudiante
+      component: CNavGroup,
+      name: 'Usuarios',
+      to: '/usuarios',
+      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+      items: [          // array con subcategorías CNavItem
+        {
+          component: CNavItem,
+          name: 'Gestión de Usuarios',
+          to: '/usuarios',
+        },
+      ],
+    });
+  }
 
-export default _nav
+  if (tipos_usuario.includes('ADM')) {
+    navItems.splice(3, 0, { 
+      component: CNavGroup,
+      name: 'Docentes',
+      to: '/docentes',
+      icon: <CIcon icon={cilBook} customClassName="nav-icon" />,
+      items: [          // array con subcategorías CNavItem
+        {
+          component: CNavItem,
+          name: 'Gestión de Docentes',
+          to: '/docentes',
+        },
+      ],
+    });
+  }
+
+
+  return navItems;
+};
+
+
+export default getNavItems;
+

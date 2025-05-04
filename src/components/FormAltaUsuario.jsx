@@ -82,7 +82,7 @@ const FormAltaUsuario = ({ initialData, onSubmit, onCancel }) => {       // mane
         <CCardBody className="p-3 ">
 
           <CInputGroup className="mb-3">
-            <CInputGroupText id="inputGTNombre">Apellido y Nombre</CInputGroupText>
+            <CInputGroupText id="inputGTNombre">Apellido y Nombreeeeeeeeeeeeeee</CInputGroupText>
             <CFormInput
               placeholder=""
               aria-label="Nombre"

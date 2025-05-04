@@ -19,6 +19,7 @@ import {
   cilSettings,
   cilTask,
   cilUser,
+  cilAccountLogout,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
@@ -84,10 +85,19 @@ const AppHeaderDropdown = () => {
           </CBadge>
         </CDropdownItem>
         <CDropdownDivider />
-        <CDropdownItem href="#">
-          <CIcon icon={cilLockLocked} className="me-2" />
-          Lock Account
+        
+        <CDropdownItem
+          href="#" // Evita navegación directa
+          onClick={(e) => {
+            e.preventDefault(); // Evita acción por defecto del enlace
+            console.log('AppHeaderDropdown: Disparando logout-request');
+            window.dispatchEvent(new CustomEvent('logout-request'))} // Dispara evento para modal
+          }
+        >
+          <CIcon icon={cilAccountLogout} className="me-2" /> {/* Ícono de logout */}
+          Cerrar Sesión
         </CDropdownItem>
+
       </CDropdownMenu>
     </CDropdown>
   )

@@ -3,7 +3,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/api.js';
-import FormAltaUsuario from '../../components/FormAltaUsuario.jsx';
 import Usuarios from '../users/Usuarios.jsx';
 
 function UserManagement() {
@@ -64,15 +63,7 @@ function UserManagement() {
   return (
     <div style={{ padding: '20px' }}>
       <h1>Gestión de Usuarios</h1>
-      <FormAltaUsuario
-        name={name}
-        password={password}
-        setName={setName}
-        setPassword={setPassword}
-        handleSaveUser={handleSaveUser}
-        editId={editId}
-        resetForm={resetForm}
-      />
+
       <Usuarios
         users={users}
         handleEditUser={handleEditUser}

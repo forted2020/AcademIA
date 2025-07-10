@@ -224,7 +224,7 @@ const generatePDF = async (table, format = 'compact', download = false) => {
 
 
 const Dashboard = () => {
-  const [tableData, setTableData] = useState([])    //  Estado para manejo de los datos de la tabla
+  const [tableData, setTableData] = useState([])    //  State para manejo de los datos de la tabla
 
   const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda global
   const [visibleXL, setVisibleXL] = useState(false);

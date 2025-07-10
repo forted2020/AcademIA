@@ -61,8 +61,8 @@ function UserManagement() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Gestión de Usuarios</h1>
+    <div style={{ padding: '10px' }}>
+      <h1 className="ms-1" >Usuarios</h1>
 
       <Usuarios
         users={users}

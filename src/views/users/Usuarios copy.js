@@ -197,7 +197,7 @@ const MyDocument = () => (
   return (
     <CContainer>
      
-      <CCard className="mb-4">
+      <CCard className="mb-1">
         <CCardBody className="p-3">        {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
           <CRow className=  "justify-content-between align-items-center"> {/* Fila en la grilla. Organiza las CCol hor. */  }
             

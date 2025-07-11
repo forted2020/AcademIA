@@ -7,7 +7,7 @@ import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilP
 
 import { CIcon } from '@coreui/icons-react';
 
-import FormAltaUsuario from '../../components/FormAltaUsuario'; // Importa el componente TextInput FormAltaUsuario.js
+import FormAltaUsuario from '../../components/FormAltaUsuario.jsx'; // Importa el componente TextInput FormAltaUsuario.js
 import { CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 
 import { CSVLink } from "react-csv";
@@ -24,9 +24,10 @@ import { compactStyles,detailedStyles } from '../dashboard/pdfFormats/pdfStyles'
 import '../../css/PersonalStyles.css'  
 
 
-import {
-  createColumnHelper, flexRender, getCoreRowModel, useReactTable, 
-  getPaginationRowModel, getSortedRowModel, getFilteredRowModel,} from '@tanstack/react-table'
+import {  createColumnHelper, flexRender, getCoreRowModel, useReactTable, 
+getPaginationRowModel, getSortedRowModel, getFilteredRowModel,} from '@tanstack/react-table'
+
+import { getUsers, createUser, updateUser, deleteUser } from '../../../src/api/api'; // Importamos las funciones de la API
 
 
 
@@ -213,8 +214,16 @@ const Dashboard = () => {
   const [filterColumn2, setFilterColumn2] = useState('domicilio'); // Columna predeterminada para el segundo filtro
   const [filterValue2, setFilterValue2] = useState(''); // Valor del segundo filtro
   const [columnFilters, setColumnFilters] = useState([]); // Estado de filtros para TanStack
-    
-  //Leemos los datos de data/datos.json
+
+  // Estados para API usuarios de sistema
+ const [systemUsers, setSystemUsers] = useState([]);
+ const [systemName, setSystemName] = useState('');
+ const [systemPassword, setSystemPassword] = useState('');
+ const [systemEditId, setSystemEditId] = useState(null);
+
+   
+ /*
+ //Leemos los datos de data/datos.json
   useEffect(() => {
     // Realizar la solicitud fetch
     fetch('../../../data/datos.json')
@@ -227,6 +236,46 @@ const Dashboard = () => {
         });
       
   }, []);  // El array vacío significa que esto solo se ejecuta al montar el componente
+  */
+ 
+
+  /*
+  // Cargar usuarios de sistema desde la API
+  useEffect(() => {
+    getUsers()
+      .then(response => {
+        console.log('Respuesta de la API:', response.data);
+        setSystemUsers(Array.isArray(response.data) ? response.data : [])
+      })
+      .catch(error => {
+        console.error('Error al obtener usuarios de sistema:', error.message);
+        console.error('Detalles del error:', error.response ? error.response.data : error);
+        setSystemUsers([]);
+      });
+  }, []);
+
+  */
+
+  //  Obtener datos de la base
+  const fetchUsers = async () => {          //  Define una función asíncrona fetchUsers que obtiene la lista de usuarios desde la API.
+    try {                                   //  try / catch: Maneja errores en caso de que la solicitud falle.
+      const { data } = await getUsers();  // Llama a getUsers y ddsestructura la respuesta para obtener solo el data (lista de usuarios).
+      setTableData(data);                     //  Actualiza el estado users con los datos obtenidos
+      //setTableData(prevData => [...prevData, ...data])
+    } catch (error) {
+      console.error('Error fetching users:', error);  //Si hay un error, lo muestra en la consola sin interrumpir la ejecución.
+    }
+  };
+
+  useEffect(() => { fetchUsers(); }, []);   //   Ejecuta la función fetchUsers cuando el componente se monta por primera vez. 
+                                            //   O sea, carga la lista inicial de usuarios al cargar la página.
+
+
+
+
+//setTableData(data);   setUsers(data);
+
+  
   
   /*  ---------------------  Paginación  -----------------------  */
   // Estado de paginación
@@ -239,6 +288,9 @@ const Dashboard = () => {
   /*  ---------------------  Ordenamiento  -----------------------  */
   //  Estado para el ordenamiento
   const [sorting, setSorting] = useState([]); // "sorting" es un array de objetos como id de la columna y dirección. Se inicializa vacío.
+
+
+ 
 
   /*  ---------------------  Filtro -----------------------  */
   // Función para aplicar filtros al hacer clic en "Buscar"
@@ -282,6 +334,53 @@ const Dashboard = () => {
     }, 
   });
 
+
+// Funciones para usuarios de sistema (API)
+const handleSaveSystemUser = () => {
+  const userData = { name: systemName, password: systemPassword };
+  if (systemEditId) {
+    updateUser(systemEditId, userData)
+      .then(response => {
+        setSystemUsers(systemUsers.map(user => (user.id === systemEditId ? response.data : user)));
+        resetSystemForm();
+      })
+      .catch(error => console.error('Error al actualizar:', error));
+  } else {
+    createUser(userData)
+      .then(response => {
+        setSystemUsers([...systemUsers, response.data]);
+        resetSystemForm();
+      })
+      .catch(error => console.error('Error al crear:', error));
+  }
+};
+
+const handleDeleteSystemUser = (id) => {
+  deleteUser(id)
+    .then(() => {
+      setSystemUsers(systemUsers.filter(user => user.id !== id));
+    })
+    .catch(error => console.error('Error al eliminar:', error));
+};
+
+const handleEditSystemUser = (user) => {
+  setSystemName(user.name);
+  setSystemPassword(user.password);
+  setSystemEditId(user.id);
+};
+
+const resetSystemForm = () => {
+  setSystemName('');
+  setSystemPassword('');
+  setSystemEditId(null);
+};
+
+
+
+
+
+
+
   const handleExportClick= () => {
     generatePDF(table, 'compact', true);
   }
@@ -312,11 +411,11 @@ const Dashboard = () => {
   return (
     <CContainer>
      
-      <CCard className="mb-4 m" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+      <CCard className="mb-1" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
         
         {/* ----------  HEAD --------------- */}
         <CCardHeader className="py-2 bg-white ">    
-          <CRow className=  "justify-content-between align-items-center py-0 pb-0 " > {/* Fila en la grilla.*/  }
+          <CRow className=  "justify-content-between align-items-center " > {/* Fila en la grilla.*/  }
             
             <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
               <h4 id="titulo" className="mb-0 ">
@@ -325,9 +424,8 @@ const Dashboard = () => {
               <div className="small text-body-secondary"> Administradores del sistema</div>
             </CCol>
 
-            <CCol xs={12} sm="auto" className="text-md-end mt-2 mt-md-0">  {/* Columna para el botón Agregar Usuario */}
-              <CButton 
-                type="submit"
+            <CCol xs={12} sm="auto" className="text-md-end ">  {/* Columna para el botón Agregar Usuario */}
+              <CButton
                 color="primary" 
                 className="shadow-sm" 
                 size="sm"
@@ -348,7 +446,7 @@ const Dashboard = () => {
                 <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
               </CModalHeader>
               <CModalBody>
-                <FormAltaUsuario id="modalInput1" label="Nuevo Campo 1" placeholder="Escribe algo aquí..." />
+                <FormAltaUsuario/>      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
               </CModalBody>
             </CModal>
           
@@ -356,53 +454,47 @@ const Dashboard = () => {
         </CCardHeader>
         {/* ----------  /HEAD --------------- */}
 
-        {/* ----------  BODY --------------- */}
-        <CCardBody className="p-4 border border-light">
-
-          {/* ---------------------  Controles de paginación ------------------------- */}
         
-          
-          <CAccordion flush className="small-accordion mb-4 "
+          <CAccordion flush className="small-accordion "
             activeItemKey={0}
             >
-            <CAccordionItem itemKey={1}>
+            <CAccordionItem itemKey={1} className='mx-0 px-2'>
+             
+              <CRow className="justify-content-between bg-light  py-1 d-flex align-items-center   ">
+                <CCol xs={2} md={2} lg={4} className="bg-light"> 
+                  <CAccordionHeader
 
-            <CRow className="justify-content-between mx-1 bg-light p-3  align-items-center">
-              <CCol xs={2} md={2} lg={4} className="bg-light"> 
-                <CAccordionHeader
-                  
-                  className='bg-transparent fw-semibold d-flex align-items-center'
-                  >
-                    Filtro avanzado</CAccordionHeader>
-              </CCol>
-            
-              <CCol></CCol>
-            
-            <CCol xs={2} md={2} lg={4} className="bg-light "> 
-              <CInputGroup className="input-group-sm">
-                <CInputGroupText id="inputGroup-sizing-sm">
-                  Buscar
-                </CInputGroupText>
-                <CFormInput
-                  type="text"
-                  placeholder="Ingrese el texto a buscar"
-                  aria-label="Sizing example input"
-                  aria-describedby="inputGroup-sizing-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ maxWidth: '200px' }} // Limita el ancho máximo
-                />
-              </CInputGroup>
-              
+                    className='bg-transparent fw-semibold d-flex align-items-center'
+                    >
+                      Filtro avanzado</CAccordionHeader>
+                </CCol>
 
-            </CCol>
-            
-            </CRow>
+                <CCol></CCol>
+
+                <CCol xs={2} md={2} lg={4} className="bg-light "> 
+                  <CInputGroup className="input-group-sm d-flex justify-content-end align-items-center">
+                    <CInputGroupText id="inputGroup-sizing-sm">
+                      Buscar
+                    </CInputGroupText>
+                    <CFormInput
+                      type="text"
+                      placeholder="Ingrese el texto a buscar"
+                      aria-label="Sizing example input"
+                      aria-describedby="inputGroup-sizing-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{ maxWidth: '200px' }} // Limita el ancho máximo
+                    />
+                  </CInputGroup>
+
+                </CCol>
+
+              </CRow>
                 
-              <CAccordionBody>
+              <CAccordionBody className="bg-light" >
               
                 <CRow
-                  className="shadow-sm py-2 border size=sm bg-light"
+                  className="flex shadow-sm py-0 border size=sm bg-light"
                 >
                 <CCol xs={6} md={6} lg={6} className="bg-light  align-items-center"> 
                   <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
@@ -512,16 +604,16 @@ const Dashboard = () => {
           
           <div></div>
           
-            <CRow className="justify-content-end mb-3 ">
-              <CCol  xs="auto"  className='' >
-                <div className='d-flex justify-content-end gap-2'>
+            <CRow className="justify-content-end align-items-center my-1">
+              <CCol  xs="auto"  className='d-flex align-items-center me-4 ' >
+                <div className='d-flex justify-content-end align-items-center gap-2 ' id="botones">
                   {/* ----------  Botón para imprimir --------------- */}
                   <CButton 
                     type="button"
                     color="secondary" 
-                    className="shadow-sm px-2 py-1 me-0"
+                    className="shadow-sm px-1 py-1 me-0"
                     variant="outline"
-                    size="sm"
+                    size="xs"
                     style={{ fontSize: '0.75rem' }}
                     onClick = {() => handlePrintButton(table)}
                     //onClick = {() => window.print()}
@@ -535,9 +627,9 @@ const Dashboard = () => {
                   <CButton 
                     type="button"
                     color="secondary" 
-                    className="shadow-sm px-2 py-1"
+                    className="shadow-sm px-1 p1-0"
                     variant="outline"
-                    size="sm"
+                    size="xs"
                     style={{ fontSize: '0.75rem' }}
                     onClick = {handleExportClick}
                     >
@@ -549,7 +641,8 @@ const Dashboard = () => {
             </CRow>
             
           
-
+        {/* ----------  BODY --------------- */}
+        <CCardBody className="px-4 pt-1 pb-2 border border-light">
           {/* ----------------------------------- TABLA ----------------------------------- */}
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
@@ -578,7 +671,7 @@ const Dashboard = () => {
                 ))}
               </CTableHead>
 
-              <CTableBody h-100> 
+              <CTableBody className="h-100"> 
                 {table.getRowModel().rows.map(row => (    // Devuelve las filas visibles según la paginación actual ("pageSize").
                                                           // rows.map(...) recorre cada fila, y row.getVisibleCells() da las celdas de esa  fila.
                   <CTableRow key={row.id}>
@@ -601,7 +694,7 @@ const Dashboard = () => {
 
         
         {/* ----------  FOOTER --------------- */}
-        <CCardFooter className="bg-white border-top p-3" 
+        <CCardFooter className="bg-white border-top px-3 py-1" 
           style={{ 
             position: 'sticky',          // Usamos 'sticky' para que se mantenga en el fondo del contenedor padre
             bottom: 0,                  // Se fija en la parte inferior
@@ -610,10 +703,10 @@ const Dashboard = () => {
             boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' // Sombra sutil para diferenciarlo
           }} 
         >
-          <CRow className=  "justify-content-between text-muted"> 
+          <CRow className=  "justify-content-between text-muted  "> 
 
             {/* ---------------------  Controles de paginación ------------------------- */}
-            <CCol xs={12} md={4} className="mb-2 mb-md-0" >    
+            <CCol xs={12} md={4} className="mb-12 mb-md-0" >    
               
                 <CPagination align="start" size="sm" aria-label="Page navigation">
                   <CPaginationItem 
@@ -647,7 +740,7 @@ const Dashboard = () => {
 
           <CCol xs= 'auto' className=" ">   
             <span >
-              Total de registros: {table.getFilteredRowModel().rows.length}
+              Total de registros: <b>{table.getFilteredRowModel().rows.length}</b>
             </span>
           </CCol> 
 
@@ -655,7 +748,9 @@ const Dashboard = () => {
             {/* Info de página y selector */}
             <CCol xs= 'auto' className=" ">
             Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()} {/* Suma 1 porque el array comienza de 0*/}
+              
               <select
+                className=" border "
                 value={table.getState().pagination.pageSize}
                 onChange={e => table.setPageSize(Number(e.target.value))}
                 //style={{ marginLeft: '10px' }}
@@ -670,7 +765,6 @@ const Dashboard = () => {
                 
           </CRow>
         </CCardFooter>
-        {/* ----------  FOOTER --------------- */}
 
 
       </CCard>

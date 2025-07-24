@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
+import { CCard, CCardHeader, CCardBody, CCol, CRow, CContainer, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
 
 
 export default function estudiante() {
@@ -11,7 +11,7 @@ export default function estudiante() {
                 {/* ----------  HEAD --------------- */}
                 <CCardHeader className="">
                     <CRow className="j " > {/* Fila en la grilla.*/}
-                        <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
+                        <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Hereda gutter de CRow*/}
                             <h4 id="titulo" className="mb-0 ">
                                 Alumnos
                             </h4>

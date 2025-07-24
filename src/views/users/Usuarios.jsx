@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import classNames from 'classnames'
 
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CTableFoot, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
+import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
 
 import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilPlus, cilSearch } from '@coreui/icons'
 
@@ -28,136 +28,18 @@ import {
   getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
 } from '@tanstack/react-table'
 
+import { getUsuariosColumns} from '../../utils/columns';  // Importamos las columnas de la tabla
+import UsersTable from '../../components/usersTable/UsersTable.jsx'; // Importamos el componente UserTable
+
+import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'; // Importamos el componente de filtros 
+
+
+
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/api.js'; // Importamos las funciones de la API
 
 import ModalConfirmDel from '../../modals/modalConfirmDel.jsx'; // Importa el modal
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'; // Importa el modal
 
-
-
-
-const getColumns = (confirmDelete, handleClickEditar) => {
-
-  const columnHelper = createColumnHelper()
-
-  return [
-    columnHelper.accessor('select', {
-      header: ({ table }) => {
-        return (
-          <CFormCheck
-            id='headCheck'  /* ID único */
-            checked={table.getIsAllRowsSelected()} // getIsAllRowsSelected() devuelve true si todas  las filas de la tabla están      seleccionadas.
-            onChange={table.getToggleAllRowsSelectedHandler()} // invierte la seleccio de todas las filas.
-
-          />
-        )
-      },
-
-      cell: ({ row }) => {
-        return (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <CFormCheck
-              checked={row.getIsSelected()}
-              disabled={!row.getCanSelect()}
-              onChange={row.getToggleSelectedHandler()} // invierte la seleccio de todas las filas.
-            />
-          </div>
-        )
-      },
-      enableSorting: false,
-      filterFn: 'includesString',
-    }
-    ),
-
-
-    columnHelper.accessor('name', {
-      header: () => 'Nombre y Apellido',
-      cell: info => info.getValue(),  // Cómo se muestra el valor en la celda
-      enableSorting: true,
-      filterFn: 'includesString',
-    }
-    ),
-
-    columnHelper.accessor('email', {
-      header: () => 'Mail',
-      cell: info => info.getValue(),
-      enableSorting: true,
-      filterFn: 'includesString',
-    }),
-
-    columnHelper.accessor('domicilio', {
-      header: () => 'Domicilio',
-      cell: info => info.getValue(),
-      enableSorting: true,
-      filterFn: 'includesString',
-    }),
-
-    columnHelper.accessor('telefono', {
-      header: () => 'Teléfono',
-      cell: info => info.getValue(),
-      enableSorting: true,
-      filterFn: 'includesString',
-    }),
-
-    columnHelper.display({
-      id: 'actions',
-      header: () => {
-        return (
-          <div className="d-flex justify-content-center gap-3">
-            <span>Acción</span>
-          </div>
-        )
-      },
-      cell: ({ row }) => {
-        //console.log('Datos de la fila:', row.original);
-        return (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <a
-              //href="#editEmployeeModal"
-              className="text-muted hover:text-blue-700"
-              data-toggle="modal"
-              title="Editar"
-              onClick={() => {
-                console.log('Paso por acá');
-                console.log('Id elemento a editar: ', row.original.id)
-                handleClickEditar(row.original)
-              }
-              }
-            >
-              <CIcon
-                icon={cilPencil}
-                size="lg"
-                className="fill-gray-500 "
-
-              />
-            </a>
-
-            <a
-              //href=""
-              className="text-muted hover:text-danger"  /* Color base */
-              data-toggle="modal"
-              title="Borrar"
-
-              onClick={() => {
-                console.log('Paso por acá')
-                console.log('Id elemento borrado: ', row.original.id)
-                confirmDelete(row.original.id); // Llama a confirmDelete en lugar de handleDelete, porque abre la modal
-              }  // row.original
-              }
-            >
-              <CIcon
-                icon={cilTrash}
-                size="lg"
-                className="text-gray-500"  /* Efecto hover */
-              />
-            </a>
-          </div>)
-      },
-      enableSorting: false, // Se deshabilita el ordenamiento en esta columna ('actions').
-      enableColumnFilter: false, // Se deshabilita el filtrado
-    })
-  ];
-}
 
 // Componente del documento PDF
 const MyDocument = ({ table, format = 'compact' }) => {
@@ -230,7 +112,7 @@ const Dashboard = () => {
   const [visibleXL, setVisibleXL] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-
+  // State para filtros
   const [filterColumn1, setFilterColumn1] = useState('name'); // Columna predeterminada para el primer filtro
   const [filterValue1, setFilterValue1] = useState(''); // Valor del primer filtro
   const [filterColumn2, setFilterColumn2] = useState('domicilio'); // Columna predeterminada para el segundo filtro
@@ -299,25 +181,6 @@ const Dashboard = () => {
     setEditModalVisible(true); // Mostrar el modal de edición
   };
 
-
-
-  /* Borrar si no pasa nada
-
-    // ---------------------  Cargar datos iniciales ---------------------  
-    useEffect(() => {
-      const fetchUsers = async () => {
-        try {
-          const { data } = await getUsers();
-          setTableData(data);
-        } catch (error) {
-          console.error('Error fetching users:', error);
-        }
-      };
-      fetchUsers();
-    }, []);
-
-  */
-
   /*  ---------------------  Paginación  -----------------------  */
   // Estado de paginación
   // "pagination" le dice a TanStack Table cómo dividirla en páginas.
@@ -331,42 +194,6 @@ const Dashboard = () => {
   const [sorting, setSorting] = useState([]); // "sorting" es un array de objetos como id de la columna y dirección. Se inicializa vacío.
 
 
-
-
-  /*  ---------------------  Filtro -----------------------  */
-
-  // Función para filtros avanzados
-  const applyFilters = () => {
-    const filters = [];
-    if (filterValue1) {
-      filters.push({ id: filterColumn1, value: filterValue1 });
-    }
-    if (filterValue2) {
-      filters.push({ id: filterColumn2, value: filterValue2 });
-    }
-    if (filterValue3) {
-      filters.push({ id: filterColumn3, value: filterValue3 });
-    }
-    if (filterValue4) {
-      filters.push({ id: filterColumn4, value: filterValue4 });
-    }
-    setColumnFilters(filters); // Actualiza los filtros en TanStack
-  };
-
-  // Función para aplicar filtros avanzados de forma dinámica
-  useEffect(() => {
-    applyFilters();
-  }, [
-      filterValue1, filterColumn1, 
-      filterValue2, filterColumn2,
-      filterValue3, filterColumn3,
-      filterValue4, filterColumn4
-    ]);
-
-
-
-
-
   /*  ---------------------  Configuración de la tabla  -----------------------  */
   // Instancia de la tabla (useReactTable) es el "cerebro" de TanStack Table. 
   // La variable "table" (creada con useReactTable) contiene toda la lógica y los métodos para manejar la tabla, 
@@ -374,7 +201,9 @@ const Dashboard = () => {
 
 
   // Configuración de la tabla con TanStack
-  const columns = getColumns(confirmDelete, handleClickEditar)
+   
+  // Se obtienen las columnas de la función 'getUsuariosColumns', importada de columns.js
+  const columns = getUsuariosColumns(confirmDelete, handleClickEditar) 
 
 
   const table = useReactTable({
@@ -521,161 +350,32 @@ const Dashboard = () => {
                 Nuevo
               </CButton>
             </CCol>
-
-
-
-
           </CRow>
         </CCardHeader>
         {/* ----------  /HEAD --------------- */}
 
-
-        <CAccordion flush className="small-accordion "
-          activeItemKey={0}
-        >
-          <CAccordionItem itemKey={1} className='mx-0 px-2'>
-
-            <CRow className="justify-content-between bg-light  py-1 d-flex align-items-center   ">
-              <CCol xs={2} md={2} lg={4} className="bg-light">
-                <CAccordionHeader
-
-                  className='bg-transparent fw-semibold d-flex align-items-center'
-                >
-                  Filtro avanzado</CAccordionHeader>
-              </CCol>
-
-              <CCol></CCol>
-
-              <CCol xs={2} md={2} lg={4} className="bg-light ">
-                <CInputGroup className="input-group-sm d-flex justify-content-end align-items-center">
-                  <CInputGroupText id="inputGroup-sizing-sm">
-                    Buscar
-                  </CInputGroupText>
-                  <CFormInput
-                    type="text"
-                    placeholder="Ingrese el texto a buscar"
-                    aria-label="Sizing example input"
-                    aria-describedby="inputGroup-sizing-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ maxWidth: '200px' }} // Limita el ancho máximo
-                  />
-                </CInputGroup>
-
-              </CCol>
-
-            </CRow>
-
-            <CAccordionBody className="bg-light" >
-
-              <CRow
-                className="flex shadow-sm py-0 border size=sm bg-light"
-              >
-                <CCol xs={6} md={6} lg={6} className="bg-light  align-items-center">
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      className="form-select w-15"
-                      value={filterColumn1}
-                      onChange={(e) => setFilterColumn1(e.target.value)}
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      className="form-input w-25"
-                      placeholder="Valor a buscar"
-                      value={filterValue1}
-                      onChange={(e) => setFilterValue1(e.target.value)}
-                    />
-                  </CInputGroup >
-
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      className="w-15"
-                      value={filterColumn2}
-                      onChange={(e) => setFilterColumn2(e.target.value)}
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      className="w-25"
-                      placeholder="Valor a buscar"
-                      value={filterValue2}
-                      onChange={(e) => setFilterValue2(e.target.value)}
-                    />
-                  </CInputGroup >
-
-                  {/*
-                    <CButton
-                      color="primary"
-                      size="sm"
-                      className="mt-2"
-                      onClick={applyFilters}>
-                      Filtrar
-                    </CButton>
-                    */}
-
-                </CCol>
-
-                <CCol xs={6} md={6} lg={6} className="bg-light  align-items-center">
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      className="form-select w-15"
-                      value={filterColumn3}
-                      onChange={(e) => setFilterColumn3(e.target.value)}
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      className="form-input w-25"
-                      placeholder="Valor a buscar"
-                      value={filterValue3}
-                      onChange={(e) => setFilterValue3(e.target.value)}
-                    />
-                  </CInputGroup >
-
-                  <CInputGroup className="shadow-sm border-0 mb-0 size=sm">
-                    <CInputGroupText>Filtrar por</CInputGroupText>
-                    <CFormSelect
-                      className="w-15"
-                      value={filterColumn4}
-                      onChange={(e) => setFilterColumn4(e.target.value)}
-                    >
-                      <option value="name">Nombre</option>
-                      <option value="email">Mail</option>
-                      <option value="domicilio">Domicilio</option>
-                      <option value="telefono">Teléfono</option>
-                    </CFormSelect>
-                    <CFormInput
-                      className="w-25"
-                      placeholder="Valor a buscar"
-                      value={filterValue4}
-                      onChange={(e) => setFilterValue4(e.target.value)}
-                    />
-                  </CInputGroup >
-
-                </CCol>
-                
-
-
-              </CRow>
-            </CAccordionBody>
-          </CAccordionItem>
-
-        </CAccordion>
-
-
+        {/* Filtros avanzados y búsqueda global */}
+        <AdvancedFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterColumn1={filterColumn1}
+          setFilterColumn1={setFilterColumn1}
+          filterValue1={filterValue1}
+          setFilterValue1={setFilterValue1}
+          filterColumn2={filterColumn2}
+          setFilterColumn2={setFilterColumn2}
+          filterValue2={filterValue2}
+          setFilterValue2={setFilterValue2}
+          filterColumn3={filterColumn3}
+          setFilterColumn3={setFilterColumn3}
+          filterValue3={filterValue3}
+          setFilterValue3={setFilterValue3}
+          filterColumn4={filterColumn4}
+          setFilterColumn4={setFilterColumn4}
+          filterValue4={filterValue4}
+          setFilterValue4={setFilterValue4}
+          setColumnFilters={setColumnFilters}
+        />
 
         <div></div>
 
@@ -718,54 +418,13 @@ const Dashboard = () => {
 
         {/* ----------  BODY --------------- */}
         <CCardBody className="px-4 pt-1 pb-2 border border-light">
-          {/* ----------------------------------- TABLA ----------------------------------- */}
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
-            <CTable id='mainTable' hover className="shadow-sm mb-0 border border-light" >
-              <CTableHead className="bg-light" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                {table.getHeaderGroups().map(headerGroup => (           //Devuelve array de grupos de encabezados (1 en este caso)
-                  <CTableRow key={headerGroup.id}>
-                    {headerGroup.headers.map(column => (       // Recorre las columnas y devuelve un array de los headers
-                      <CTableHeaderCell
-                        key={column.id}
-                        onClick={column.column.getToggleSortingHandler()} // encabezado clicable para ordenar
-                        style={{ cursor: column.column.getCanSort() ? 'pointer' : 'default' }} // Cursor pointer si es ordenable
-                        className='bg-light '
-                      >
-                        {flexRender(column.column.columnDef.header, column.getContext())} {/*Renderiza los header con flexRender*/}
-                        {column.column.getCanSort() ? {        // Si la columna no es ordenable, no muestra icono
-                          asc: <CIcon icon={cilArrowTop} size="sm" />,
-                          desc: <CIcon icon={cilArrowBottom} size="sm" />,
-                        }[column.column.getIsSorted()] || <CIcon icon={cilSwapVertical} className="text-body-secondary" />
-                          : null
-                        }
-
-                      </CTableHeaderCell>
-                    ))}
-                  </CTableRow>
-                ))}
-              </CTableHead>
-
-              <CTableBody className="h-100">
-                {table.getRowModel().rows.map(row => (    // Devuelve las filas visibles según la paginación actual ("pageSize").
-                  // rows.map(...) recorre cada fila, y row.getVisibleCells() da las celdas de esa  fila.
-                  <CTableRow key={row.id}>
-                    {row.getVisibleCells().map(cell => (
-                      <CTableDataCell key={cell.id} className="small text-xs" >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())} {/* Renderiza el contenido de cada celda (mediante    flexrender) */}
-                      </CTableDataCell>
-                    ))}
-                  </CTableRow>
-                ))}
-              </CTableBody>
-
-
-
-            </CTable>
-          </div>
+          {/*  ---------------  Tabla  ------------- */}
+          {/* Se utiliza el componente UserTable importado de UsersTable.jsx, pasando la instancia de table como prop.*/}
+          <UsersTable table={table} />
+                  
         </CCardBody>
         {/* ----------  /BODY --------------- */}
-
 
 
         {/* ----------  FOOTER --------------- */}

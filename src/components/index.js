@@ -4,10 +4,10 @@ import AppFooter from './AppFooter'
 import AppHeader from './AppHeader'
 import AppHeaderDropdown from './header/AppHeaderDropdown'
 import AppSidebar from './AppSidebar'
-import DocsComponents from './DocsComponents'
-import DocsIcons from './DocsIcons'
-import DocsLink from './DocsLink'
-import DocsExample from './DocsExample'
+//  import DocsComponents from './BORRAR-DocsComponents'  BORRAR 
+//  import DocsIcons from './DocsIcons'  BORRAR 
+//  import DocsLink from './DocsLink'  BORRAR 
+//  import DocsExample from './DocsExample'  BORRAR 
 
 export {
   AppBreadcrumb,
@@ -16,8 +16,8 @@ export {
   AppHeader,
   AppHeaderDropdown,
   AppSidebar,
-  DocsComponents,
-  DocsIcons,
-  DocsLink,
-  DocsExample,
+  //  DocsComponents,    BORRAR  
+  //  DocsIcons,  BORRAR 
+  //  DocsLink,   BORRAR 
+  //  DocsExample,  BORRAR 
 }

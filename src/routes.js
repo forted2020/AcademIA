@@ -6,10 +6,11 @@ import UserList from './views/users/UserList';
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
-const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
+//  const Typography = React.lazy(() => import('./views/theme/typography/Typography'))  BORRAR
 const Usuarios = React.lazy(() => import('../src/views/users/Usuarios'))
-const Usuarios2 = React.lazy(() => import('./views/users/Usuarios2'))
+//const Usuarios2 = React.lazy(() => import('./views/users/Usuarios2'))
 const Estilos = React.lazy(() => import('../src/views/users/Estilos'))
+
 
 
 
@@ -18,9 +19,9 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
-  { path: '/theme/typography', name: 'Typography', element: Typography },
+  //  { path: '/theme/typography', name: 'Typography', element: Typography },  BORRAR
   { path: '/usuarios', name: 'Usuarios', element: Usuarios }, // Nueva página
-  { path: '/usuarios2', name: 'Usuarios2', element: Usuarios2 }, // Usuarios 2(para pruebas)
+ // { path: '/usuarios2', name: 'Usuarios2', element: Usuarios2 }, // Usuarios 2(para pruebas)
   { path: '/estilos', name: 'Estilos', element: Estilos }, //  página Estilos
  
   

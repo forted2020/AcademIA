@@ -1,7 +1,7 @@
 import React from 'react'
-import CIcon from '@coreui/icons-react'
-import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome } from '@coreui/icons'
-import { CNavItem, CNavTitle, CNavGroup,  } from '@coreui/react'
+import {CIcon} from '@coreui/icons-react'
+import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription} from '@coreui/icons'
+import { CNavItem, CNavTitle, CNavGroup} from '@coreui/react'
 
 
 // Función que genera ítems del menú lateral dinámicamente según tipos_usuario
@@ -20,6 +20,7 @@ const getNavItems = () => {
       to: '/inicio',
       icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
     },
+    
     {
       component: CNavGroup,   // Categoría desplegable
       name: 'Estudiantes',
@@ -33,6 +34,38 @@ const getNavItems = () => {
         },
       ],
     },
+
+    {
+      component: CNavGroup,   // Categoría desplegable
+      name: 'Cursos',
+      to: '/curso',
+      icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: 'Gestión de Cursos',
+          to: '/curso',
+        },
+        
+      ],
+    },
+
+
+    {
+      component: CNavGroup,   // Categoría desplegable
+      name: 'Materias',
+      to: '/materias',
+      icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: 'Gestión de Materias',
+          to: '/materia',
+        },
+        
+      ],
+    },
+
     {
       component: CNavItem,
       name: 'Cerrar Sesión',

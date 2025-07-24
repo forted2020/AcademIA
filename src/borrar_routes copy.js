@@ -6,7 +6,7 @@ import UserList from './views/users/UserList';
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
-const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
+//  const Typography = React.lazy(() => import('./views/theme/typography/Typography'))  BORRAR
 const Usuarios = React.lazy(() => import('../src/views/users/Usuarios'))
 
 // Base

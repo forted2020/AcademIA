@@ -15,8 +15,8 @@ const VerifyEmail = React.lazy(() => import('./views/pages/VerifyEmail/VerifyEma
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404')); // Importar Page404
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500')); // Importar Page500
 const UserManagement = React.lazy(() => import('./views/UserManagement/UserManagement')); // Importar UserManagement
-const Estudiante = React.lazy(() => import('./views/pages/estudiante/estudiante')); // Importar estudiante.jsx
-const Docentes = React.lazy(() => import('./views/pages/docentes/Docentes')); // Importar Docentes.jsx
+const Estudiante = React.lazy(() => import('./views/estudiantes/estudiante')); // Importar estudiante.jsx
+const Docentes = React.lazy(() => import('./views/docentes/Docentes')); // Importar Docentes.jsx
 
 
 
@@ -53,8 +53,8 @@ const RouterContent = () => {
         <Route exact path="/login" name="Login Page" element={<Login />} /> // Ruta para login
         <Route exact path="/register" name="Register Page" element={<Register />} /> // Ruta para registro
         <Route exact path="/verify-email" name="Verify Email" element={<VerifyEmail />} /> // Ruta para verificación
-        <Route exact path="/404" name="Page 404" element={<Page404 />} /> // Ruta para 404
-        <Route exact path="/500" name="Page 500" element={<Page500 />} /> // Ruta para 500
+        <Route exact path="/404" name="Page 404" element={<Page404 />} /> // Ruta para 404   
+        <Route exact path="/500" name="Page 500" element={<Page500 />} /> // Ruta para 500  
         <Route exact path="/" name="Home" element={<Login />} /> // Ruta raíz a login
 
         <Route path="*" element={<DefaultLayout />}>   Anidados asegura que se rendericen con Menú lateral AppSidebar

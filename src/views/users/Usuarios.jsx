@@ -37,7 +37,7 @@ import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.js
 
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/api.js'; // Importamos las funciones de la API
 
-import ModalConfirmDel from '../../modals/modalConfirmDel.jsx'; // Importa el modal
+import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'; // Importa el modal
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'; // Importa el modal
 
 

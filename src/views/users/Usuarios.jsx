@@ -28,10 +28,13 @@ import {
   getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
 } from '@tanstack/react-table'
 
-import { getUsuariosColumns} from '../../utils/columns';  // Importamos las columnas de la tabla
+import TablePagination from '../../components/tablePagination/TablePagination.jsx'
+
+import { getUsuariosColumns } from '../../utils/columns';  // Importamos las columnas de la tabla
 import UsersTable from '../../components/usersTable/UsersTable.jsx'; // Importamos el componente UserTable
 
 import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'; // Importamos el componente de filtros 
+import TableActions from '../../components/tableActions/TableActions.jsx' // Importamos botones de acciones de la tabla
 
 
 
@@ -41,71 +44,8 @@ import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'; // Importa el mo
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'; // Importa el modal
 
 
-// Componente del documento PDF
-const MyDocument = ({ table, format = 'compact' }) => {
-  const filteredRows = table.getFilteredRowModel().rows;
-  const styles = format === 'compact' ? compactStyles : detailedStyles; // Selecciona estilos según formato
 
-
-  return (
-    <Document>    {/* Componente de React-PDF (MyDocument) que genera un PDF a partir de los datos filtrados de la tabla*/}
-      <Page style={styles.page}>
-        <Text style={styles.title}>Administración de Usuarios</Text>
-        <View style={styles.table}>
-
-          <View style={styles.tableRow}>
-            {table.getHeaderGroups()[0].headers
-              .filter(header => header.id !== 'actions')    // Excluimos la columna 'action
-              .map(header => (
-                <Text key={header.id} style={styles.tableHeader}>
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </Text>
-              ))}
-          </View>
-
-          {filteredRows.map(row => (
-            <View key={row.id} style={styles.tableRow}>
-              {row
-                .getVisibleCells()
-                .filter(cell => cell.column.id !== 'actions')    // Excluimos la columna 'action
-                .map(cell => (
-                  <Text key={cell.id} style={styles.tableCell}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Text>
-                ))}
-            </View>
-          ))}
-        </View>
-      </Page>
-    </Document>
-  );
-};
-
-
-// Función para generar y descargar el PDF. Devuelve el blob
-const generatePDF = async (table, format = 'compact', download = false) => {
-  const doc = <MyDocument table={table} />;
-  const asPdf = pdf([]); // Crear instancia de PDF
-  asPdf.updateContainer(doc); // Añadir el documento
-  const blob = await asPdf.toBlob(); // Generar el PDF como Blob
-
-  // Si download es true, descarga el archivo
-  if (download) {
-    saveAs(blob, 'tabla_filtrada.pdf'); // Descargar el archivo
-  }
-
-  return blob; // Siempre devuelve el Blob
-
-}
-
-
-
-
-
-
-
-
-const Dashboard = () => {
+const Usuarios = () => {
   const [tableData, setTableData] = useState([])    //  State para manejo de los datos de la tabla
 
   const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda global
@@ -201,9 +141,9 @@ const Dashboard = () => {
 
 
   // Configuración de la tabla con TanStack
-   
+
   // Se obtienen las columnas de la función 'getUsuariosColumns', importada de columns.js
-  const columns = getUsuariosColumns(confirmDelete, handleClickEditar) 
+  const columns = getUsuariosColumns(confirmDelete, handleClickEditar)
 
 
   const table = useReactTable({
@@ -291,31 +231,16 @@ const Dashboard = () => {
     setSystemEditId(null);
   };
 
+  {/*
   const handleExportClick = () => {
     generatePDF(table, 'compact', true);
   }
+*/}
 
+  {/* ----------  FUncion handlePrintButton --------------- */ }
 
-  const handlePrintButton = async (table) => {
+  {/* ----------  FUncion handlePrintButton --------------- */ }
 
-    // Usa generatePDF para obtener el Blob, sin descargar
-    const blob = await generatePDF(table, 'compact', false); // false para no descargar
-    const pdfUrl = URL.createObjectURL(blob); // Crea una URL temporal
-
-    // Abre la URL en una nueva ventana (window.print imprime una ventana)
-    const printWindow = window.open(pdfUrl, '_blank', 'height=600,width=800');
-
-    // Espera a que cargue y dispare la impresión
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      // Opcional: printWindow.close(); // Cierra después de imprimir
-
-    };
-
-    // Limpia la URL después de un tiempo
-    setTimeout(() => URL.revokeObjectURL(pdfUrl), 10000);
-  };
 
 
   return (
@@ -344,7 +269,7 @@ const Dashboard = () => {
                 // onClick={() => setVisibleXL(!visibleXL)}
                 // onClick={() => setEditModalVisible2(!editModalVisible2)}
                 onClick={() => handleClickEditar('')}
-                
+
               >
                 <CIcon icon={cilPlus} className="me-1" />
                 Nuevo
@@ -379,41 +304,7 @@ const Dashboard = () => {
 
         <div></div>
 
-        <CRow className="justify-content-end align-items-center my-1">
-          <CCol xs="auto" className='d-flex align-items-center me-4 ' >
-            <div className='d-flex justify-content-end align-items-center gap-2 ' id="botones">
-              {/* ----------  Botón para imprimir --------------- */}
-              <CButton
-                type="button"
-                color="secondary"
-                className="shadow-sm px-1 py-1 me-0"
-                variant="outline"
-                size="xs"
-                style={{ fontSize: '0.75rem' }}
-                onClick={() => handlePrintButton(table)}
-              //onClick = {() => window.print()}
-              >
-                Imprimir
-              </CButton>
-              {/* ----------  Fin Botón para imprimir  --------------- */}
-
-
-              {/* ----------  Botón para exportar a CSV --------------- */}
-              <CButton
-                type="button"
-                color="secondary"
-                className="shadow-sm px-1 p1-0"
-                variant="outline"
-                size="xs"
-                style={{ fontSize: '0.75rem' }}
-                onClick={handleExportClick}
-              >
-                Expotar
-              </CButton>
-              {/* ----------  Fin Botón para exportar a CSV --------------- */}
-            </div>
-          </CCol>
-        </CRow>
+        <TableActions table={table} />
 
 
         {/* ----------  BODY --------------- */}
@@ -422,13 +313,13 @@ const Dashboard = () => {
           {/*  ---------------  Tabla  ------------- */}
           {/* Se utiliza el componente UserTable importado de UsersTable.jsx, pasando la instancia de table como prop.*/}
           <UsersTable table={table} />
-                  
+
         </CCardBody>
         {/* ----------  /BODY --------------- */}
 
-
         {/* ----------  FOOTER --------------- */}
-        <CCardFooter className="bg-white border-top px-3 py-1"
+        <CCardFooter
+          className="bg-white border-top px-3 py-1"
           style={{
             position: 'sticky',          // Usamos 'sticky' para que se mantenga en el fondo del contenedor padre
             bottom: 0,                  // Se fija en la parte inferior
@@ -437,80 +328,26 @@ const Dashboard = () => {
             boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' // Sombra sutil para diferenciarlo
           }}
         >
-          <CRow className="justify-content-between text-muted  ">
+          {/* Componente que contiene paginación, conteo de registros y selector de tamaño de página.
+         Le paso pasando la instancia de table como prop. */}
 
-            {/* ---------------------  Controles de paginación ------------------------- */}
-            <CCol xs={12} md={4} className="mb-12 mb-md-0" >
+          <TablePagination table={table} />
 
-              <CPagination align="start" size="sm" aria-label="Page navigation">
-                <CPaginationItem
-                  aria-label="Next"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <span aria-hidden="true">&laquo;</span>
-                </CPaginationItem>
-                {/* items nros de página del paginado */}
-                {Array.from({ length: table.getPageCount() }, (_, i) => (   //table.getPageCount() = nº total filas / pageSize
-                  <CPaginationItem
-                    key={i}
-                    active={i === table.getState().pagination.pageIndex} // Muestra la página actual
-                    onClick={() => table.setPageIndex(i)}     // Cambia a una página específica
-                  >
-                    {i + 1}       {/* Suma 1 porque el array comienza de 0*/}
-                  </CPaginationItem>
-                ))}
-                <CPaginationItem
-                  aria-label="Previous"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <span aria-hidden="true">&raquo;</span>
-                </CPaginationItem>
-
-              </CPagination>
-
-            </CCol>
-
-            <CCol xs='auto' className=" ">
-              <span >
-                Total de registros: <b>{table.getFilteredRowModel().rows.length}</b>
-              </span>
-            </CCol>
-
-
-            {/* Info de página y selector */}
-            <CCol xs='auto' className=" ">
-              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()} {/* Suma 1 porque el array comienza de 0*/}
-
-              <select
-                className=" border "
-                value={table.getState().pagination.pageSize}
-                onChange={e => table.setPageSize(Number(e.target.value))}
-              //style={{ marginLeft: '10px' }}
-              >
-                {[2, 5, 10, 20].map(pageSize => (
-                  <option key={pageSize} value={pageSize}>
-                    Mostrar {pageSize}
-                  </option>
-                ))}
-              </select>
-            </CCol>
-
-          </CRow>
         </CCardFooter>
-
 
       </CCard>
 
-
-      {/* Modal de confirmación */}
+ 
+      {/* Modal de confirmación 
       <ModalConfirmDel
         visible={deleteModalVisible}
         onClose={() => setDeleteModalVisible(false)}
         onConfirm={handleDelete}
         userId={userToDelete}
       />
+
+*/}
+
 
       {/* Modal Editar */}
       <ModalNewEdit
@@ -519,7 +356,7 @@ const Dashboard = () => {
           setEditModalVisible(false);
           setUserToEdit(null);
         }}
-        
+
         title={!userToEdit ? 'Nuevo usuario' : 'Editar usuario'}  // ! verifica si userToEdit es "falsy" (null, undefined, '', 0, etc.).
         initialData={userToEdit || {
           name: '',
@@ -605,4 +442,4 @@ const Dashboard = () => {
 }
 
 
-export default Dashboard
+export default Usuarios

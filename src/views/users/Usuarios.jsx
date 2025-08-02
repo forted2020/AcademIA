@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import classNames from 'classnames'
 
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow, CFormSelect, CFormInput, CFormCheck, CInputGroup, CInputGroupText, CContainer, CModalFooter, CPagination, CPaginationItem, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
+import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer, CPagination, CPaginationItem, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
 
 import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilPlus, cilSearch } from '@coreui/icons'
 
@@ -16,8 +16,7 @@ import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver'; // Para descargar el archivo
 import { PDFViewer } from '@react-pdf/renderer';
-
-import ReactDOM from 'react-dom';
+import TableAction from '../../components/tableActions/TableActions.jsx'
 
 import { compactStyles, detailedStyles } from '../dashboard/pdfFormats/pdfStyles.js';
 
@@ -32,7 +31,6 @@ import TablePagination from '../../components/tablePagination/TablePagination.js
 
 import { getUsuariosColumns } from '../../utils/columns';  // Importamos las columnas de la tabla
 import UsersTable from '../../components/usersTable/UsersTable.jsx'; // Importamos el componente UserTable
-
 import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'; // Importamos el componente de filtros 
 import TableActions from '../../components/tableActions/TableActions.jsx' // Importamos botones de acciones de la tabla
 
@@ -95,7 +93,6 @@ const Usuarios = () => {
   //   O sea, carga la lista inicial de usuarios al cargar la página.
 
 
-
   //   ---------------------    Elimiar usuario ---------------------  
   const handleDelete = async (id) => {
     try {
@@ -142,7 +139,9 @@ const Usuarios = () => {
 
   // Configuración de la tabla con TanStack
 
+
   // Se obtienen las columnas de la función 'getUsuariosColumns', importada de columns.js
+  const columns = getUsuariosColumns(confirmDelete, handleClickEditar)
   const columns = getUsuariosColumns(confirmDelete, handleClickEditar)
 
 
@@ -216,9 +215,6 @@ const Usuarios = () => {
   };
 
 
-
-
-
   const handleEditSystemUser = (user) => {
     setSystemName(user.name);
     setSystemPassword(user.password);
@@ -270,6 +266,7 @@ const Usuarios = () => {
                 // onClick={() => setEditModalVisible2(!editModalVisible2)}
                 onClick={() => handleClickEditar('')}
 
+
               >
                 <CIcon icon={cilPlus} className="me-1" />
                 Nuevo
@@ -313,6 +310,7 @@ const Usuarios = () => {
           {/*  ---------------  Tabla  ------------- */}
           {/* Se utiliza el componente UserTable importado de UsersTable.jsx, pasando la instancia de table como prop.*/}
           <UsersTable table={table} />
+
 
         </CCardBody>
         {/* ----------  /BODY --------------- */}
@@ -368,49 +366,49 @@ const Usuarios = () => {
         onSave={handleSaveUser}
       />
 
-      {/* Modal Eliminar */}
-      <ModalConfirmDel
-        visible={deleteModalVisible}
-        onClose={() => {
-          setDeleteModalVisible(false);
-          setUserToDelete(null);
-        }}
-        onConfirm={handleDelete}
-        userId={userToDelete}
-      />
+  {/* Modal Eliminar */ }
+  <ModalConfirmDel
+    visible={deleteModalVisible}
+    onClose={() => {
+      setDeleteModalVisible(false);
+      setUserToDelete(null);
+    }}
+    onConfirm={handleDelete}
+    userId={userToDelete}
+  />
 
 
-      {/*  --------------- Modal Nuevo Usuario ---------------  */}
-      <CModal
-        size="xl"
-        visible={visibleXL}
-        onClose={() => setVisibleXL(false)}
-        aria-labelledby="OptionalSizesExample1"
-      >
-        <CModalHeader>
-          <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
-        </CModalBody>
-      </CModal>
+  {/*  --------------- Modal Nuevo Usuario ---------------  */ }
+  <CModal
+    size="xl"
+    visible={visibleXL}
+    onClose={() => setVisibleXL(false)}
+    aria-labelledby="OptionalSizesExample1"
+  >
+    <CModalHeader>
+      <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
+    </CModalHeader>
+    <CModalBody>
+      <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
+    </CModalBody>
+  </CModal>
 
-      {/*  --------------- Modal Editar Usuario ---------------  */}
-      <CModal
-        id="EditUserModal"
-        size="xl"
-        visible={editModalVisible2}
-        onClose={() => {
-          setEditModalVisible2(false);
-          resetSystemForm();
-        }}
-        aria-labelledby="EditUserModal"
-      >
-        <CModalHeader>
-        </CModalHeader>
-        <CModalBody>
-          <ModalNewEdit />
-          {/*
+  {/*  --------------- Modal Editar Usuario ---------------  */ }
+  <CModal
+    id="EditUserModal"
+    size="xl"
+    visible={editModalVisible2}
+    onClose={() => {
+      setEditModalVisible2(false);
+      resetSystemForm();
+    }}
+    aria-labelledby="EditUserModal"
+  >
+    <CModalHeader>
+    </CModalHeader>
+    <CModalBody>
+      <ModalNewEdit />
+      {/*
           {userToEdit && (
             <ModalNewEdit
               initialData={userToEdit}  // Pasa los datos del usuario al formulario
@@ -430,12 +428,12 @@ const Usuarios = () => {
             />
           )}
         */}
-        </CModalBody>
-      </CModal>
+    </CModalBody>
+  </CModal>
 
 
 
-    </CContainer>
+    </CContainer >
   )
 
 

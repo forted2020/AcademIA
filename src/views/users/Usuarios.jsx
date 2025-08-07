@@ -142,7 +142,6 @@ const Usuarios = () => {
 
   // Se obtienen las columnas de la función 'getUsuariosColumns', importada de columns.js
   const columns = getUsuariosColumns(confirmDelete, handleClickEditar)
-  const columns = getUsuariosColumns(confirmDelete, handleClickEditar)
 
 
   const table = useReactTable({

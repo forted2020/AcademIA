@@ -27,11 +27,9 @@ const getNavItems = () => {
       to: '/estudiante',
       icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
       items: [
-        {
-          component: CNavItem,
-          name: 'Trayectoria',
-          to: '/estudiante',
-        },
+        {component: CNavItem, name: 'Gestión de Estudiantes', to: '/estudiante'},
+        {component: CNavItem, name: 'Trayectoria', to: '/estudiante'},
+        {component: CNavItem, name: 'Informes', to: '/estudiante'},
       ],
     },
 
@@ -41,15 +39,11 @@ const getNavItems = () => {
       to: '/curso',
       icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
       items: [
-        {
-          component: CNavItem,
-          name: 'Gestión de Cursos',
-          to: '/curso',
-        },
+        {component: CNavItem, name: 'Gestión de Cursos', to: '/curso', },
+        {component: CNavItem, name: 'Informes', to: '/curso', },
         
       ],
     },
-
 
     {
       component: CNavGroup,   // Categoría desplegable
@@ -57,11 +51,8 @@ const getNavItems = () => {
       to: '/materias',
       icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
       items: [
-        {
-          component: CNavItem,
-          name: 'Gestión de Materias',
-          to: '/materia',
-        },
+        {component: CNavItem, name: 'Gestión de Materias', to: '/materia',},
+        {component: CNavItem, name: 'Informes', to: '/materia',},
         
       ],
     },
@@ -83,30 +74,54 @@ const getNavItems = () => {
       to: '/usuarios',
       icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
       items: [          // array con subcategorías CNavItem
-        {
-          component: CNavItem,
-          name: 'Gestión de Usuarios',
-          to: '/usuarios',
-        },
+        {component: CNavItem, name: 'Gestión de Usuarios', to: '/usuarios'},
+        {component: CNavItem, name: 'Informes',to: '/usuarios'},
+      ],
+    });
+
+    navItems.splice(3, 0, { // Inserta Usuarios después de AcademIA y antes de Estudiante
+      component: CNavGroup,
+      name: 'Docentes',
+      to: '/docentes',
+      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+      items: [          // array con subcategorías CNavItem
+        {component: CNavItem, name: 'Gestión de Docentes', to: '/docentes'},
+        {component: CNavItem, name: 'Carga de notas', to: '/cargaNotas'},
+        {component: CNavItem, name: 'Informes', to: '/docentes'},
       ],
     });
   }
 
+
   if (tipos_usuario.includes('ADM')) {
-    navItems.splice(3, 0, { 
+    navItems.splice(2, 0, { // Inserta Usuarios después de AcademIA y antes de Estudiante
+      component: CNavGroup,
+      name: 'Gestión Académica',
+      to: '/usuarios',
+      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+      items: [          // array con subcategorías CNavItem
+        { component: CNavItem, name: 'Gestión de Personal', to: '/usuarios'},
+        { component: CNavItem, name: 'Asistencia', to: '/usuarios'},
+        { component: CNavItem, name: 'Inscripción a ciclo lectivo', to: '/usuarios'},
+        { component: CNavItem, name: 'Informes', to: '/usuarios'},
+      ],
+    });
+
+    navItems.splice(3, 0, { // Inserta Usuarios después de AcademIA y antes de Estudiante
       component: CNavGroup,
       name: 'Docentes',
       to: '/docentes',
-      icon: <CIcon icon={cilBook} customClassName="nav-icon" />,
+      icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
       items: [          // array con subcategorías CNavItem
-        {
-          component: CNavItem,
-          name: 'Gestión de Docentes',
-          to: '/docentes',
-        },
+        {component: CNavItem, name: 'Gestión de Docentes', to: '/docentes'},
+        {component: CNavItem, name: 'Carga de notas', to: '/docentes'},
+        {component: CNavItem, name: 'Informes', to: '/docentes'},
       ],
     });
   }
+
+
+
 
 
   return navItems;

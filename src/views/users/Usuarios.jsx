@@ -23,34 +23,38 @@ import { compactStyles, detailedStyles } from '../dashboard/pdfFormats/pdfStyles
 import '../../css/PersonalStyles.css'
 
 import {
-  createColumnHelper, flexRender, getCoreRowModel, useReactTable,
-  getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
+  createColumnHelper, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
 } from '@tanstack/react-table'
 
 import TablePagination from '../../components/tablePagination/TablePagination.jsx'
 
 import { getUsuariosColumns } from '../../utils/columns';  // Importamos las columnas de la tabla
-import UsersTable from '../../components/usersTable/UsersTable.jsx'; // Importamos el componente UserTable
+import GenericTable from '../../components/usersTable/GenericTable.jsx'; // Importamos el componente UserTable
 import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'; // Importamos el componente de filtros 
+
 import TableActions from '../../components/tableActions/TableActions.jsx' // Importamos botones de acciones de la tabla
-
-
 
 import { getUsers, createUser, updateUser, deleteUser } from '../../api/api.js'; // Importamos las funciones de la API
 
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'; // Importa el modal
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'; // Importa el modal
 
-
+// Estado para manejar los filtros de manera unificada
+const initialFilters = [
+  { id: 'name', value: '' },
+  { id: 'email', value: '' },
+  { id: 'domicilio', value: '' },
+  { id: 'telefono', value: '' },
+];
 
 const Usuarios = () => {
   const [tableData, setTableData] = useState([])    //  State para manejo de los datos de la tabla
-
   const [searchTerm, setSearchTerm] = useState(''); // Búsqueda dinámica. Estado para el término de búsqueda global
   const [visibleXL, setVisibleXL] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   // State para filtros
+  /*
   const [filterColumn1, setFilterColumn1] = useState('name'); // Columna predeterminada para el primer filtro
   const [filterValue1, setFilterValue1] = useState(''); // Valor del primer filtro
   const [filterColumn2, setFilterColumn2] = useState('domicilio'); // Columna predeterminada para el segundo filtro
@@ -59,14 +63,19 @@ const Usuarios = () => {
   const [filterValue3, setFilterValue3] = useState(''); // Valor del segundo filtro
   const [filterColumn4, setFilterColumn4] = useState('domicilio'); // Columna predeterminada para el segundo filtro
   const [filterValue4, setFilterValue4] = useState(''); // Valor del segundo filtro
+  */
 
-  const [columnFilters, setColumnFilters] = useState([]); // Estado de filtros para TanStack
+  // Estado para manejar los filtros de TanStack como un array de objetos
+  const [columnFilters, setColumnFilters] = useState(initialFilters);
+
 
   // Estados para API usuarios de sistema
   // const [systemUsers, setSystemUsers] = useState([]);
   const [systemName, setSystemName] = useState('');   // Para el formulario
   const [systemPassword, setSystemPassword] = useState('');   // Para el formulario
   const [systemEditId, setSystemEditId] = useState(null);   // Para edición
+
+
 
   //const columns = getColumns((id, setSystemUsers) => handleDelete(id, deleteUser, setSystemUsers), setSystemUsers);
 
@@ -232,11 +241,6 @@ const Usuarios = () => {
   }
 */}
 
-  {/* ----------  FUncion handlePrintButton --------------- */ }
-
-  {/* ----------  FUncion handlePrintButton --------------- */ }
-
-
 
   return (
 
@@ -275,26 +279,12 @@ const Usuarios = () => {
         </CCardHeader>
         {/* ----------  /HEAD --------------- */}
 
-        {/* Filtros avanzados y búsqueda global */}
+        {/* Filtros avanzados y búsqueda global 
+          Se pasan columnFilters y setColumnFilters directamente al componente AdvancedFilters*/}
         <AdvancedFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          filterColumn1={filterColumn1}
-          setFilterColumn1={setFilterColumn1}
-          filterValue1={filterValue1}
-          setFilterValue1={setFilterValue1}
-          filterColumn2={filterColumn2}
-          setFilterColumn2={setFilterColumn2}
-          filterValue2={filterValue2}
-          setFilterValue2={setFilterValue2}
-          filterColumn3={filterColumn3}
-          setFilterColumn3={setFilterColumn3}
-          filterValue3={filterValue3}
-          setFilterValue3={setFilterValue3}
-          filterColumn4={filterColumn4}
-          setFilterColumn4={setFilterColumn4}
-          filterValue4={filterValue4}
-          setFilterValue4={setFilterValue4}
+          columnFilters={columnFilters}
           setColumnFilters={setColumnFilters}
         />
 
@@ -307,8 +297,8 @@ const Usuarios = () => {
         <CCardBody className="px-4 pt-1 pb-2 border border-light">
 
           {/*  ---------------  Tabla  ------------- */}
-          {/* Se utiliza el componente UserTable importado de UsersTable.jsx, pasando la instancia de table como prop.*/}
-          <UsersTable table={table} />
+          {/* Se utiliza el componente GenericTable importado de GenericTable.jsx, pasando la instancia de table como prop.*/}
+          <GenericTable table={table} />
 
 
         </CCardBody>
@@ -334,7 +324,7 @@ const Usuarios = () => {
 
       </CCard>
 
- 
+
       {/* Modal de confirmación 
       <ModalConfirmDel
         visible={deleteModalVisible}
@@ -365,49 +355,49 @@ const Usuarios = () => {
         onSave={handleSaveUser}
       />
 
-  {/* Modal Eliminar */ }
-  <ModalConfirmDel
-    visible={deleteModalVisible}
-    onClose={() => {
-      setDeleteModalVisible(false);
-      setUserToDelete(null);
-    }}
-    onConfirm={handleDelete}
-    userId={userToDelete}
-  />
+      {/* Modal Eliminar */}
+      <ModalConfirmDel
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        userId={userToDelete}
+      />
 
 
-  {/*  --------------- Modal Nuevo Usuario ---------------  */ }
-  <CModal
-    size="xl"
-    visible={visibleXL}
-    onClose={() => setVisibleXL(false)}
-    aria-labelledby="OptionalSizesExample1"
-  >
-    <CModalHeader>
-      <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
-    </CModalHeader>
-    <CModalBody>
-      <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
-    </CModalBody>
-  </CModal>
+      {/*  --------------- Modal Nuevo Usuario ---------------  */}
+      <CModal
+        size="xl"
+        visible={visibleXL}
+        onClose={() => setVisibleXL(false)}
+        aria-labelledby="OptionalSizesExample1"
+      >
+        <CModalHeader>
+          <CModalTitle id="OptionalSizesExample1">Nuevo usuario</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <FormAltaUsuario />      {/* Usa como cuerpo de la modal, el componente FormAltaUsuario.js */}
+        </CModalBody>
+      </CModal>
 
-  {/*  --------------- Modal Editar Usuario ---------------  */ }
-  <CModal
-    id="EditUserModal"
-    size="xl"
-    visible={editModalVisible2}
-    onClose={() => {
-      setEditModalVisible2(false);
-      resetSystemForm();
-    }}
-    aria-labelledby="EditUserModal"
-  >
-    <CModalHeader>
-    </CModalHeader>
-    <CModalBody>
-      <ModalNewEdit />
-      {/*
+      {/*  --------------- Modal Editar Usuario ---------------  */}
+      <CModal
+        id="EditUserModal"
+        size="xl"
+        visible={editModalVisible2}
+        onClose={() => {
+          setEditModalVisible2(false);
+          resetSystemForm();
+        }}
+        aria-labelledby="EditUserModal"
+      >
+        <CModalHeader>
+        </CModalHeader>
+        <CModalBody>
+          <ModalNewEdit />
+          {/*
           {userToEdit && (
             <ModalNewEdit
               initialData={userToEdit}  // Pasa los datos del usuario al formulario
@@ -427,8 +417,8 @@ const Usuarios = () => {
             />
           )}
         */}
-    </CModalBody>
-  </CModal>
+        </CModalBody>
+      </CModal>
 
 
 

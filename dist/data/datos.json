@@ -110,7 +110,21 @@
           "email": "anacastro@gmail.com",
           "domicilio": "Avellaneda 789",
           "telefono": "343-6543456"
+        },
+      {
+        
+          "name": "Morales, Juan",
+          "email": "juanmorales@icloud.com",
+          "domicilio": "Lavalle 432",
+          "telefono": "343-4325678"
+        },
+      {
+          "name": "Bravo, María José",
+          "email": "mariajosebravo@yahoo.com",
+          "domicilio": "Perón 234",
+          "telefono": "343-5434567"
         }
+      
 
 ]
     

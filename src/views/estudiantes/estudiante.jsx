@@ -231,7 +231,10 @@ export default function Estudiante() {
                 initialData={studentToEdit || {}}
                 onSave={handleSaveStudent}
                 fields={[
+                    //{ name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
                     { name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
+                    { name: 'nombre', label: 'Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Carlos' },
+                    { name: 'apellido', label: 'Apellido', type: 'text', required: true, placeholder: 'Ejemplo: Pérez' },
                     { name: 'email', label: 'Email', type: 'email', required: false, placeholder: 'ejemplo@mail.com' },
                     { name: 'fec_nac', label: 'Fecha de Nacimiento', type: 'date', required: false },
                     { name: 'domicilio', label: 'Domicilio', type: 'text', required: false, placeholder: 'Calle 123' },

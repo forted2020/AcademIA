@@ -19,20 +19,17 @@ const AdvancedFilters = ({ searchTerm, setSearchTerm, columnFilters, setColumnFi
   const handleColumnChange = (index, value) => {
     const newFilters = [...filtersToShow];
     newFilters[index] = { ...newFilters[index], id: value };
+    setColumnFilters(newFilters); // Pasar TODOS los filtros al padre (sin filtrar), para mantener el estado UI
 
-    // Solo pasamos al padre los filtros activos (que tienen id y value)
-    const activeFilters = newFilters.filter(f => f.id && f.value);
-    setColumnFilters(activeFilters);
   };
 
   // Maneja el cambio en el valor de un filtro
   const handleValueChange = (index, value) => {
     const newFilters = [...filtersToShow];
     newFilters[index] = { ...newFilters[index], value };
+    newFilters[index] = { ...newFilters[index], value: value || '' }; // Asegurar string vacío
+    setColumnFilters(newFilters); // Pasar TODOS los filtros al padre (sin filtrar)
 
-    // Solo pasamos al padre los filtros activos (que tienen id y value)
-    const activeFilters = newFilters.filter(f => f.id && f.value);
-    setColumnFilters(activeFilters);
   };
 
   // Opciones por defecto si no se pasan props (fallback)

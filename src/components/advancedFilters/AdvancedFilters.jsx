@@ -1,10 +1,8 @@
 //  Este componente independiente encapsula la lógica y presentación del CAccordion de filtros, haciéndolo reutilizable.
 //  Maneja además los estados de los filtros (filterColumn1, filterValue1, etc.) y comunica los cambios al componente padre mediante callbacks.
 
-import { useEffect } from 'react';
 import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CCol, CRow, CInputGroup, CInputGroupText, CFormSelect, CFormInput } from '@coreui/react';
-import { CIcon } from '@coreui/icons-react';
-import { cilSearch } from '@coreui/icons';
+import '../../css/AdvancedFilters.css';
 
 // Componente que encapsula los filtros avanzados y la búsqueda global
 const AdvancedFilters = ({ searchTerm, setSearchTerm, columnFilters, setColumnFilters, filterOptions }) => {
@@ -40,49 +38,56 @@ const AdvancedFilters = ({ searchTerm, setSearchTerm, columnFilters, setColumnFi
 
   const options = filterOptions || defaultOptions;
 
+
   return (
-    <CAccordion flush className="small-accordion" activeItemKey={0}>
-      <CAccordionItem itemKey={1} className="mx-0 px-2">
-        {/* Encabezado del acordeón con búsqueda global */}
-        <CRow className="justify-content-between bg-light py-1 d-flex align-items-center">
-          <CCol xs={2} md={2} lg={4} className="bg-light">
-            <CAccordionHeader className="bg-transparent fw-semibold d-flex align-items-center">
-              Filtro avanzado
-            </CAccordionHeader>
-          </CCol>
-          <CCol />
-          <CCol xs={2} md={2} lg={4} className="bg-light">
-            {/* Input para búsqueda global */}
-            <CInputGroup className="input-group-sm d-flex justify-content-end align-items-center">
-              <CInputGroupText id="inputGroup-sizing-sm">
+    // Agregamos la clase 'af-wrapper' para aplicar nuestros estilos CSS personalizados
+    <CAccordion flush className="af-wrapper shadow-sm rounded border" activeItemKey={0}>
+      <CAccordionItem itemKey={1} className="border-0">
+
+        {/* Encabezado Compacto */}
+        <CAccordionHeader>
+          <div className="d-flex justify-content-between align-items-center w-100 pe-2">
+
+            {/* IZQUIERDA: Título + Flecha manual */}
+            <div className="d-flex align-items-center gap-2">
+              <span className="fw-semibold text-secondary">Filtros Avanzados</span>
+              {/* Aquí colocamos la flecha manualmente */}
+              <span className="af-arrow-custom"></span>
+            </div>
+
+            {/* DERECHA: Buscador Global (se mantiene igual) */}
+            <CInputGroup size="sm" style={{ maxWidth: '240px' }} onClick={(e) => e.stopPropagation()}>
+              <CInputGroupText className="af-label border rounded-start">
                 Buscar
               </CInputGroupText>
               <CFormInput
                 type="text"
-                placeholder="Ingrese el texto a buscar"
-                aria-label="Sizing example input"
-                aria-describedby="inputGroup-sizing-sm"
+                placeholder="..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ maxWidth: '200px' }}
+                className="af-input rounded-end"
               />
             </CInputGroup>
-          </CCol>
-        </CRow>
-        {/* Cuerpo del acordeón con filtros por columna */}
-        <CAccordionBody className="bg-light">
-          <CRow className="flex shadow-sm py-0 border size=sm bg-light">
-            <CCol xs={6} md={6} lg={6} className="bg-light align-items-center">
-              {/* Primer y segundo filtro */}
-              {filtersToShow.slice(0, 2).map((filter, index) => (
-                <CInputGroup key={index} className="shadow-sm border-0 mb-0 size=sm">
-                  <CInputGroupText>Filtrar por</CInputGroupText>
+          </div>
+        </CAccordionHeader>
+
+        {/* Cuerpo Compacto */}
+        <CAccordionBody>
+          <CRow className="g-2">
+            {filtersToShow.map((filter, index) => (
+              <CCol xs={12} md={6} key={index}>
+                <CInputGroup size="sm">
+                  {/* Etiqueta "Filtrar por" */}
+                  <CInputGroupText className="af-label">
+                    Filtrar por
+                  </CInputGroupText>
+
+                  {/* Select de Columna */}
                   <CFormSelect
-                    className="form-select w-15"
+                    className="af-select"
                     value={filter.id}
                     onChange={(e) => handleColumnChange(index, e.target.value)}
                   >
-                    {/* Opción por defecto "Seleccionar" */}
                     <option value="">Seleccionar</option>
                     {options.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -90,44 +95,18 @@ const AdvancedFilters = ({ searchTerm, setSearchTerm, columnFilters, setColumnFi
                       </option>
                     ))}
                   </CFormSelect>
+
+                  {/* Input de Valor */}
                   <CFormInput
-                    className="form-input w-25"
-                    placeholder="Valor a buscar"
+                    className="af-input"
+                    placeholder="Valor..."
                     value={filter.value}
                     onChange={(e) => handleValueChange(index, e.target.value)}
-                    disabled={!filter.id} // Deshabilitar si no hay columna seleccionada
+                    disabled={!filter.id}
                   />
                 </CInputGroup>
-              ))}
-            </CCol>
-            <CCol xs={6} md={6} lg={6} className="bg-light align-items-center">
-              {/* Tercer y cuarto filtro */}
-              {filtersToShow.slice(2, 4).map((filter, index) => (
-                <CInputGroup key={index + 2} className="shadow-sm border-0 mb-0 size=sm">
-                  <CInputGroupText>Filtrar por</CInputGroupText>
-                  <CFormSelect
-                    className="form-select w-15"
-                    value={filter.id}
-                    onChange={(e) => handleColumnChange(index + 2, e.target.value)}
-                  >
-                    {/* Opción por defecto "Seleccionar" */}
-                    <option value="">Seleccionar</option>
-                    {options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                  <CFormInput
-                    className="form-input w-25"
-                    placeholder="Valor a buscar"
-                    value={filter.value}
-                    onChange={(e) => handleValueChange(index + 2, e.target.value)}
-                    disabled={!filter.id} // Deshabilitar si no hay columna seleccionada
-                  />
-                </CInputGroup>
-              ))}
-            </CCol>
+              </CCol>
+            ))}
           </CRow>
         </CAccordionBody>
       </CAccordionItem>

@@ -62,4 +62,41 @@ export const updateEstudiante = (id, estudiante) => api.put(`/api/estudiantes/${
 export const deleteEstudiante = (id) => api.delete(`/api/estudiantes/${id}`);
 
 
+// ==================== DOCENTES (tbl_entidad con tipo_entidad = 'DOC') ====================
+/**
+ * Obtiene todos los docentes (entidades con tipo_entidad = 'DOC')
+ * El backend debe filtrar automáticamente por tipo_entidad = 'DOC'
+ */
+export const getDocentes = () => api.get('/api/docentes');
+
+
+/**
+ * Obtiene un Docente específico por ID
+ * @param {number} id - ID del Docente
+ */
+export const getDocente = (id) => api.get(`/api/docentes/${id}`);
+
+/**
+ * Crea un nuevo Docente
+ * El backend debe asignar automáticamente tipo_entidad = 'DOC'
+ * @param {object} docente - Datos del Docente
+ */
+export const createDocente = (docente) => api.post('/api/docentes/', docente);
+
+/**
+ * Actualiza un docente existente
+ * @param {number} id - ID del docente
+ * @param {object} docente - Datos actualizados del docente
+ */
+export const updateDocente = (id, docente) => api.put(`/api/docentes/${id}`, docente);
+
+/**
+ * Elimina un docente
+ * @param {number} id - ID del docente a eliminar
+ */
+export const deleteDocente = (id) => api.delete(`/api/docentes/${id}`);
+
+
+
+
 export default api;

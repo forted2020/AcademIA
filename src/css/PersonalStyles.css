@@ -1,41 +1,51 @@
 .scrollable-table-body {
-    max-height: 300px;
-    overflow-y: auto;
-    display: block;
-    width: 100% !important; /* Forzamos el ancho con !important para evitar sobrescrituras */
-  }
+  max-height: 300px;
+  overflow-y: auto;
+  display: block;
+  width: 100% !important;
+  /* Forzamos el ancho con !important para evitar sobrescrituras */
+}
 
-  /* Ajustar las filas y celdas para que mantengan el diseño tabular */
+/* Ajustar las filas y celdas para que mantengan el diseño tabular */
 .scrollable-table-body tr {
-    display: table; /* Restaura el comportamiento de tabla para las filas */
-    width: 100%; /* Ocupa todo el ancho */
-    table-layout: fixed; /* Evita que las celdas se desajusten */
-  }
-  
-  /* Ajustar las celdas para que respeten el ancho */
-  .scrollable-table-body td,
-  .scrollable-table-body th {
-    word-wrap: break-word; /* Evita desbordamiento horizontal */
-    white-space: normal;
-  }
+  display: table;
+  /* Restaura el comportamiento de tabla para las filas */
+  width: 100%;
+  /* Ocupa todo el ancho */
+  table-layout: fixed;
+  /* Evita que las celdas se desajusten */
+}
 
-  /* Asegurar que el contenedor responsive no limite el ancho */
+/* Ajustar las celdas para que respeten el ancho */
+.scrollable-table-body td,
+.scrollable-table-body th {
+  word-wrap: break-word;
+  /* Evita desbordamiento horizontal */
+  white-space: normal;
+}
+
+/* Asegurar que el contenedor responsive no limite el ancho */
 .table-responsive {
-    width: 100% !important;
-    overflow-x: auto; /* Para scroll horizontal si es necesario en pantallas pequeñas */
-  }
+  width: 100% !important;
+  overflow-x: auto;
+  /* Para scroll horizontal si es necesario en pantallas pequeñas */
+}
 
 
 /* Estilo para print */
 
 @media print {
+
   /* Oculta todo excepto la tabla */
   body * {
     visibility: hidden;
   }
-  #mainTable, #mainTable * {
+
+  #mainTable,
+  #mainTable * {
     visibility: visible;
   }
+
   #mainTable {
     position: absolute;
     left: 0;
@@ -46,43 +56,196 @@
 
 /* Estilos para Accordeon*/
 .custom-accordion {
-  background-color: #f8f9fa; /* Fondo gris claro */
-  color: #333; /* Color de texto oscuro */
+  background-color: #f8f9fa;
+  /* Fondo gris claro */
+  color: #333;
+  /* Color de texto oscuro */
   /*border: 2px solid #007bff; /* Borde azul */
-  border-radius: 1px; /* Bordes redondeados */
+  border-radius: 1px;
+  /* Bordes redondeados */
 }
 
 .custom-accordion .accordion-button {
-  padding: 0.75rem 1.5rem; /* Padding del botón */
-  background-color: #e9ecef; /* Fondo del botón */
-  color: #495057; /* Color del texto del botón */
+  padding: 0.75rem 1.5rem;
+  /* Padding del botón */
+  background-color: #e9ecef;
+  /* Fondo del botón */
+  color: #495057;
+  /* Color del texto del botón */
 }
 
 .custom-accordion .accordion-button:not(.collapsed) {
-  background-color: #cce5ff; /* Fondo del botón activo */
-  color: #0056b3; /* Color del texto activo */
+  background-color: #cce5ff;
+  /* Fondo del botón activo */
+  color: #0056b3;
+  /* Color del texto activo */
 }
 
 .custom-accordion .accordion-body {
-  padding: 0.5rem 0.5rem; /* Padding del cuerpo */
+  padding: 0.5rem 0.5rem;
+  /* Padding del cuerpo */
 }
 
 /* PersonalStyles.css */
 .small-accordion .accordion-button {
-  padding: 0.25rem 0.5rem !important; /* Padding pequeño, forzado */
-  font-size: 0.9rem !important;     /* Texto más pequeño (14px) */
-  line-height: 1.2 !important;        /* Compacta la altura */
-  border: border-light!important; 
+  padding: 0.25rem 0.5rem !important;
+  /* Padding pequeño, forzado */
+  font-size: 0.9rem !important;
+  /* Texto más pequeño (14px) */
+  line-height: 1.2 !important;
+  /* Compacta la altura */
+  border: border-light !important;
 }
 
 .small-accordion .accordion-button::after {
-  width: 0.75rem !important;          /* Ícono más pequeño */
+  width: 0.75rem !important;
+  /* Ícono más pequeño */
   height: 0.75rem !important;
-  background-size: 0.75rem !important; /* Escala el ícono */
+  background-size: 0.75rem !important;
+  /* Escala el ícono */
 }
 
 .small-accordion .accordion-button:not(.collapsed)::after {
-  width: 0.75rem !important;          /* Ícono activo más pequeño */
+  width: 0.75rem !important;
+  /* Ícono activo más pequeño */
   height: 0.75rem !important;
   background-size: 0.75rem !important;
 }
+
+.hover-bg-primary:hover {
+  background-color: #667eea !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.c-accordion-header[aria-expanded="true"] .cil-chevron-bottom {
+  transform: rotate(180deg);
+}
+
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* AcademicDashboard.css ---------- -------- Se usa en Trayectoria_Gemini_1.jsx */
+.status-card {
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; /* shadow-lg equiv */
+}
+
+/* Bordes de estado */
+.border-start-success { border-left: 5px solid #198754; }
+.border-start-danger { border-left: 5px solid #dc3545; }
+.border-start-warning { border-left: 5px solid #ffc107; }
+.border-start-primary { border-left: 5px solid #0d6efd; }
+
+/* Fondo sutil al hacer hover en la cabecera */
+.hover-bg-light:hover { background-color: #f8f9fa; }
+
+/* AcademicDashboard.css ---------- -------- Se usa en Trayectoria_Gemini_1.jsx */
+
+
+/* AcademicDashboard.css ---------- -------- Se usa en Trayectoria_Gemini_2.jsx */
+/* Dashboard.css */
+:root {
+  --cui-primary-rgb: 30, 64, 175; /* Un azul más profesional */
+}
+
+.dashboard-bg {
+  background-color: #f3f4f6;
+  min-height: 100vh;
+}
+
+/* --- Tarjetas con efecto 'Glass' y elevación --- */
+.card-modern {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: white;
+  overflow: hidden;
+}
+
+.card-modern:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Estados de Materias (Borde izquierdo estético) --- */
+.status-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  transition: width 0.2s;
+}
+
+.card-subject:hover .status-indicator {
+  width: 8px; /* Feedback sutil al pasar el mouse */
+}
+
+/* Colores semánticos vibrantes */
+.status-success { background-color: #10b981; }
+.status-danger { background-color: #ef4444; }
+.status-warning { background-color: #f59e0b; }
+.status-info { background-color: #3b82f6; }
+
+/* --- Barra de progreso animada --- */
+.progress-modern {
+  height: 8px;
+  border-radius: 10px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+.progress-bar-animated {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* Animación de carga suave */
+}
+
+/* --- Typography & Badges --- */
+.text-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.badge-soft {
+  padding: 0.5em 1em;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.badge-soft-success { background-color: #d1fae5; color: #065f46; }
+.badge-soft-danger { background-color: #fee2e2; color: #991b1b; }
+
+/* --- Chevron Rotación --- */
+.chevron-icon {
+  transition: transform 0.3s ease;
+}
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* --- Filtro de año estilizado --- */
+.year-selector {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  cursor: pointer;
+}
+
+/* AcademicDashboard.css ---------- -------- Se usa en Trayectoria_Gemini_2.jsx */
+

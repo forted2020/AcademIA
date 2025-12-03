@@ -81,28 +81,12 @@ export const academicData = {
         id: "calc-dif",
         name: "Cálculo Diferencial",
         professor: "Dra. Elena Castro",
-        grade: 9.0, // Promedio de 9.5 y 8.5
+        grade: 9.5,
         status: "aprobado",
         details: [
-          { 
-            period: "Primer Cuatrimestre", 
-            finalGrade: 9.5, 
-            status: "APROBADO", 
-            evaluations: [
-              { name: "Examen Parcial 1 (50%)", grade: 9.2, weight: 0.50 },
-              { name: "Trabajo Práctico 1 (30%)", grade: 9.8, weight: 0.30 },
-              { name: "Participación (20%)", grade: 9.5, weight: 0.20 },
-            ]
-          },
-          { 
-            period: "Segundo Cuatrimestre", 
-            finalGrade: 8.5, 
-            status: "APROBADO", 
-            evaluations: [
-              { name: "Examen Final (70%)", grade: 8.0, weight: 0.70 },
-              { name: "Proyecto Final (30%)", grade: 9.6, weight: 0.30 },
-            ]
-          },
+          { name: "1er Parcial", grade: 9.2, status: "APROBADO" },
+          { name: "Trabajo Práctico", grade: 9.8, status: "APROBADO" },
+          { name: "Examen Final", grade: 9.5, status: "APROBADO" },
         ]
       },
       {
@@ -112,27 +96,11 @@ export const academicData = {
         grade: 5.8,
         status: "reprobado",
         details: [
-          { 
-            period: "Primer Cuatrimestre", 
-            finalGrade: 6.8, 
-            status: "APROBADO (Condicional)", 
-            evaluations: [
-              { name: "Examen Parcial 1 (60%)", grade: 6.0, weight: 0.60 },
-              { name: "Entrega Práctica (40%)", grade: 8.0, weight: 0.40 },
-            ]
-          },
-          { 
-            period: "Segundo Cuatrimestre", 
-            finalGrade: 4.5, 
-            status: "REPROBADO", 
-            evaluations: [
-              { name: "Examen Final (70%)", grade: 4.0, weight: 0.70 },
-              { name: "Trabajo Práctico 2 (30%)", grade: 5.5, weight: 0.30 },
-            ]
-          },
+          { name: "1er Parcial", grade: 4.0, status: "REPROBADO" },
+          { name: "Trabajo Práctico", grade: 8.5, status: "APROBADO" },
+          { name: "Recuperatorio", grade: 5.8, status: "PENDIENTE" },
         ]
       }
-
     ]
   },
   

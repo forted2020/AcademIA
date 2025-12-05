@@ -1,122 +1,28 @@
 import React, { useState, useEffect } from 'react';
+
 import {
-    CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner
+    CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert
 } from '@coreui/react';
+
 import CIcon from '@coreui/icons-react';
+
 import {
     cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine
 } from '@coreui/icons';
-import { academicData } from './data'; // Tu archivo de datos
+
+import { academicData } from './data'; // Archivo de datos
 import '../../css/AdvancedFilters.css'
-import AttendanceSection from './AttendanceSection'; // <-- Importa el nuevo co
+
+//  IMporto componentes modularizados
+import AttendanceSection from './AttendanceSection'; // <-- Importa el componente de asistencias
+import SubjectCard from '../../components/subjectCard/SubjectCard'; // Importa el componente de Fila materias
+import StatCard from '../../components/statCard/statCard'; // Importa el componente de Tarjeta Estadística
 
 
-// --- Sub-componente: Tarjeta de Estadísticas (KPI) ---
-const StatCard = ({ title, value, icon, color, subtext }) => (
-    <CCard className="card-modern h-100 p-2">
-        <CCardBody className="d-flex align-items-center justify-content-between">
-            <div>
-                <p className="text-label mb-1">{title}</p>
-                <h3 className={`fw-bold text-${color} mb-0 display-6`}>{value}</h3>
-                {subtext && <small className="text-muted" style={{ fontSize: '0.75rem' }}>{subtext}</small>}
-            </div>
-            <div className={`bg-${color} bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center`} style={{ width: '60px', height: '60px' }}>
-                <CIcon icon={icon} size="xl" className={`text-${color}`} />
-            </div>
-        </CCardBody>
-    </CCard>
-);
+import { getMateriasPorEstudiante } from '../../api/api.js';  // 
+//import { CSpinner, CAlert } from '@coreui/react';
 
-// --- Sub-componente: Fila de Materia ---
-const SubjectCard = ({ subject, isOpen, onToggle }) => {
-    const isPassing = subject.grade >= 6.0;
-    const statusColor = subject.status === 'aprobado' ? 'success' : (subject.status === 'reprobado' ? 'danger' : 'warning');
-    const badgeClass = subject.status === 'aprobado' ? 'badge-soft-success' : 'badge-soft-danger';
 
-    // Calculo visual del progreso
-    const progressWidth = `${Math.min(subject.grade * 10, 100)}%`;
-
-    return (
-        <CCard className="card-modern card-subject mb-3 cursor-pointer" onClick={onToggle}>
-            {/* Indicador lateral de color */}
-            <div className={`status-indicator status-${statusColor}`}></div>
-
-            <CCardBody className="p-0">
-                {/* Cabecera Clickable */}
-                <div className="p-4 d-flex flex-wrap align-items-center gap-3">
-
-                    {/* Info Principal */}
-                    <div className="flex-grow-1" style={{ minWidth: '200px' }}>
-                        <h5 className="fw-bold text-dark mb-1">{subject.name}</h5>
-                        <div className="d-flex align-items-center text-muted small">
-                            <CIcon icon={cilSchool} size="sm" className="me-1" />
-                            {subject.professor}
-                        </div>
-                    </div>
-
-                    {/* Visualización de Nota (Desktop) */}
-                    <div className="d-none d-lg-block flex-grow-1 mx-4" style={{ maxWidth: '300px' }}>
-                        <div className="d-flex justify-content-between mb-1">
-                            <span className="text-label">Progreso Académico</span>
-                            <span className="fw-bold small">{subject.grade} / 10</span>
-                        </div>
-                        <div className="progress-modern">
-                            <div
-                                className={`progress-bar-animated status-${statusColor}`}
-                                style={{ width: isOpen ? progressWidth : '0%', width: progressWidth }} // Animación al montar
-                            ></div>
-                        </div>
-                    </div>
-
-                    {/* Nota Grande y Chevron */}
-                    <div className="d-flex align-items-center gap-4">
-                        <div className="text-end">
-                            <span className={`fs-3 fw-bolder text-${statusColor}`}>{subject.grade}</span>
-                        </div>
-                        <span className={`${badgeClass} d-none d-md-inline-block`}>
-                            {subject.status}
-                        </span>
-                        <CIcon
-                            icon={cilChevronBottom}
-                            className={`text-muted chevron-icon ${isOpen ? 'rotate-180' : ''}`}
-                        />
-                    </div>
-                </div>
-
-                {/* Detalles Desplegables */}
-                <CCollapse visible={isOpen}>
-                    <div className="bg-light bg-opacity-50 border-top p-4 ps-5">
-                        <h6 className="fw-bold mb-3 text-dark">Historial de Evaluaciones</h6>
-                        <CRow className="g-3">
-                            {subject.details.map((detail, idx) => (
-                                <CCol md={6} lg={3} key={idx}>
-                                    <div className="bg-white p-3 rounded-3 shadow-sm border border-light h-100">
-                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                            <span className="text-xs text-uppercase fw-bold text-muted">{detail.name}</span>
-                                            {detail.status !== 'No aplica' && (
-                                                <CIcon icon={detail.grade >= 6 ? cilCheckCircle : cilWarning} className={`text-${detail.grade >= 6 ? 'success' : 'danger'}`} size="sm" />
-                                            )}
-                                        </div>
-                                        <div className="mt-2">
-                                            <span className="h4 fw-bold text-dark">{detail.grade}</span>
-                                            <div className="small text-muted">{detail.status}</div>
-                                        </div>
-                                    </div>
-                                </CCol>
-                            ))}
-                        </CRow>
-                        {!isPassing && (
-                            <div className="mt-3 p-3 bg-danger bg-opacity-10 text-danger rounded-3 border border-danger border-opacity-25 d-flex align-items-center">
-                                <CIcon icon={cilWarning} className="me-2" />
-                                <small className="fw-semibold">Atención: Materia en riesgo. Consulta fechas de recuperatorio.</small>
-                            </div>
-                        )}
-                    </div>
-                </CCollapse>
-            </CCardBody>
-        </CCard>
-    );
-};
 
 // --- Componente Principal ---
 const AcademicDashboard = () => {
@@ -141,8 +47,8 @@ const AcademicDashboard = () => {
                 {/* Cabecera */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
                     <div>
-                        <h1 className="fw-bolder text-dark mb-1">Tu Rendimiento</h1>
-                        <p className="text-muted mb-0">Resumen académico y asistencias</p>
+                        <h1 className="fw-bolder text-dark mb-1">Historial académico</h1>
+                        <p className="text-muted mb-0">Visualización de calificaciones, asistencias y evaluaciones</p>
                     </div>
 
                     <div className="mt-3 mt-md-0 d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
@@ -167,7 +73,8 @@ const AcademicDashboard = () => {
                     </div>
                 ) : data ? (
                     <div className="fade-in-up">
-                        {/* KPIs / Métricas */}
+                        
+                        {/* KPIs / Métricas  - Uso de statCards */}
                         <CRow className="g-4 mb-5">
                             <CCol sm={6} lg={3}>
                                 <StatCard
@@ -208,7 +115,7 @@ const AcademicDashboard = () => {
                         <div className="mb-4 d-flex align-items-center justify-content-between">
                             <h4 className="fw-bold text-dark m-0">Materias & Calificaciones</h4>
                             <span className="badge bg-white text-dark border shadow-sm rounded-pill">
-                                {data.subjects.length} Cursadas
+                                {data.subjects.length} Cursadass
                             </span>
                         </div>
 
@@ -223,9 +130,9 @@ const AcademicDashboard = () => {
                             ))}
                         </div>
 
+
+
                         {/* Sección de Asistencia (Extendida del mockup original) */}
-
-
                         <div className="mt-5">
                             <h4 className="fw-bold text-dark m-0 mb-3">Registro de Asistencias</h4>
                             <AttendanceSection

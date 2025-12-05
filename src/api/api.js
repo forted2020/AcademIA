@@ -1,3 +1,5 @@
+//  api.js
+ 
 import axios from 'axios';
 
 const api = axios.create({
@@ -60,6 +62,15 @@ export const updateEstudiante = (id, estudiante) => api.put(`/api/estudiantes/${
  * @param {number} id - ID del estudiante a eliminar
  */
 export const deleteEstudiante = (id) => api.delete(`/api/estudiantes/${id}`);
+
+/**
+ * Obtiene las materias en las que está inscripto un estudiante
+ * @param {number} estudianteId - ID del estudiante (id_entidad)
+ * @returns {Promise}
+ */
+export const getMateriasPorEstudiante = (estudianteId) => 
+    api.get(`/api/estudiantes/${estudianteId}/materias`);
+
 
 
 // ==================== DOCENTES (tbl_entidad con tipo_entidad = 'DOC') ====================

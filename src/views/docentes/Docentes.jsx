@@ -145,109 +145,112 @@ export default function docentes() {
   })
 
   return (
-    <CContainer>
-      <CCard className="mb-1">
-        {/* ---------- ENCABEZADO ---------- */}
-        <CCardHeader className="py-2 bg-white">
-          <CRow className="justify-content-between align-items-center">
-            <CCol xs={12} sm="auto">
-              <h4 id="titulo" className="mb-0">
-                Gestión de Docentes
-              </h4>
-              <div className="small text-body-secondary">
-                Administración de Docentel establecimiento
-              </div>
-            </CCol>
+    <div style={{ padding: '10px'}}>
+      <h1 className="ms-1" >Docentes</h1>
+      <CContainer>
+        <CCard className="mb-1">
+          {/* ---------- ENCABEZADO ---------- */}
+          <CCardHeader className="py-2 bg-white">
+            <CRow className="justify-content-between align-items-center">
+              <CCol xs={12} sm="auto">
+                <h4 id="titulo" className="mb-0">
+                  Gestión de Docentes
+                </h4>
+                <div className="small text-body-secondary">
+                  Administración de Docentel establecimiento
+                </div>
+              </CCol>
 
-            {/* Botón para agregar nuevo Docente */}
-            <CCol xs={12} sm="auto" className="text-md-end">
-              <CButton
-                color="primary"
-                className="shadow-sm"
-                size="sm"
-                onClick={() => handleClickEditar('')} // Abrir modal vacío para crear nuevo
-              >
-                <CIcon icon={cilPlus} className="me-1" />
-                Nuevo Docente
-              </CButton>
-            </CCol>
-          </CRow>
-        </CCardHeader>
+              {/* Botón para agregar nuevo Docente */}
+              <CCol xs={12} sm="auto" className="text-md-end">
+                <CButton
+                  color="primary"
+                  className="shadow-sm"
+                  size="sm"
+                  onClick={() => handleClickEditar('')} // Abrir modal vacío para crear nuevo
+                >
+                  <CIcon icon={cilPlus} className="me-1" />
+                  Nuevo Docente
+                </CButton>
+              </CCol>
+            </CRow>
+          </CCardHeader>
 
-        {/* ---------- FILTROS AVANZADOS Y BÚSQUEDA GLOBAL ---------- */}
-        <AdvancedFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
-          filterOptions={[
-            { value: 'nombre', label: 'Nombre' },
-            { value: 'apellido', label: 'Apellido' },
-            { value: 'email', label: 'Email' },
-            { value: 'domicilio', label: 'Domicilio' },
-            { value: 'telefono', label: 'Teléfono' },
+          {/* ---------- FILTROS AVANZADOS Y BÚSQUEDA GLOBAL ---------- */}
+          <AdvancedFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            columnFilters={columnFilters}
+            setColumnFilters={setColumnFilters}
+            filterOptions={[
+              { value: 'nombre', label: 'Nombre' },
+              { value: 'apellido', label: 'Apellido' },
+              { value: 'email', label: 'Email' },
+              { value: 'domicilio', label: 'Domicilio' },
+              { value: 'telefono', label: 'Teléfono' },
+            ]}
+          />
+
+          {/* ---------- ACCIONES DE TABLA (Exportar, etc.) ---------- */}
+          <TableActions table={table} />
+
+          {/* ---------- CUERPO DE LA TABLA ---------- */}
+          <CCardBody className="px-4 pt-1 pb-2 border border-light">
+            {/* Tabla de docentes (reutiliza el componente GenericTable) */}
+            <GenericTable table={table} />
+          </CCardBody>
+
+          {/* ---------- PIE DE PÁGINA CON PAGINACIÓN ---------- */}
+          <CCardFooter
+            className="bg-white border-top px-3 py-1"
+            style={{
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 1,
+              boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
+            }}
+          >
+            <TablePagination table={table} />
+          </CCardFooter>
+        </CCard>
+
+        {/* ---------- MODALES ---------- */}
+
+        {/* Modal de edición/creación de docente */}
+        <ModalNewEdit
+          visible={editModalVisible}
+          onClose={() => {
+            setEditModalVisible(false)
+            setDocenteToEdit(null)
+          }}
+          title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
+          initialData={docenteToEdit || {}}
+          onSave={handleSaveDocente}
+          fields={[
+            //{ name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
+            // { name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
+            { name: 'nombre', label: 'Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Carlos' },
+            { name: 'apellido', label: 'Apellido', type: 'text', required: true, placeholder: 'Ejemplo: Pérez' },
+            { name: 'email', label: 'Email', type: 'email', required: false, placeholder: 'ejemplo@mail.com' },
+            { name: 'fec_nac', label: 'Fecha de Nacimiento', type: 'date', required: false },
+            { name: 'domicilio', label: 'Domicilio', type: 'text', required: false, placeholder: 'Calle 123' },
+            { name: 'telefono', label: 'Teléfono', type: 'tel', required: false, placeholder: '1234567890' },
+            { name: 'password', label: 'Contraseña', type: 'password', required: false, placeholder: 'Solo si se crea usuario', fullWidth: true },
           ]}
         />
 
-        {/* ---------- ACCIONES DE TABLA (Exportar, etc.) ---------- */}
-        <TableActions table={table} />
-
-        {/* ---------- CUERPO DE LA TABLA ---------- */}
-        <CCardBody className="px-4 pt-1 pb-2 border border-light">
-          {/* Tabla de docentes (reutiliza el componente GenericTable) */}
-          <GenericTable table={table} />
-        </CCardBody>
-
-        {/* ---------- PIE DE PÁGINA CON PAGINACIÓN ---------- */}
-        <CCardFooter
-          className="bg-white border-top px-3 py-1"
-          style={{
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 1,
-            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
+        {/* Modal de confirmación de eliminación */}
+        <ModalConfirmDel
+          visible={deleteModalVisible}
+          onClose={() => {
+            setDeleteModalVisible(false)
+            setDocenteToDelete(null)
           }}
-        >
-          <TablePagination table={table} />
-        </CCardFooter>
-      </CCard>
-
-      {/* ---------- MODALES ---------- */}
-
-      {/* Modal de edición/creación de docente */}
-      <ModalNewEdit
-        visible={editModalVisible}
-        onClose={() => {
-          setEditModalVisible(false)
-          setDocenteToEdit(null)
-        }}
-        title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
-        initialData={docenteToEdit || {}}
-        onSave={handleSaveDocente}
-        fields={[
-          //{ name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
-          // { name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
-          { name: 'nombre', label: 'Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Carlos' },
-          { name: 'apellido', label: 'Apellido', type: 'text', required: true, placeholder: 'Ejemplo: Pérez' },
-          { name: 'email', label: 'Email', type: 'email', required: false, placeholder: 'ejemplo@mail.com' },
-          { name: 'fec_nac', label: 'Fecha de Nacimiento', type: 'date', required: false },
-          { name: 'domicilio', label: 'Domicilio', type: 'text', required: false, placeholder: 'Calle 123' },
-          { name: 'telefono', label: 'Teléfono', type: 'tel', required: false, placeholder: '1234567890' },
-          { name: 'password', label: 'Contraseña', type: 'password', required: false, placeholder: 'Solo si se crea usuario', fullWidth: true },
-        ]}
-      />
-
-      {/* Modal de confirmación de eliminación */}
-      <ModalConfirmDel
-        visible={deleteModalVisible}
-        onClose={() => {
-          setDeleteModalVisible(false)
-          setDocenteToDelete(null)
-        }}
-        onConfirm={handleDelete}
-        userId={docenteToDelete}
-      />
-    </CContainer>
-
+          onConfirm={handleDelete}
+          userId={docenteToDelete}
+        />
+      </CContainer>
+    </div>
   )
+
 }

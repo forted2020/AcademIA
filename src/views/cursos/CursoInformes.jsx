@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer} from '@coreui/react'
+import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer,} from '@coreui/react'
 
-export default function Curso() {
+import '../../css/PersonalStyles.css'
+
+
+export default function CursoInformes() {
 
     return (
 
@@ -18,9 +21,9 @@ export default function Curso() {
                         <CRow className="justify-content-between align-items-center " > {/* Fila en la grilla.*/}
                             <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
                                 <h4 id="titulo" className="mb-0 ">
-                                    Administración de Cursos
+                                    Informes de Cursos
                                 </h4>
-                                <div className="small text-body-secondary"> Administradores del sistema</div>
+                                <div className="small text-body-secondary"> Reportes y listados</div>
                             </CCol>
                         </CRow>
                     </CCardHeader>

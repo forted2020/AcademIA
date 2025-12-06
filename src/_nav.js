@@ -45,12 +45,21 @@ const getNavItems = () => {
       to: '/cursos',
       icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
       items: [
-        { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos' },
-        { component: CNavItem, name: 'Informes', to: '/curso/informes' },
+        { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos' }, // "Cuando seleccione el ítem 'Gestión de Cursos", le agregue '/   cursos/ a la URL y me lleve ahí. 
+        { component: CNavItem, name: 'Informes', to: '/cursos/informes' },
       ],
     },
-    
-    
+
+    {
+      component: CNavGroup,
+      name: 'Materias',
+      to: '/materias',
+      icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
+      items: [
+        { component: CNavItem, name: 'Gestión de Materias', to: '/materias' },
+        { component: CNavItem, name: 'Informes', to: '/materias/informes' },
+      ],
+    },
     
     {
       component: CNavGroup,
@@ -59,8 +68,8 @@ const getNavItems = () => {
       icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
       items: [
         { component: CNavItem, name: 'Gestión de Docentes', to: '/docentes' },
-        { component: CNavItem, name: 'Carga de notas', to: '/cargaNotas' },
-        { component: CNavItem, name: 'Informes', to: '/docentes' },
+        { component: CNavItem, name: 'Carga de notas', to: '/docentes/cargaNotas' },
+        { component: CNavItem, name: 'Informes', to: '/docentes/informes' },
       ],
     },
     {
@@ -80,6 +89,7 @@ const getNavItems = () => {
 
 
   // ------------- Ítems generales PARA TODOS LOS LOGUEADOS (Estudiantes, Cursos, Materias)  ------------- 
+  // ------------- POR EL MOMENTO SE USA EL DEL ADM. hAY QUE REVISAR ESTO CUANDO SE IMPLEMENTEN LOS PERFILES  ------------- 
   const generalItems = [
     {
       component: CNavGroup,
@@ -108,8 +118,8 @@ const getNavItems = () => {
       to: '/materias',
       icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
       items: [
-        { component: CNavItem, name: 'Gestión de Materias', to: '/materia' },
-        { component: CNavItem, name: 'Informes', to: '/materia/informes' },
+        { component: CNavItem, name: 'Gestión de Materias', to: '/materias' },
+        { component: CNavItem, name: 'Informes', to: '/materias/informes' },
       ],
     },
   ]

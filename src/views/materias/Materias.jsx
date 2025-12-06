@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer} from '@coreui/react'
+import { CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer} from '@coreui/react'
 
-export default function Curso() {
+export default function Materias() {
 
     return (
 
         <div style={{ padding: '10px' }}>
-            <h1 className="ms-1" >Cursos</h1>
+            <h1 className="ms-1" >Materias</h1>
 
             <CContainer>
 
@@ -18,9 +18,9 @@ export default function Curso() {
                         <CRow className="justify-content-between align-items-center " > {/* Fila en la grilla.*/}
                             <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
                                 <h4 id="titulo" className="mb-0 ">
-                                    Administración de Cursos
+                                    Administración de Materias
                                 </h4>
-                                <div className="small text-body-secondary"> Administradores del sistema</div>
+                                <div className="small text-body-secondary"> Planificación de materias</div>
                             </CCol>
                         </CRow>
                     </CCardHeader>

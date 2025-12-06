@@ -28,7 +28,7 @@ import {
 
 import TablePagination from '../../components/tablePagination/TablePagination.jsx'
 
-import { getUsuariosColumns } from '../../utils/columns';  // Importamos las columnas de la tabla
+import { getUsuariosColumns } from '../../utils/columns.js';  // Importamos las columnas de la tabla
 import GenericTable from '../../components/usersTable/GenericTable.jsx'; // Importamos el componente UserTable
 import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'; // Importamos el componente de filtros 
 

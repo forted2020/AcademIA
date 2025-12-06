@@ -5,11 +5,12 @@ import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
 // Función para generar los ítems del menú de navegación lateral
 const getNavItems = () => {
-  // Obtener usuario del localStorage o definir estructura por defecto
+  
+  // Obtener usuario del localStorage o definir estructura por defecto, para decidir que items mostrar !!!IMPORTANTE!!!!!
   const user = JSON.parse(localStorage.getItem('user')) || { tipos_usuario: [] }
   const tipos_usuario = user.tipos_usuario || []
 
-  // Ítems base visibles para todos los usuarios
+  // ------------- Ítems base VISIBLES PARA TODOS LOS USUARIOS ------------- 
   const baseItems = [
     {
       component: CNavTitle,
@@ -18,12 +19,13 @@ const getNavItems = () => {
     {
       component: CNavItem,
       name: 'Inicio',
-      to: '/inicio',
+      to: '/home',
       icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
     },
   ]
 
-  // Ítems específicos para Administradores (ADM)
+ 
+  // ------------- Ítems específicos para Administradores (ADM) ------------- 
   const adminItems = [
     {
       component: CNavGroup,
@@ -35,6 +37,21 @@ const getNavItems = () => {
         { component: CNavItem, name: 'Informes', to: '/usuarios' },
       ],
     },
+    
+    
+    {
+      component: CNavGroup,
+      name: 'Cursos',
+      to: '/cursos',
+      icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
+      items: [
+        { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos' },
+        { component: CNavItem, name: 'Informes', to: '/curso/informes' },
+      ],
+    },
+    
+    
+    
     {
       component: CNavGroup,
       name: 'Docentes',
@@ -60,7 +77,9 @@ const getNavItems = () => {
     },
   ]
 
-  // Ítems generales (Estudiantes, Cursos, Materias)
+
+
+  // ------------- Ítems generales PARA TODOS LOS LOGUEADOS (Estudiantes, Cursos, Materias)  ------------- 
   const generalItems = [
     {
       component: CNavGroup,
@@ -76,11 +95,11 @@ const getNavItems = () => {
     {
       component: CNavGroup,
       name: 'Cursos',
-      to: '/curso',
+      to: '/cursos',
       icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
       items: [
-        { component: CNavItem, name: 'Gestión de Cursos', to: '/curso' },
-        { component: CNavItem, name: 'Informes', to: '/curso/informes' },
+        { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos' },
+        { component: CNavItem, name: 'Informes', to: '/cursos/informes' },
       ],
     },
     {
@@ -106,7 +125,9 @@ const getNavItems = () => {
     },
   ]
 
-  // Construcción del menú final
+  
+  
+  // Construcción del menú final combinando bloques según el tipo de usuario
   let navItems = [...baseItems]
 
   // Si es administrador, agregamos sus opciones

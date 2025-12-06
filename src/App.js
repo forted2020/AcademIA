@@ -15,8 +15,10 @@ const VerifyEmail = React.lazy(() => import('./views/pages/VerifyEmail/VerifyEma
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const UserManagement = React.lazy(() => import('./views/UserManagement/UserManagement'))
+const Home = React.lazy(() => import('./views/home/Home'))
 const Estudiante = React.lazy(() => import('./views/estudiantes/estudiante'))
 const Trayectoria = React.lazy(() => import('./views/estudiantes/Trayectoria'))
+const Curso = React.lazy(() => import('./views/cursos/Curso'))
 const Docentes = React.lazy(() => import('./views/docentes/Docentes'))
 
 // Hook personalizado para sincronizar el tema desde la URL o Redux
@@ -68,8 +70,17 @@ const RouterContent = () => {
 
         {/* Rutas protegidas anidadas bajo el Layout Principal */}
         <Route path="*" element={<DefaultLayout />}>
+
           <Route
-            path="Docentes"
+            path="home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="docentes"
             element={
               <ProtectedRoute>
                 <Docentes />
@@ -92,6 +103,16 @@ const RouterContent = () => {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="cursos"
+            element={
+              <ProtectedRoute>
+                <Curso />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="usuarios"
             element={

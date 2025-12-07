@@ -1,3 +1,5 @@
+//  Componente de registro de Asistencias
+
 import React, { useState } from 'react';
 import { CCard, CCardBody, CCollapse, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react';
 import CIcon from '@coreui/icons-react';

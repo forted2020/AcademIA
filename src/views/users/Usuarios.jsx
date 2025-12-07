@@ -53,17 +53,6 @@ const Usuarios = () => {
   const [visibleXL, setVisibleXL] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // State para filtros
-  /*
-  const [filterColumn1, setFilterColumn1] = useState('name'); // Columna predeterminada para el primer filtro
-  const [filterValue1, setFilterValue1] = useState(''); // Valor del primer filtro
-  const [filterColumn2, setFilterColumn2] = useState('domicilio'); // Columna predeterminada para el segundo filtro
-  const [filterValue2, setFilterValue2] = useState(''); // Valor del segundo filtro
-  const [filterColumn3, setFilterColumn3] = useState('domicilio'); // Columna predeterminada para el segundo filtro
-  const [filterValue3, setFilterValue3] = useState(''); // Valor del segundo filtro
-  const [filterColumn4, setFilterColumn4] = useState('domicilio'); // Columna predeterminada para el segundo filtro
-  const [filterValue4, setFilterValue4] = useState(''); // Valor del segundo filtro
-  */
 
   // Estado para manejar los filtros de TanStack como un array de objetos
   const [columnFilters, setColumnFilters] = useState(initialFilters);

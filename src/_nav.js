@@ -34,7 +34,7 @@ const getNavItems = () => {
       icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
       items: [
         { component: CNavItem, name: 'Gestión de Usuarios', to: '/usuarios' },
-        { component: CNavItem, name: 'Informes', to: '/usuarios' },
+        { component: CNavItem, name: 'Informes', to: '/usuarios/informes' },
       ],
     },
     

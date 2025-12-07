@@ -7,11 +7,18 @@ import '../../css/AdvancedFilters.css';
 // Componente que encapsula los filtros avanzados y la búsqueda global
 const AdvancedFilters = ({ searchTerm, setSearchTerm, columnFilters, setColumnFilters, filterOptions }) => {
 
-  // Aseguramos que siempre haya al menos 4 filtros para mostrar en la UI
-  const filtersToShow = [...columnFilters];
+   
+  // Aseguramos que columnFilters sea siempre un array iterable
+  const safeColumnFilters = Array.isArray(columnFilters) ? columnFilters : [];
+
+  // Ahora creamos los filtros a mostrar, empezando desde un array seguro
+  const filtersToShow = [...safeColumnFilters];
+
+  // Completamos hasta tener al menos 4 filtros visibles en la UI
   while (filtersToShow.length < 4) {
-    filtersToShow.push({ id: '', value: '' }); // Inicializa con opción "Seleccionar"
+    filtersToShow.push({ id: '', value: '' }); // Filtro vacío para mostrar "Seleccionar"
   }
+
 
   // Maneja el cambio en la columna de un filtro
   const handleColumnChange = (index, value) => {

@@ -1,4 +1,9 @@
-/*  Componente maneje la lógica de los usuarios */
+//  UserManagement.js
+
+/*  
+Componente que maneje la lógica de los usuarios: comunicarse con la API, manejar el estado, crear/editar/eliminar usuarios.
+Solo pasa los datos y las funciones necesarias al componente presentacional Usuarios.
+ */
 
 
 import React, { useEffect, useState } from 'react';

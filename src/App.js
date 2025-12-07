@@ -17,8 +17,8 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const UserManagement = React.lazy(() => import('./views/UserManagement/UserManagement'))
 const Home = React.lazy(() => import('./views/home/Home'))
-const Estudiante = React.lazy(() => import('./views/estudiantes/estudiante'))
-const EstudianteInformes = React.lazy(() => import('./views/estudiantes/EstudianteInformes'))
+const Estudiante = React.lazy(() => import('./views/estudiantes/Estudiantes'))
+const EstudiantesInformes = React.lazy(() => import('./views/estudiantes/EstudiantesInformes'))
 const Trayectoria = React.lazy(() => import('./views/estudiantes/Trayectoria'))
 const Curso = React.lazy(() => import('./views/cursos/Curso'))
 const CursoInformes = React.lazy(() => import('./views/cursos/CursoInformes'))
@@ -102,7 +102,7 @@ const RouterContent = () => {
 
           <Route path="estudiante" element={<ProtectedRoute> <Estudiante /> </ProtectedRoute>} />
           <Route path="estudiante/trayectoria" element={<ProtectedRoute> <Trayectoria /> </ProtectedRoute>} />
-          <Route path="estudiante/informes" element={<ProtectedRoute> <EstudianteInformes /> </ProtectedRoute>} />
+          <Route path="estudiante/informes" element={<ProtectedRoute> <EstudiantesInformes /> </ProtectedRoute>} />
 
           <Route path="cursos" element={<ProtectedRoute> <Curso /> </ProtectedRoute>} />
           <Route path="cursos/informes" element={<ProtectedRoute> <CursoInformes /> </ProtectedRoute>} />

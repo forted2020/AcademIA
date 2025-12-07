@@ -19,7 +19,7 @@ import SubjectCard from '../../components/subjectCard/SubjectCard'; // Importa e
 import StatCard from '../../components/statCard/statCard'; // Importa el componente de Tarjeta Estadística
 
 
-import { getMateriasPorEstudiante } from '../../api/api.js';  // 
+import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  // 
 //import { CSpinner, CAlert } from '@coreui/react';
 
 

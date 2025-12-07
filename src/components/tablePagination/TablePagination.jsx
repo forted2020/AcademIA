@@ -2,6 +2,17 @@ import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CConta
 
 const TablePagination = ({ table }) => {
 
+    // ========================================
+    // PROTECCIÓN: Si table no está lista, no renderizamos nada o mostramos placeholder
+    // ========================================
+    if (!table) {
+        return (
+            <div className="text-center py-2 text-muted small">
+                Cargando paginación...
+            </div>
+        );
+    }
+
     return (
 
         <div className="bg-white border-top px-3 py-1"

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 
 import {CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer} from '@coreui/react'
 
-export default function EstudianteInformes() {
+export default function EstudiantesInformes() {
 
     return (
 

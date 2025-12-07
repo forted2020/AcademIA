@@ -29,48 +29,6 @@ export const deleteUser = (id) => api.delete(`/api/users/${id}`);     // Elimina
 // ==================== AUTENTICACIÓN ====================
 export const login = (data) => api.post('/api/login', data); // Login de usuario
 
-// ==================== ESTUDIANTES (tbl_entidad con tipo_entidad = 'ALU') ====================
-/**
- * Obtiene todos los estudiantes (entidades con tipo_entidad = 'ALU')
- * El backend debe filtrar automáticamente por tipo_entidad = 'ALU'
- */
-export const getEstudiantes = () => api.get('/api/estudiantes');
-
-
-/**
- * Obtiene un estudiante específico por ID
- * @param {number} id - ID del estudiante
- */
-export const getEstudiante = (id) => api.get(`/api/estudiantes/${id}`);
-
-/**
- * Crea un nuevo estudiante
- * El backend debe asignar automáticamente tipo_entidad = 'ALU'
- * @param {object} estudiante - Datos del estudiante
- */
-export const createEstudiante = (estudiante) => api.post('/api/estudiantes/', estudiante);
-
-/**
- * Actualiza un estudiante existente
- * @param {number} id - ID del estudiante
- * @param {object} estudiante - Datos actualizados del estudiante
- */
-export const updateEstudiante = (id, estudiante) => api.put(`/api/estudiantes/${id}`, estudiante);
-
-/**
- * Elimina un estudiante
- * @param {number} id - ID del estudiante a eliminar
- */
-export const deleteEstudiante = (id) => api.delete(`/api/estudiantes/${id}`);
-
-/**
- * Obtiene las materias en las que está inscripto un estudiante
- * @param {number} estudianteId - ID del estudiante (id_entidad)
- * @returns {Promise}
- */
-export const getMateriasPorEstudiante = (estudianteId) => 
-    api.get(`/api/estudiantes/${estudianteId}/materias`);
-
 
 
 // ==================== DOCENTES (tbl_entidad con tipo_entidad = 'DOC') ====================

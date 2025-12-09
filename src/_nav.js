@@ -4,20 +4,7 @@ import { CIcon } from '@coreui/icons-react'
 import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
-// --------------------------------------------------------------------------------
-// ROLES ACTUALES DEL BACKEND (¡¡¡IMPORTANTÍSIMO!!!)
-// --------------------------------------------------------------------------------
-const ROL_ADMIN = 'ADMIN';
-const ROL_ALUMNO = 'ALUMNO';
-const ROL_DOCENTE = 'DOCENTE';
-
-//  Ver si despues se pueden usar los tipos de usuarios para habilitar los menus
-//  const ROL = {
-//      ADMIN: 'ADMIN_SISTEMA',
-//      ALUMNO: 'ALUMNO_APP',
-//      DOCENTE: 'DOCENTE_APP', 
-//  };
-
+import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../src/constants/Roles';
 
 // --------------------------------------------------------------------------------
 // 1. DEFINICIÓN DEL MENÚ CON PERMISOS
@@ -120,52 +107,72 @@ const fullNavigation = [
     },
 ];
 
+//--------------------------------------------------------------------------------
+// 2. FUNCIÓN DE FILTRADO (MEJORADA: Soporte Multirrol y Limpieza de Grupos)
 // --------------------------------------------------------------------------------
-// 2. FUNCIÓN DE FILTRADO
-// --------------------------------------------------------------------------------
-const filterNavItems = (items, userRole) => {
-    return items
-        .filter(item => {
-            if (item.roles && item.roles.includes(userRole)) {
-                return true;
-            }
-            if (!item.roles) {
-                return true;
-            }
+const filterNavItems = (items, userRoles) => {
+    // Usamos un Set para búsquedas de roles eficientes (O(1))
+    const userRoleSet = new Set(userRoles);
+
+    // Primera pasada: Filtrar recursivamente los sub-ítems
+    const itemsWithFilteredChildren = items.map(item => {
+        if (item.items) {
+            // Se filtra recursivamente el contenido del grupo
+            const filteredItems = filterNavItems(item.items, userRoles);
+            
+            return {
+                ...item,
+                items: filteredItems,
+            };
+        }
+        return item;
+    });
+
+    // Segunda pasada: Filtrar el ítem principal (y eliminar grupos vacíos)
+    return itemsWithFilteredChildren.filter(item => {
+        // Regla 1: Ocultar si es un grupo sin ítems visibles (limpieza UX)
+        if (item.component === CNavGroup && item.items && item.items.length === 0) {
             return false;
-        })
-        .map(item => {
-            if (item.items) {
-                return {
-                    ...item,
-                    items: filterNavItems(item.items, userRole),
-                };
-            }
-            return item;
-        });
+        }
+
+        // Regla 2: Si no tiene roles definidos (ej. CNavTitle), siempre es visible
+        if (!item.roles || item.roles.length === 0) {
+            return true;
+        }
+        
+        // Regla 3 (Soporte Multirrol): Es visible si AL MENOS UNO de los roles
+        // requeridos por el ítem coincide con CUALQUIERA de los roles del usuario.
+        return item.roles.some(requiredRole => userRoleSet.has(requiredRole));
+    });
 };
 
 // --------------------------------------------------------------------------------
-// 3. FUNCIÓN PRINCIPAL CON DEBUG
+// 3. FUNCIÓN PRINCIPAL (MEJORADA: Extracción de Todos los Roles)
 // --------------------------------------------------------------------------------
+/**
+ * Obtiene el menú de navegación filtrado según los roles del usuario logueado.
+ * @returns {Array} El array de navegación de CoreUI.
+ */
 const getNavItems = () => {
     const userJson = localStorage.getItem('user');
     const user = userJson ? JSON.parse(userJson) : null;
 
-    const rolSistema = user && user.tipos_usuario && user.tipos_usuario.length > 0
-        ? user.tipos_usuario[0].cod_tipo_usuario
-        : null;
+    // Extraer *TODOS* los códigos de rol del usuario (soporte multirrol)
+    const userRoles = user && user.tipos_usuario
+        ? user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario)
+        : [];
 
     console.log('🔍 _nav.js - Usuario en localStorage:', user);
-    console.log('🔍 _nav.js - Rol detectado:', rolSistema);
+    console.log('🔍 _nav.js - Roles detectados (multirrol):', userRoles);
 
-    if (!rolSistema) {
-        console.log('❌ No se encontró rol → Menú vacío');
+    if (userRoles.length === 0) {
+        console.log('❌ No se encontraron roles → Menú vacío');
         return [];
     }
 
-    const finalNavItems = filterNavItems(fullNavigation, rolSistema);
-    console.log('✅ Menú filtrado con ítems:', finalNavItems.length);
+    // Filtrar el menú completo con el array de roles del usuario
+    const finalNavItems = filterNavItems(fullNavigation, userRoles);
+    console.log('✅ Menú filtrado con ítems finales:', finalNavItems.length);
 
     return finalNavItems;
 };

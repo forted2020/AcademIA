@@ -121,11 +121,36 @@ const RouterContent = () => {
   )
 }
 
-// Componente para proteger rutas (requiere token)
-const ProtectedRoute = ({ children }) => {
+// Componente para proteger rutas (requiere token Y rol)
+const ProtectedRoute = ({ children, requiredRoles = [] }) => {
+  // Verificar Autenticación (Token)
   const token = localStorage.getItem('token')
   // Si no hay token, redirige al login
-  return token ? children : <Navigate to="/login" replace />
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Si el token existe, verificar Autorización (Rol)
+  // Obtener los datos del usuario del localStorage
+  const userJson = localStorage.getItem('user');
+  const user = userJson ? JSON.parse(userJson) : null;
+  const rolSistema = user?.rol_sistema; // Usamos optional chaining por seguridad
+
+  // Si la ruta no requiere roles específicos, permitir el acceso (e.g., /home)
+  if (requiredRoles.length === 0) {
+    return children;
+  }
+
+  // Si la ruta requiere roles, verificar si el rol del usuario está incluido
+  if (rolSistema && requiredRoles.includes(rolSistema)) {
+    return children;
+  }
+
+  // Si el usuario está autenticado pero no tiene el rol requerido
+  // NOTA: Podrías redirigir a una página 403 (No Autorizado) en lugar de /404
+  console.log('Acceso denegado. Rol:', rolSistema, 'Roles requeridos:', requiredRoles);
+  return <Navigate to="/404" replace />;
+
 }
 
 const App = () => {

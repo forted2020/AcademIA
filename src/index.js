@@ -10,11 +10,13 @@ import store from './store'
 import './index.css';   //Borrar el archivo despues de prueba
 import reportWebVitals from './reportWebVitals';    //Borrar el archivo despues de prueba
 
-
+import { AuthProvider } from './context/AuthContext';
 
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    <App />
+    <AuthProvider> 
+      <App />
+    </AuthProvider>
   </Provider>,
 )

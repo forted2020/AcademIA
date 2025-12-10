@@ -1,15 +1,9 @@
+//  AcademIA\src\views\estudiantes\Trayectoria.jsx
+
 import React, { useState, useEffect } from 'react';
-
-import {
-    CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert
-} from '@coreui/react';
-
+import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert} from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-
-import {
-    cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine
-} from '@coreui/icons';
-
+import {cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine} from '@coreui/icons';
 import { academicData } from './data'; // Archivo de datos
 import '../../css/AdvancedFilters.css'
 

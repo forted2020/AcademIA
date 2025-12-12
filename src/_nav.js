@@ -119,7 +119,7 @@ const filterNavItems = (items, userRoles) => {
         if (item.items) {
             // Se filtra recursivamente el contenido del grupo
             const filteredItems = filterNavItems(item.items, userRoles);
-            
+
             return {
                 ...item,
                 items: filteredItems,
@@ -139,7 +139,7 @@ const filterNavItems = (items, userRoles) => {
         if (!item.roles || item.roles.length === 0) {
             return true;
         }
-        
+
         // Regla 3 (Soporte Multirrol): Es visible si AL MENOS UNO de los roles
         // requeridos por el ítem coincide con CUALQUIERA de los roles del usuario.
         return item.roles.some(requiredRole => userRoleSet.has(requiredRole));
@@ -157,10 +157,28 @@ const getNavItems = () => {
     const userJson = localStorage.getItem('user');
     const user = userJson ? JSON.parse(userJson) : null;
 
-    // Extraer *TODOS* los códigos de rol del usuario (soporte multirrol)
-    const userRoles = user && user.tipos_usuario
-        ? user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario)
-        : [];
+    // Extraer *TODOS* los códigos de rol del usuario (soporte multirrol) NO IMPLEMENTADO
+    //  Extrae solo un rol, como un objeto único, no como un array.
+
+    let userRoles = [];
+    
+    // --- LÓGICA DE EXTRACCIÓN ROBUSTA DE ROLES ---
+
+    // 1. **Prioridad Alta/Multi-Rol:** Verificar la estructura futura o la antigua (ARRAY de roles)
+    //    Esta es la estructura más flexible que ya tenías implementada.
+    if (user && user.tipos_usuario && Array.isArray(user.tipos_usuario)) {
+        userRoles = user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario);
+        console.log('✅ Estructura MULTI-ROL (tipos_usuario) detectada.');
+
+    }
+    // 2. **Fallback (Alternativa) / Rol Único:** Verificar la estructura actual (OBJETO único)
+    //    Esta es la estructura que tu backend devuelve ahora.
+    else if (user && user.tipo_rol && user.tipo_rol.cod_tipo_usuario) {
+        // Extraemos el rol único y lo envolvemos en un array para compatibilidad.
+        const rolEncontrado = user.tipo_rol.cod_tipo_usuario;
+        userRoles = [rolEncontrado];
+        console.log('✅ Estructura ROL ÚNICO (tipo_rol) detectada.');
+    }
 
     console.log('🔍 _nav.js - Usuario en localStorage:', user);
     console.log('🔍 _nav.js - Roles detectados (multirrol):', userRoles);

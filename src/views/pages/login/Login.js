@@ -68,7 +68,7 @@ const Login = () => {
       const { access_token, user } = response.data; // 🌟 CAPTURAMOS el objeto 'user'
 
       // El rol está en la lista user.tipos_usuario, y la clave es cod_tipo_usuario.
-      const rolSistema = user.tipos_usuario[0].cod_tipo_usuario; // 🌟 EXTRAEMOS el valor final del rol
+      const rolSistema = user.tipo_rol.cod_tipo_usuario; // 🌟 Linea 71. EXTRAEMOS el valor final del rol
 
       // Almacena el token en localStorage para mantener la sesión
       localStorage.setItem('token', access_token);

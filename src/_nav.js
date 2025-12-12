@@ -164,20 +164,19 @@ const getNavItems = () => {
     
     // --- LÓGICA DE EXTRACCIÓN ROBUSTA DE ROLES ---
 
-    // 1. **Prioridad Alta/Multi-Rol:** Verificar la estructura futura o la antigua (ARRAY de roles)
-    //    Esta es la estructura más flexible que ya tenías implementada.
-    if (user && user.tipos_usuario && Array.isArray(user.tipos_usuario)) {
-        userRoles = user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario);
-        console.log('✅ Estructura MULTI-ROL (tipos_usuario) detectada.');
+    // 1. Prioridad al campo rol_sistema que viene del backend.
+    // Este campo contiene el Rol del Sistema (ADMIN_SISTEMA) que ahora usaremos.
+    if (user && user.rol_sistema) {
+        // El rol_sistema es un string simple. Lo envolvemos en un array.
+        userRoles = [user.rol_sistema];
+        console.log('✅ Estructura ROL_SISTEMA (nuevo) detectada.');
 
     }
-    // 2. **Fallback (Alternativa) / Rol Único:** Verificar la estructura actual (OBJETO único)
-    //    Esta es la estructura que tu backend devuelve ahora.
-    else if (user && user.tipo_rol && user.tipo_rol.cod_tipo_usuario) {
-        // Extraemos el rol único y lo envolvemos en un array para compatibilidad.
-        const rolEncontrado = user.tipo_rol.cod_tipo_usuario;
-        userRoles = [rolEncontrado];
-        console.log('✅ Estructura ROL ÚNICO (tipo_rol) detectada.');
+    // 2. **Fallback (Alternativa) / Verificar la estructura actual (OBJETO único)
+    // Mantenemos esto si user.tipos_usuario es la estructura preferida para multirrol.
+    else if (user && user.tipos_usuario && Array.isArray(user.tipos_usuario)) {
+        userRoles = user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario);
+        console.log('⚠️ Estructura MULTI-ROL (tipos_usuario antiguo) detectada.');
     }
 
     console.log('🔍 _nav.js - Usuario en localStorage:', user);

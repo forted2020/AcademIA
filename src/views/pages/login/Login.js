@@ -68,12 +68,12 @@ const Login = () => {
       const { access_token, user } = response.data; // 🌟 CAPTURAMOS el objeto 'user'
 
       // El rol está en la lista user.tipos_usuario, y la clave es cod_tipo_usuario.
-      const rolSistema = user.tipo_rol.cod_tipo_usuario; // 🌟 Linea 71. EXTRAEMOS el valor final del rol
+      const rolSistema = user.tipo_rol.cod_tipo_usuario; // EXTRAEMOS el valor final del rol
 
       // Almacena el token en localStorage para mantener la sesión
       localStorage.setItem('token', access_token);
 
-      // Guardamos el objeto 'user' completo (incluye rol_sistema)
+      // Guardamos el objeto 'user' completo (incluye id_entidad)
       localStorage.setItem('user', JSON.stringify(user));
       console.log('Token guardado:', localStorage.getItem('token'));
       console.log('Usuario guardado:', localStorage.getItem('user'));
@@ -85,7 +85,7 @@ const Login = () => {
         navigate('/usuarios');
       } else if (rolSistema === 'ALUMNO' || rolSistema === 'ALUMNO_APP') {
         navigate('/estudiante');
-      } else if (rolSistema === 'DOCENTE') {
+      } else if (rolSistema === 'DOCENTE'|| rolSistema === 'DOCENTE_APP') {
         navigate('/docente'); // o la ruta que corresponda para docentes
       } else {
         setError('Rol de usuario no reconocido. Contacte a soporte.');

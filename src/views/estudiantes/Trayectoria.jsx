@@ -1,10 +1,10 @@
 //  AcademIA\src\views\estudiantes\Trayectoria.jsx
 
-import React, { useState, useEffect } from 'react';
-import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert} from '@coreui/react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import {cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine} from '@coreui/icons';
-import { academicData } from './data'; // Archivo de datos
+import { cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine } from '@coreui/icons';
+//  import { academicData } from './data'; // Archivo de datos. 
 import '../../css/AdvancedFilters.css'
 
 //  IMporto componentes modularizados
@@ -16,23 +16,106 @@ import StatCard from '../../components/statCard/statCard'; // Importa el compone
 import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  // 
 //import { CSpinner, CAlert } from '@coreui/react';
 
+// --- CONSTANTES ---
+const API_BASE_URL = 'http://localhost:8000';
+const API_PREFIX = '/api/estudiantes'; // <--- Prefijo del nuevo endpoint (de attendance_estudiante)
+
+
+// --- Función para obtener el ID de la ENTIDAD logueada ---
+const getEntidadIdFromStorage = () => {
+    try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+            const user = JSON.parse(userString);
+            return user.id_entidad; // <--- Extraer id_entidad
+        }
+        return null;
+    } catch (e) {
+        console.error("Error al parsear el usuario del localStorage", e);
+        return null;
+    }
+};
 
 
 // --- Componente Principal ---
 const AcademicDashboard = () => {
+
+    // Usamos useMemo para obtener el ID de la entidad
+    const entidadId = useMemo(() => getEntidadIdFromStorage(), []);
+
     const [year, setYear] = useState('2025');
-    const [loading, setLoading] = useState(false); // UX: Estado de carga
+    const [loading, setLoading] = useState(true); // Inicia la carga en TRUE, ya que la API se llama al montar
     const [openSubject, setOpenSubject] = useState(null);
+    const [academicData, setAcademicData] = useState(null);
+    const [error, setError] = useState(null);
 
-    const data = academicData[year];
+    // FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta (JSON), obteniendo datos de la API
+    const fetchAcademicData = async (id, selectedYear) => {
+        if (!id) {
+            setError("Error: ID de Entidad no encontrado. Por favor, vuelva a iniciar sesión.");
+            setLoading(false);
+            return;
+        }
 
-    // Simular carga de datos para mejor sensación UX
-    const handleYearChange = (e) => {
-        setLoading(true);
-        setYear(e.target.value);
-        setOpenSubject(null);
-        setTimeout(() => setLoading(false), 600);
+        setLoading(true); // Inicia el spinner
+        setError(null);
+        setAcademicData(null);
+
+        try {
+            // Construye la URL correcta: http://localhost:8000/estudiantes/{id_entidad}/asistencias?year={year}
+            const attendanceUrl = `${API_BASE_URL}${API_PREFIX}/${id}/asistencias?year=${selectedYear}`;
+            console.log(`API Call (id_entidad): ${attendanceUrl}`);
+
+            const attendanceResponse = await fetch(attendanceUrl);
+
+            if (!attendanceResponse.ok) {
+                // Manejo de errores HTTP 
+                throw new Error(`Error ${attendanceResponse.status}: ${attendanceResponse.statusText}`);
+            }
+
+            const attendanceAPI = await attendanceResponse.json();
+
+            // --------------------------------------------------------------------------
+            // 🔑 NOTA: Aquí solo tenemos los datos de asistencia. Mantenemos mockups
+            //          temporales para que el resto de tu vista funcione (StatCards).
+            // --------------------------------------------------------------------------
+            const tempSummary = {
+                average: 7.0,
+                approved: 5,
+                attendance: attendanceAPI ? `${(100 - (attendanceAPI.totalDaysLost * 10)).toFixed(0)}%` : 'N/A',
+                failed: 2
+            };
+            const tempSubjects = [];
+
+            // Almacena los datos en el estado
+            setAcademicData({
+                summary: tempSummary,
+                subjects: tempSubjects,
+                attendance: attendanceAPI, // <-- Datos reales de la API
+            });
+
+        } catch (err) {
+            console.error("Error al cargar datos académicos:", err);
+            setError(`Fallo al cargar datos: ${err.message}.`);
+            setAcademicData(null);
+        } finally {
+            setLoading(false); // Finaliza el spinner
+        }
     };
+
+    // ----------- HOOK DE EFECTO para llamar a la API --------------------------
+    useEffect(() => {
+        // La función se dispara al montar y cada vez que 'year' o 'entidadId' cambian.
+        fetchAcademicData(entidadId, year);
+    }, [year, entidadId]);
+
+
+    const handleYearChange = (e) => {
+        setYear(e.target.value);    // El 'useEffect' ya se encargó de llamar a la API.
+        setOpenSubject(null);
+    };
+
+    const data = academicData   //  data es el estado
 
     return (
         <div className="dashboard-bg p-3 p-lg-5">
@@ -46,6 +129,18 @@ const AcademicDashboard = () => {
                     </div>
 
                     <div className="mt-3 mt-md-0 d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
+                        <label className="fw-bold text-muted small me-2 px-2">Alumno:</label>
+                        <input
+                            type="text"
+                            value={'Alumno'}  // Hay que cambiar por el correcto
+                            onChange={handleYearChange} // Habría que cambiar la funcion
+                            placeholder="Ingrese nombre del alumno"
+                            className="form-select border-0 bg-light fw-bold text-primary py-2 ps-3 pe-5 rounded-pill"
+                            style={{ cursor: 'text', outline: 'none', boxShadow: 'none', minWidth: '180px' }}
+                        >
+                        </input>
+
+
                         <label className="fw-bold text-muted small me-2 px-2">Año:</label>
                         <select
                             value={year}
@@ -58,16 +153,22 @@ const AcademicDashboard = () => {
                             <option value="2023">2023</option>
                         </select>
                     </div>
+
+
+
+
                 </div>
 
                 {loading ? (
+                    //  Bloque de Carga
                     <div className="text-center py-5 fade-in">
                         <CSpinner color="primary" variant="grow" />
                         <p className="text-muted mt-3 animate-pulse">Sincronizando registros...</p>
                     </div>
                 ) : data ? (
+                    //  Bloque de contenido
                     <div className="fade-in-up">
-                        
+
                         {/* KPIs / Métricas  - Uso de statCards */}
                         <CRow className="g-4 mb-5">
                             <CCol sm={6} lg={3}>
@@ -151,3 +252,4 @@ const AcademicDashboard = () => {
 };
 
 export default AcademicDashboard;
+

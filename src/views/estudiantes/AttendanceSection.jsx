@@ -1,3 +1,4 @@
+//  src\views\estudiantes\AttendanceSection.jsx
 //  Componente de registro de Asistencias
 
 import React, { useState } from 'react';
@@ -20,13 +21,14 @@ const AttendanceSection = ({ attendanceData, year }) => {
     );
   }
 
-  const { totalDaysLost, justifiedDays, detailedRecords } = attendanceData;
+  const { totalDaysLost, justifiedDays, detailedRecords } = attendanceData; //  
   const unjustifiedDays = (totalDaysLost - justifiedDays).toFixed(2);
   const isAttendanceBad = totalDaysLost >= 10; // Ejemplo de umbral de riesgo
 
   const attendanceColor = isAttendanceBad ? 'danger' : 'success';
   const chevronClass = openAttendance ? 'rotate-180' : '';
 
+  
   // Componente Reutilizable para Badge de Justificación
   const JustificationBadge = ({ isJustified }) => {
     const color = isJustified ? 'success' : 'danger';

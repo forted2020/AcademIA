@@ -20,7 +20,29 @@ import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  //
 const API_BASE_URL = 'http://localhost:8000';
 const API_PREFIX = '/api/estudiantes'; // <--- Prefijo del nuevo endpoint (de attendance_estudiante)
 
+// Roles definidos para la lógica de visualización
+const ADMIN_ROLES = ['ADMIN_SISTEMA', 'DOCENTE_APP'];
+const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos.
 
+// --- Función para obtener el ID de la ENTIDAD logueada y el ROL ---
+const getLoggedUserInfo = () => {
+    try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+            const user = JSON.parse(userString);
+            return {
+                idEntidad: user.id_entidad, // <--- Extraer id_entidad
+                rol: user.tipo_rol?.cod_tipo_usuario || user.rol_sistema,
+            };
+        }
+        return { idEntidad: null, rol: null };
+    } catch (e) {
+        console.error("Error al parsear el usuario del localStorage", e);
+        return { idEntidad: null, rol: null };
+    }
+};
+
+/*
 // --- Función para obtener el ID de la ENTIDAD logueada ---
 const getEntidadIdFromStorage = () => {
     try {
@@ -35,19 +57,38 @@ const getEntidadIdFromStorage = () => {
         return null;
     }
 };
-
+*/
 
 // --- Componente Principal ---
 const AcademicDashboard = () => {
 
-    // Usamos useMemo para obtener el ID de la entidad
-    const entidadId = useMemo(() => getEntidadIdFromStorage(), []);
+    // Usamos useMemo para obtener el ID de la entidad y el rol
+    const loggedUserInfo = useMemo(() => getLoggedUserInfo(), []);
+
+    // Lógica para determinar el rol del usuario logueado
+    const isTeacherOrAdmin = useMemo(() => {
+        return ADMIN_ROLES.includes(loggedUserInfo.rol);
+    }, [loggedUserInfo.rol]);
+
+    // ID del estudiante por defecto (el propio ID del usuario si es alumno)
+    const initialEntityId = loggedUserInfo.idEntidad || '';
+
 
     const [year, setYear] = useState('2025');
     const [loading, setLoading] = useState(true); // Inicia la carga en TRUE, ya que la API se llama al montar
     const [openSubject, setOpenSubject] = useState(null);
     const [academicData, setAcademicData] = useState(null);
     const [error, setError] = useState(null);
+
+    // ESTADOS para Docentes/Admins:
+
+    // ID de Entidad ingresado en el input (solo Docente/Admin)
+    const [inputEntityId, setInputEntityId] = useState('');
+
+    // ID de Entidad usado para disparar la API (se actualiza con el botón)
+    const [currentEntityId, setCurrentEntityId] = useState(initialEntityId);
+
+
 
     // FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta (JSON), obteniendo datos de la API
     const fetchAcademicData = async (id, selectedYear) => {
@@ -63,6 +104,7 @@ const AcademicDashboard = () => {
 
         try {
             // Construye la URL correcta: http://localhost:8000/estudiantes/{id_entidad}/asistencias?year={year}
+            //  Ej: http://localhost:8000/api/estudiantes/1/asistencias?year=2025
             const attendanceUrl = `${API_BASE_URL}${API_PREFIX}/${id}/asistencias?year=${selectedYear}`;
             console.log(`API Call (id_entidad): ${attendanceUrl}`);
 
@@ -103,17 +145,36 @@ const AcademicDashboard = () => {
         }
     };
 
-    // ----------- HOOK DE EFECTO para llamar a la API --------------------------
-    useEffect(() => {
-        // La función se dispara al montar y cada vez que 'year' o 'entidadId' cambian.
-        fetchAcademicData(entidadId, year);
-    }, [year, entidadId]);
 
+    // Handler para el input text (solo para docentes/admins)
+    const handleStudentIdChange = (e) => {
+        setInputEntityId(e.target.value);
+    };
 
-    const handleYearChange = (e) => {
-        setYear(e.target.value);    // El 'useEffect' ya se encargó de llamar a la API.
+    // Handler para el botón de búsqueda (solo para docentes/admins)
+    const handleSearchClick = () => {
+        // Al hacer clic, actualizamos el ID que dispara el useEffect
+        setCurrentEntityId(inputEntityId);
         setOpenSubject(null);
     };
+
+    // Handler para el cambio de año (usa currentEntityId)
+    const handleYearChange = (e) => {
+        setYear(e.target.value);
+        setOpenSubject(null);   // El useEffect se encargará de disparar la API.
+    };
+
+
+
+    // ----------- HOOK DE EFECTO para llamar a la API --------------------------
+    useEffect(() => {
+        // Depende del `currentEntityId` que puede ser el propio (alumno) 
+        // o el que se ingresó y se confirmó con el botón (docente/admin)
+        fetchAcademicData(currentEntityId, year);
+    }, [year, currentEntityId]);
+
+
+
 
     const data = academicData   //  data es el estado
 
@@ -128,35 +189,47 @@ const AcademicDashboard = () => {
                         <p className="text-muted mb-0">Visualización de calificaciones, asistencias y evaluaciones</p>
                     </div>
 
-                    <div className="mt-3 mt-md-0 d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
-                        <label className="fw-bold text-muted small me-2 px-2">Alumno:</label>
-                        <input
-                            type="text"
-                            value={'Alumno'}  // Hay que cambiar por el correcto
-                            onChange={handleYearChange} // Habría que cambiar la funcion
-                            placeholder="Ingrese nombre del alumno"
-                            className="form-select border-0 bg-light fw-bold text-primary py-2 ps-3 pe-5 rounded-pill"
-                            style={{ cursor: 'text', outline: 'none', boxShadow: 'none', minWidth: '180px' }}
-                        >
-                        </input>
+                    {/* Contenedor Principal: APILA los elementos (Alumno y Año) y los ALINEA a la derecha */}
+                    <div className="mt-3 mt-md-0 d-flex flex-column align-items-end">
 
+                        {/* 1. Bloque de Búsqueda de Alumno (Fila horizontal, visible solo para Admin/Docente) */}
+                        {isTeacherOrAdmin && (
+                            <div className="d-flex align-items-center bg-white p-1 rounded-4 shadow-sm mb-2">
+                                <label className="fw-bold text-muted small me-2 px-2">ID Alumno:</label>
+                                <input
+                                    type="text"
+                                    value={inputEntityId}
+                                    onChange={handleStudentIdChange}
+                                    placeholder="ID Entidad"
+                                    className="form-select border-0 bg-light fw-bold text-primary py-2 ps-3 pe-3 rounded-pill me-2"
+                                    style={{ cursor: 'text', outline: 'none', boxShadow: 'none', minWidth: '130px' }}
+                                />
+                                <button
+                                    onClick={handleSearchClick}
+                                    className="btn btn-primary d-flex align-items-center justify-content-center rounded-pill px-3 py-2 shadow-sm"
+                                    title="Buscar"
+                                >
+                                    
+                                    Buscar
+                                </button>
+                            </div>
+                        )}
 
-                        <label className="fw-bold text-muted small me-2 px-2">Año:</label>
-                        <select
-                            value={year}
-                            onChange={handleYearChange}
-                            className="form-select border-0 bg-light fw-bold text-primary py-2 ps-3 pe-5 rounded-pill"
-                            style={{ cursor: 'pointer', outline: 'none', boxShadow: 'none' }}
-                        >
-                            <option value="2025">2025 (Actual)</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                        </select>
+                        {/* 2. Bloque del Año (Fila horizontal) - Queda automáticamente debajo del bloque 1 */}
+                        <div className="d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
+                            <label className="fw-bold text-muted small me-2 px-2">Año:</label>
+                            <select
+                                value={year}
+                                onChange={handleYearChange}
+                                className="form-select border-0 bg-light fw-bold text-primary py-2 ps-3 pe-5 rounded-pill"
+                                style={{ cursor: 'pointer', outline: 'none', boxShadow: 'none' }}
+                            >
+                                <option value="2025">2025 (Actual)</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
                     </div>
-
-
-
-
                 </div>
 
                 {loading ? (

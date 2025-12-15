@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+//  src\hooks\useAuthUser.js
 
 //  Hook de Usuario para la obtención del usuario desde localStorage. 
+
+import { useMemo } from 'react';
 
 // Roles definidos para la lógica de visualización (Se mueven aquí o a una constante global)
 const ADMIN_ROLES = ['ADMIN_SISTEMA', 'DOCENTE_APP'];

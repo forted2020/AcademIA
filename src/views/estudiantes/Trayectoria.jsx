@@ -32,7 +32,12 @@ const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos
 const AcademicDashboard = () => {
 
     // OBTENCIÓN DE DATOS DEL USUARIO DESDE localStorage (Usando el Hook)
-    const { idEntidad: loggedEntityId, isAdmin } = useAuthUser();
+    const { idEntidad: loggedEntityId, isAdmin, rol } = useAuthUser();
+
+    // 🔍 Líneas de depuración en consola
+    console.log('=== Datos del usuario autenticado (useAuthUser) ===');
+    console.log('Objeto completo devuelto por useAuthUser:', useAuthUser());
+
 
     // ESTADOS LOCALES DE LA INTERFAZ
     const [year, setYear] = useState('2025');
@@ -43,25 +48,16 @@ const AcademicDashboard = () => {
 
     // Estados para Docentes/Admins:
     const [inputEntityId, setInputEntityId] = useState('');
+    
     // ID de Entidad usado para disparar la API (se actualiza con el botón). 
     // El ID inicial del estudiante a buscar es el del propio usuario logueado (si es alumno)
-    const [currentEntityId, setCurrentEntityId] = useState(loggedEntityId || '');
-
-
-    /*
-    // Lógica para determinar el rol del usuario logueado
-    // Comentario: Se eliminó esta lógica y la variable loggedUserInfo ya que useAuthUser devuelve directamente isAdmin.
-    const isTeacherOrAdmin = useMemo(() => {
-        return ADMIN_ROLES.includes(loggedUserInfo.rol);
-    }, [loggedUserInfo.rol]);
-    // Comentario: Se eliminó la línea `const initialEntityId = loggedUserInfo.idEntidad || '';` ya que usaba loggedUserInfo.
-    */
+    // Si es admin/docente y no hay ID aún, queda como null → luego se controla en fetchAcademicData
+    const [currentEntityId, setCurrentEntityId] = useState(loggedEntityId ?? null);
 
 
     // FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta (JSON), obteniendo datos de la API
-    // COMENTARIO CLAVE: Se movió la función DENTRO del componente para que pueda usar los setters de estado (setLoading, setAcademicData, setError).
     const fetchAcademicData = async (id, selectedYear) => {
-        // Si no hay ID o si es 0 (solo si es Admin/Docente), detiene la llamada a la API
+        // Si es admin/docente y no se ha ingresado un ID válido aún, detiene la llamada a la API
         if (isAdmin && (!id || id === '0')) {
             console.log("Admin/Docente: Esperando ID de búsqueda.");
             setLoading(false);
@@ -71,7 +67,7 @@ const AcademicDashboard = () => {
         }
 
         if (!id) {
-            setError("Error: ID de Entidad no encontrado. Por favor, vuelva a iniciar sesión.");
+            setError("Error: No se pudo identificar al estudiante.");
             setLoading(false);
             return;
         }
@@ -164,7 +160,7 @@ const AcademicDashboard = () => {
     const toggleSubject = (id) => setOpenSubject(openSubject === id ? null : id);
 
     // Para determinar si estamos en el estado inicial de Admin/Docente.
-    const isAwaitingSearch = isAdmin && !loading && !error && !data && (currentEntityId === '' || currentEntityId === '0');
+    const isAwaitingSearch = isAdmin && !loading && !error && !data && currentEntityId === null;
 
 
     return (

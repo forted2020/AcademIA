@@ -1,174 +1,61 @@
-//  AcademIA\src\views\estudiantes\Trayectoria.jsx
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert } from '@coreui/react';
+import React, { useState } from 'react';
+import { CContainer, CRow, CCol, CSpinner } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine } from '@coreui/icons';
-//  import { academicData } from './data'; // Archivo de datos. 
-import '../../css/AdvancedFilters.css'
-
-// Componentes modulares
-import AttendanceSection from './AttendanceSection'; // <-- Importa el componente de asistencias
-import SubjectCard from '../../components/subjectCard/SubjectCard'; // Importa el componente de Fila materias
-import StatCard from '../../components/statCard/statCard'; // Importa el componente de Tarjeta Estadística
-
-import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  // 
-//import { CSpinner, CAlert } from '@coreui/react';
+import { cilSchool, cilCheckCircle, cilWarning, cilCalendar, cilChartLine } from '@coreui/icons';
 
 // Hooks Modulares
-import useAuthUser from '../../hooks/useAuthUser'; // <-- Hook de Usuario
-import useAcademicData from '../../hooks/useAcademicData'; // <-- Hook de Datos (Fetch API)
+import useAuthUser from '../../hooks/useAuthUser'; // <-- NUEVO Hook de Usuario
+import useAcademicData from '../../hooks/useAcademicData'; // <-- NUEVO Hook de Datos (Fetch API)
 
-// --- CONSTANTES ---
-const API_BASE_URL = 'http://localhost:8000';
-const API_PREFIX = '/api/estudiantes';
+// Componentes modulares
+import AttendanceSection from './AttendanceSection'; 
+import SubjectCard from '../../components/subjectCard/SubjectCard';
+import StatCard from '../../components/statCard/statCard';
 
-// Roles definidos para la lógica de visualización
-const ADMIN_ROLES = ['ADMIN_SISTEMA', 'DOCENTE_APP'];
-const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos.
-
-
-// --- Componente Principal ---
+// Componente Principal
 const AcademicDashboard = () => {
+    // 1. OBTENCIÓN DE DATOS DEL USUARIO (Usando el Hook)
+    const { idEntidad: loggedEntityId, isAdmin } = useAuthUser(); // <-- Simplificado
 
-    // OBTENCIÓN DE DATOS DEL USUARIO DESDE locaStorage (Usando el Hook)
-    const { idEntidad: loggedEntityId, isAdmin } = useAuthUser();
-
-    // ESTADOS LOCALES DE LA INTERFAZ
+    // 2. ESTADOS LOCALES DE LA INTERFAZ
     const [year, setYear] = useState('2025');
-    const [loading, setLoading] = useState(true);
     const [openSubject, setOpenSubject] = useState(null);
-    const [academicData, setAcademicData] = useState(null);
-    const [error, setError] = useState(null);
 
     // Estados para Docentes/Admins:
-    const [inputEntityId, setInputEntityId] = useState(''); 
-    // ID de Entidad usado para disparar la API (se actualiza con el botón). 
+    const [inputEntityId, setInputEntityId] = useState('');
     // El ID inicial del estudiante a buscar es el del propio usuario logueado (si es alumno)
     const [currentEntityId, setCurrentEntityId] = useState(loggedEntityId || '');
 
 
+    // 3. OBTENCIÓN DE DATOS ACADÉMICOS (Usando el Hook)
+    const { academicData, loading, error } = useAcademicData(currentEntityId, year);
 
-    /*
-    // Usamos useMemo para obtener el ID de la entidad y el rol
-    const loggedUserInfo = useMemo(() => getLoggedUserInfo(), []);
-    */
-
-    /*
-    // Lógica para determinar el rol del usuario logueado
-    const isTeacherOrAdmin = useMemo(() => {
-        return ADMIN_ROLES.includes(loggedUserInfo.rol);
-    }, [loggedUserInfo.rol]);
-*/
-
-    // ID del estudiante por defecto (el propio ID del usuario si es alumno)
-    const initialEntityId = loggedUserInfo.idEntidad || '';
-
-    //  HANDLERS DE INTERFAZ
-
-    // Handler para el input text (solo para docentes/admins)
+    // 4. HANDLERS DE INTERFAZ
     const handleStudentIdChange = (e) => {
         setInputEntityId(e.target.value);
     };
 
-    // Handler para el botón de búsqueda (solo para docentes/admins)
     const handleSearchClick = () => {
-        // Al hacer clic, actualizamos el ID que dispara el useEffect
+        // Actualiza el ID que dispara el useAcademicData (vía useEffect interno)
         setCurrentEntityId(inputEntityId);
         setOpenSubject(null);
     };
 
-    // Handler para el cambio de año (usa currentEntityId)
     const handleYearChange = (e) => {
         setYear(e.target.value);
-        setOpenSubject(null);   // El useEffect se encargará de disparar la API.
+        setOpenSubject(null);
     };
     
-
-};
-
-
-// FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta (JSON), obteniendo datos de la API
-const fetchAcademicData = async (id, selectedYear) => {
-    if (!id) {
-        setError("Error: ID de Entidad no encontrado. Por favor, vuelva a iniciar sesión.");
-        setLoading(false);
-        return;
-    }
-
-    setLoading(true); // Inicia el spinner
-    setError(null);
-    setAcademicData(null);
-
-    try {
-        // Construye la URL correcta: http://localhost:8000/estudiantes/{id_entidad}/asistencias?year={year}
-        //  Ej: http://localhost:8000/api/estudiantes/1/asistencias?year=2025
-        const attendanceUrl = `${API_BASE_URL}${API_PREFIX}/${id}/asistencias?year=${selectedYear}`;
-        console.log(`API Call (id_entidad): ${attendanceUrl}`);
-
-        const attendanceResponse = await fetch(attendanceUrl);
-
-        if (!attendanceResponse.ok) {
-            // Manejo de errores HTTP 
-            throw new Error(`Error ${attendanceResponse.status}: ${attendanceResponse.statusText}`);
-        }
-
-        const attendanceAPI = await attendanceResponse.json();
-
-        // --------------------------------------------------------------------------
-        // 🔑 NOTA: Aquí solo tenemos los datos de asistencia. Mantenemos mockups
-        //          temporales para que el resto de tu vista funcione (StatCards).
-        // --------------------------------------------------------------------------
-        const tempSummary = {
-            average: 7.0,
-            approved: 5,
-            attendance: attendanceAPI ? `${(100 - (attendanceAPI.totalDaysLost * 10)).toFixed(0)}%` : 'N/A',
-            failed: 2
-        };
-        const tempSubjects = [];
-
-        // Almacena los datos en el estado
-        setAcademicData({
-            summary: tempSummary,
-            subjects: tempSubjects,
-            attendance: attendanceAPI, // <-- Datos reales de la API
-        });
-
-    } catch (err) {
-        console.error("Error al cargar datos académicos:", err);
-        setError(`Fallo al cargar datos: ${err.message}.`);
-        setAcademicData(null);
-    } finally {
-        setLoading(false); // Finaliza el spinner
-    }
-
-
-
-
-
-
-
-    // ----------- HOOK DE EFECTO para llamar a la API --------------------------
-    useEffect(() => {
-        // Depende del `currentEntityId` que puede ser el propio (alumno) 
-        // o el que se ingresó y se confirmó con el botón (docente/admin)
-        fetchAcademicData(currentEntityId, year);
-    }, [year, currentEntityId]);
-
-    // LÓGICA DE RENDERIZADO
-    const data = academicData   //  data es el estado
+    // 5. LÓGICA DE RENDERIZADO
+    const data = academicData;
 
     // Lógica para alternar la apertura/cierre de la tarjeta de materia
     const toggleSubject = (id) => setOpenSubject(openSubject === id ? null : id);
 
 
-
-
-
     return (
         <div className="dashboard-bg p-3 p-lg-5">
             <CContainer size="xl">
-
                 {/* Cabecera */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
                     <div>
@@ -176,12 +63,13 @@ const fetchAcademicData = async (id, selectedYear) => {
                         <p className="text-muted mb-0">Visualización de calificaciones, asistencias y evaluaciones</p>
                     </div>
 
-                    {/* Contenedor Principal: APILA los elementos (Alumno y Año) y los ALINEA a la derecha */}
+                    {/* Controles de Búsqueda y Filtro */}
                     <div className="mt-3 mt-md-0 d-flex flex-column align-items-end">
 
-                        {/* 1. Bloque de Búsqueda de Alumno (Fila horizontal, visible solo para Admin/Docente) */}
-                        {isTeacherOrAdmin && (
+                        {/* Bloque de Búsqueda de Alumno (Solo para Admin/Docente) */}
+                        {isAdmin && (
                             <div className="d-flex align-items-center bg-white p-1 rounded-4 shadow-sm mb-2">
+                                {/* ... (Input y botón de búsqueda, sin cambios) ... */}
                                 <label className="fw-bold text-muted small me-2 px-2">ID Alumno:</label>
                                 <input
                                     type="text"
@@ -196,13 +84,12 @@ const fetchAcademicData = async (id, selectedYear) => {
                                     className="btn btn-primary d-flex align-items-center justify-content-center rounded-pill px-3 py-2 shadow-sm"
                                     title="Buscar"
                                 >
-
                                     Buscar
                                 </button>
                             </div>
                         )}
 
-                        {/* 2. Bloque del Año (Fila horizontal) - Queda automáticamente debajo del bloque 1 */}
+                        {/* Bloque del Año */}
                         <div className="d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
                             <label className="fw-bold text-muted small me-2 px-2">Año:</label>
                             <select
@@ -219,17 +106,26 @@ const fetchAcademicData = async (id, selectedYear) => {
                     </div>
                 </div>
 
-                {loading ? (
-                    //  Bloque de Carga
+                {/* Contenido Condicional: Carga, Error o Datos */}
+                {loading && (
                     <div className="text-center py-5 fade-in">
                         <CSpinner color="primary" variant="grow" />
                         <p className="text-muted mt-3 animate-pulse">Sincronizando registros...</p>
                     </div>
-                ) : data ? (
-                    //  Bloque de contenido
+                )}
+
+                {!loading && error && (
+                    <div className="text-center py-5">
+                        <h3 className="text-danger fw-bold">⚠️ Error de Carga</h3>
+                        <p className="text-muted">{error}</p>
+                    </div>
+                )}
+                
+                {!loading && data ? (
+                    // Bloque de contenido con datos cargados
                     <div className="fade-in-up">
 
-                        {/* KPIs / Métricas  - Uso de statCards */}
+                        {/* KPIs / Métricas - Uso de statCards */}
                         <CRow className="g-4 mb-5">
                             <CCol sm={6} lg={3}>
                                 <StatCard
@@ -270,24 +166,26 @@ const fetchAcademicData = async (id, selectedYear) => {
                         <div className="mb-4 d-flex align-items-center justify-content-between">
                             <h4 className="fw-bold text-dark m-0">Materias & Calificaciones</h4>
                             <span className="badge bg-white text-dark border shadow-sm rounded-pill">
-                                {data.subjects.length} Cursadass
+                                {data.subjects.length} Cursadas
                             </span>
                         </div>
 
                         <div>
-                            {data.subjects.map((sub) => (
-                                <SubjectCard
-                                    key={sub.id}
-                                    subject={sub}
-                                    isOpen={openSubject === sub.id}
-                                    onToggle={() => setOpenSubject(openSubject === sub.id ? null : sub.id)}
-                                />
-                            ))}
+                            {data.subjects.length > 0 ? (
+                                data.subjects.map((sub) => (
+                                    <SubjectCard
+                                        key={sub.id}
+                                        subject={sub}
+                                        isOpen={openSubject === sub.id}
+                                        onToggle={() => toggleSubject(sub.id)} // Uso de la función simplificada
+                                    />
+                                ))
+                            ) : (
+                                <p className="text-muted fst-italic p-3 bg-white border rounded">No hay materias registradas para {year}.</p>
+                            )}
                         </div>
 
-
-
-                        {/* Sección de Asistencia (Extendida del mockup original) */}
+                        {/* Sección de Asistencia */}
                         <div className="mt-5">
                             <h4 className="fw-bold text-dark m-0 mb-3">Registro de Asistencias</h4>
                             <AttendanceSection
@@ -297,7 +195,8 @@ const fetchAcademicData = async (id, selectedYear) => {
                         </div>
 
                     </div>
-                ) : (
+                ) : (!loading && !error && (
+                    // Bloque de "Sin Datos" si no está cargando y no hay error
                     <div className="text-center py-5">
                         <div className="bg-white p-5 rounded-circle shadow-sm d-inline-block mb-3">
                             <CIcon icon={cilSchool} size="4xl" className="text-muted" />
@@ -305,11 +204,10 @@ const fetchAcademicData = async (id, selectedYear) => {
                         <h3 className="text-dark fw-bold">Sin registros para {year}</h3>
                         <p className="text-muted">No se encontraron inscripciones activas en este periodo.</p>
                     </div>
-                )}
+                ))}
             </CContainer>
         </div>
     );
 };
 
 export default AcademicDashboard;
-

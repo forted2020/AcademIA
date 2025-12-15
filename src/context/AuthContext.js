@@ -16,19 +16,25 @@ export const AuthProvider = ({ children }) => {
   });
 
   // 3. Lógica Centralizada de Lectura y Parseo 
-  
+
   // Hook useEffect: Lógica para Ejecutar al Montar el Componente
   // Este hook se usa para realizar "efectos secundarios", como la lectura de datos externos.
   // El array de dependencias vacío `[]` asegura que esta función se ejecute SÓLO UNA VEZ, justo después del renderizado inicial del componente.
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userString = localStorage.getItem('user');
-    
+
     if (token && userString) {
       try {
         const user = JSON.parse(userString);
-        const roleCode = user.tipos_usuario[0]?.cod_tipo_usuario; 
-        
+
+        // ----------------------------------------------------
+        // El primer `?.` comprueba si `tipos_usuario` existe y no es null/undefined.
+        // El segundo `?.` comprueba si el elemento [0] existe.
+        // Si algo falla, 'roleCode' será undefined, no lanzará error.
+        const roleCode = user.tipos_usuario?.[0]?.cod_tipo_usuario;
+        // ----------------------------------------------------
+
         setSessionData({
           isAuthenticated: true,
           user: user,

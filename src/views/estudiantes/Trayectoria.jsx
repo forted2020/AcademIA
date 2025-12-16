@@ -1,6 +1,6 @@
 //  AcademIA\src\views\estudiantes\Trayectoria.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo  } from 'react';
 import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine, cilSearch } from '@coreui/icons';
@@ -19,6 +19,9 @@ import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  //
 import useAuthUser from '../../hooks/useAuthUser'; // <-- Hook de Usuario
 import useAcademicData from '../../hooks/useAcademicData'; // <-- Hook de Datos de API
 
+//  Roles desde archivo
+import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../../constants/Roles';
+
 // Roles definidos para la lógica de visualización
 const ADMIN_ROLES = ['ADMIN_SISTEMA', 'DOCENTE_APP'];
 //  const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos.
@@ -30,7 +33,7 @@ const AcademicDashboard = () => {
     // Obtención de datos del usuario autenticado desde localStorage, usando el Hook useAuthUser().
     const { idEntidad: loggedEntityId, isAdmin, rol } = useAuthUser();
 
-    // 🔍 Líneas de depuración en consola
+    // Líneas de depuración en consola
     console.log('=== Datos del usuario autenticado (useAuthUser) ===');
     console.log('Objeto completo devuelto por useAuthUser:', useAuthUser());
 
@@ -42,15 +45,8 @@ const AcademicDashboard = () => {
     const [inputEntityId, setInputEntityId] = useState('');
 
     // Determinar el Rol del usuario 
-    const esAlumno = rol === 'ALUMNO_APP';
-    const esDocenteOAdmin = rol === 'ADMIN_SISTEMA' || rol === 'DOCENTE_APP';
-
-
-    // Inicializamos currentEntityId según el rol
-    // Solo si es ALUMNO, usamos su propio ID. 
-    // Si es docente o admin, empezamos en null → muestra mensaje de búsqueda
-    //  const initialEntityId = (rol === 'ALUMNO_APP') ? loggedEntityId : null;
-
+    const esAlumno = useMemo(() => rol === ROL_ALUMNO, [rol]);  //  Usa el hook usememo, para memorizar el valor
+    const esDocenteOAdmin = useMemo(() => rol === ROL_ADMIN || rol === ROL_DOCENTE, [rol]);
 
     // ID de Entidad usado para cargar datos 
     // - Alumno: usa su propio ID automáticamente
@@ -107,7 +103,7 @@ const AcademicDashboard = () => {
                     {/* Contenedor Principal: APILA los elementos (Alumno y Año) y los ALINEA a la derecha */}
                     <div className="mt-3 mt-md-0 d-flex flex-column align-items-end">
 
-                        {/* 1. Bloque de Búsqueda de Alumno (Fila horizontal, visible solo para Admin/Docente) */}
+                        {/* Bloque de Búsqueda de Alumno (Fila horizontal, visible solo para Admin/Docente) */}
                         {esDocenteOAdmin && (
                             <div className="d-flex align-items-center bg-white p-1 rounded-4 shadow-sm mb-2">
                                 <label className="fw-bold text-muted small me-2 px-2">ID Alumno:</label>

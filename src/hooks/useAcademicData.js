@@ -25,12 +25,16 @@ const useAcademicData = (entityId, year) => {
 
     // FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta
     const fetchData = async (id, selectedYear) => {
-        if (!id) {
-            setError("Error: ID de Entidad no encontrado. Por favor, vuelva a iniciar sesión.");
+        // Si el ID es null o vacío, y estamos en modo "esperando búsqueda"
+        // NO lanzamos error, simplemente limpiamos todo y salimos.
+        if (id === null || id === '' || id === undefined) {
+            setAcademicData(null);
+            setError(null);        // ← No mostramos error
             setLoading(false);
             return;
         }
 
+        // Si llegamos acá, es que hay un ID válido → intentamos cargar
         setLoading(true); // Inicia el spinner
         setError(null);
         setAcademicData(null);
@@ -48,24 +52,24 @@ const useAcademicData = (entityId, year) => {
             }
 
             const attendanceAPI = await attendanceResponse.json();
-            
+
             // --------------------------------------------------------------------------
             // 🔑 NOTA: Mocks temporales. En producción, aquí harías otras llamadas 
             //          a la API para obtener promedio, aprobadas, reprobadas, y materias.
             // --------------------------------------------------------------------------
-            const attendancePercentage = attendanceAPI?.totalDaysAttended && attendanceAPI?.totalDaysScheduled 
+            const attendancePercentage = attendanceAPI?.totalDaysAttended && attendanceAPI?.totalDaysScheduled
                 ? `${((attendanceAPI.totalDaysAttended / attendanceAPI.totalDaysScheduled) * 100).toFixed(0)}%`
                 : 'N/A';
-                
+
             const tempSummary = {
                 average: 7.0, // MOCK
                 approved: 5, // MOCK
                 attendance: attendancePercentage, // CALCULADO
                 failed: 2 // MOCK
             };
-            
+
             // Simula las materias (vacío, ya que la API solo trajo asistencias)
-            const tempSubjects = []; 
+            const tempSubjects = [];
 
             // Almacena los datos en el estado
             setAcademicData({
@@ -76,6 +80,7 @@ const useAcademicData = (entityId, year) => {
 
         } catch (err) {
             console.error("Error al cargar datos académicos:", err);
+             // 🔑 Se muestra error real (problema de red, 404, etc.)
             setError(`Fallo al cargar datos: ${err.message}.`);
             setAcademicData(null);
         } finally {
@@ -87,7 +92,7 @@ const useAcademicData = (entityId, year) => {
     useEffect(() => {
         fetchData(entityId, year);
     }, [entityId, year, fetchTrigger]);
-    
+
     // Función de re-fetch para usar en el botón de búsqueda
     const refetch = () => setFetchTrigger(prev => prev + 1);
 

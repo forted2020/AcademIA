@@ -19,7 +19,7 @@ const useAuthUser = () => {
             if (userString) {
                 const user = JSON.parse(userString);
                 
-                // Determina el rol (usa tipo_rol o rol_sistema como fallback)
+                // Extrae el rol de forma segura (prioriza cod_tipo_usuario, luego rol_sistema como fallback)
                 const rol = user.tipo_rol?.cod_tipo_usuario || user.rol_sistema || null;
                 
                 const isAdmin = ADMIN_ROLES.includes(rol);

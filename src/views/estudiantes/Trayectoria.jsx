@@ -1,6 +1,6 @@
 //  AcademIA\src\views\estudiantes\Trayectoria.jsx
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { CContainer, CRow, CCol, CCard, CCardBody, CCollapse, CSpinner, CAlert } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, cilChartLine, cilSearch } from '@coreui/icons';
@@ -8,30 +8,26 @@ import { cilSchool, cilCheckCircle, cilWarning, cilChevronBottom, cilCalendar, c
 import '../../css/AdvancedFilters.css'
 
 // Componentes modulares
-import AttendanceSection from './AttendanceSection'; // <-- Importa el componente de asistencias
-import SubjectCard from '../../components/subjectCard/SubjectCard'; // Importa el componente de Fila materias
-import StatCard from '../../components/statCard/StatCard'; // Importa el componente de Tarjeta Estadística
+import AttendanceSection from './AttendanceSection'; // <-- Cmponente de asistencias
+import SubjectCard from '../../components/subjectCard/SubjectCard'; // Componente de Fila materias
+import StatCard from '../../components/statCard/StatCard'; // Componente de Tarjeta Estadística
 
 import { getMateriasPorEstudiante } from '../../api/apiEstudiantes';  // 
 //import { CSpinner, CAlert } from '@coreui/react';
 
 // Hooks Modulares
 import useAuthUser from '../../hooks/useAuthUser'; // <-- Hook de Usuario
-import useAcademicData from '../../hooks/useAcademicData'; // <-- Hook de Datos (Fetch API - No usado actualmente)
-
-// --- CONSTANTES ---
-const API_BASE_URL = 'http://localhost:8000';
-const API_PREFIX = '/api/estudiantes';
+import useAcademicData from '../../hooks/useAcademicData'; // <-- Hook de Datos de API
 
 // Roles definidos para la lógica de visualización
 const ADMIN_ROLES = ['ADMIN_SISTEMA', 'DOCENTE_APP'];
-const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos.
+//  const STUDENT_ROLE = 'ALUMNO_APP'; // <-- Ya está implícito, pero lo definimos.
 
 
 // --- Componente Principal ---
 const AcademicDashboard = () => {
 
-    // OBTENCIÓN DE DATOS DEL USUARIO DESDE localStorage (Usando el Hook)
+    // Obtención de datos del usuario autenticado desde localStorage, usando el Hook useAuthUser().
     const { idEntidad: loggedEntityId, isAdmin, rol } = useAuthUser();
 
     // 🔍 Líneas de depuración en consola
@@ -41,110 +37,46 @@ const AcademicDashboard = () => {
 
     // ESTADOS LOCALES DE LA INTERFAZ
     const [year, setYear] = useState('2025');
-    const [loading, setLoading] = useState(true);
     const [openSubject, setOpenSubject] = useState(null);
-    const [academicData, setAcademicData] = useState(null);
-    const [error, setError] = useState(null);
-
-    // Estados para Docentes/Admins:
+    // Estados para búsqueda (solo admins/docentes)
     const [inputEntityId, setInputEntityId] = useState('');
-    
-    // ID de Entidad usado para disparar la API (se actualiza con el botón). 
-    // El ID inicial del estudiante a buscar es el del propio usuario logueado (si es alumno)
-    // Si es admin/docente y no hay ID aún, queda como null → luego se controla en fetchAcademicData
-    const [currentEntityId, setCurrentEntityId] = useState(loggedEntityId ?? null);
+
+    // Determinar el Rol del usuario 
+    const esAlumno = rol === 'ALUMNO_APP';
+    const esDocenteOAdmin = rol === 'ADMIN_SISTEMA' || rol === 'DOCENTE_APP';
 
 
-    // FUNCIÓN CENTRAL: hace la llamada a la API y maneja la respuesta (JSON), obteniendo datos de la API
-    const fetchAcademicData = async (id, selectedYear) => {
-        // Si es admin/docente y no se ha ingresado un ID válido aún, detiene la llamada a la API
-        if (isAdmin && (!id || id === '0')) {
-            console.log("Admin/Docente: Esperando ID de búsqueda.");
-            setLoading(false);
-            setError(null);
-            setAcademicData(null);
-            return;
-        }
-
-        if (!id) {
-            setError("Error: No se pudo identificar al estudiante.");
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true); // Inicia el spinner
-        setError(null);
-        setAcademicData(null);
-
-        try {
-            // Construye la URL correcta: http://localhost:8000/estudiantes/{id_entidad}/asistencias?year={year}
-            //  Ej: http://localhost:8000/api/estudiantes/1/asistencias?year=2025
-            const attendanceUrl = `${API_BASE_URL}${API_PREFIX}/${id}/asistencias?year=${selectedYear}`;
-            console.log(`API Call (id_entidad): ${attendanceUrl}`);
-
-            const attendanceResponse = await fetch(attendanceUrl);
-
-            if (!attendanceResponse.ok) {
-                // Manejo de errores HTTP 
-                throw new Error(`Error ${attendanceResponse.status}: ${attendanceResponse.statusText}`);
-            }
-
-            const attendanceAPI = await attendanceResponse.json();
-
-            // --------------------------------------------------------------------------
-            // 🔑 NOTA: Aquí solo tenemos los datos de asistencia. Mantenemos mockups
-            //          temporales para que el resto de tu vista funcione (StatCards).
-            // --------------------------------------------------------------------------
-
-            // Cálculo del porcentaje de asistencia (usando datos reales de la API si existen)
-            const attendancePercentage = attendanceAPI?.totalDaysAttended && attendanceAPI?.totalDaysScheduled
-                ? `${((attendanceAPI.totalDaysAttended / attendanceAPI.totalDaysScheduled) * 100).toFixed(0)}%`
-                : 'N/A';
-
-            const tempSummary = {
-                average: 7.0, // MOCK
-                approved: 5, // MOCK
-                attendance: attendancePercentage, // USA el cálculo basado en attendanceAPI
-                failed: 2 // MOCK
-            };
-            const tempSubjects = []; // MOCK
-
-            // Almacena los datos en el estado
-            setAcademicData({
-                summary: tempSummary,
-                subjects: tempSubjects,
-                attendance: attendanceAPI, // <-- Datos reales de la API
-            });
-
-        } catch (err) {
-            console.error("Error al cargar datos académicos:", err);
-            setError(`Fallo al cargar datos: ${err.message}.`);
-            setAcademicData(null);
-        } finally {
-            setLoading(false); // Finaliza el spinner
-        }
-    };
+    // Inicializamos currentEntityId según el rol
+    // Solo si es ALUMNO, usamos su propio ID. 
+    // Si es docente o admin, empezamos en null → muestra mensaje de búsqueda
+    //  const initialEntityId = (rol === 'ALUMNO_APP') ? loggedEntityId : null;
 
 
-    // ----------- HOOK DE EFECTO para llamar a la API --------------------------
-    useEffect(() => {
-        // Depende del `currentEntityId` que puede ser el propio (alumno) 
-        // o el que se ingresó y se confirmó con el botón (docente/admin)
-        fetchAcademicData(currentEntityId, year);
-    }, [year, currentEntityId]); // Dependencias: Si el año o el ID a buscar cambian, vuelve a llamar a la API.
+    // ID de Entidad usado para cargar datos 
+    // - Alumno: usa su propio ID automáticamente
+    // - Docente/Admin: empieza vacío (null), hasta que busque
+    const [currentEntityId, setCurrentEntityId] = useState(esAlumno ? loggedEntityId : null);
 
-    //  HANDLERS DE INTERFAZ
+    // Usamos el hook useAcademicData para obtener los datos de la base
+    //   * currentEntityId: ID del estudiante a buscar
+    //   * year: Año de datos a buscar
+    //   * academicData: guarda los datos del estudiante (asistencia, promedios, materias, etc)
+    //   * loading: booleano para indicar si se están cargando los datos
+    //   * error: mensaje de error si API falla o null si está todo OK.
+    //    *refectch: llama la función de forma manual, cuando por ejemplo, se presiona el botón "Buscar"
+    const { academicData, loading, error, refetch } = useAcademicData(currentEntityId, year);
 
+    //  -----   HANDLERS DE INTERFAZ    -----
     // Handler para el input text (solo para docentes/admins)
-    const handleStudentIdChange = (e) => {
-        setInputEntityId(e.target.value);
-    };
+    const handleStudentIdChange = (e) => setInputEntityId(e.target.value);
 
     // Handler para el botón de búsqueda (solo para docentes/admins)
     const handleSearchClick = () => {
-        // Al hacer clic, actualizamos el ID que dispara el useEffect
-        setCurrentEntityId(inputEntityId);
-        setOpenSubject(null);
+        const id = inputEntityId.trim();
+        if (id) {
+            setCurrentEntityId(id);
+            refetch();
+        }
     };
 
     // Handler para el cambio de año (usa currentEntityId)
@@ -153,14 +85,12 @@ const AcademicDashboard = () => {
         setOpenSubject(null);   // El useEffect se encargará de disparar la API.
     };
 
-    // LÓGICA DE RENDERIZADO
-    const data = academicData;   //  data es el estado
-
     // Lógica para alternar la apertura/cierre de la tarjeta de materia
     const toggleSubject = (id) => setOpenSubject(openSubject === id ? null : id);
 
-    // Para determinar si estamos en el estado inicial de Admin/Docente.
-    const isAwaitingSearch = isAdmin && !loading && !error && !data && currentEntityId === null;
+    // Lógica para mostrar mensaje de "esperando búsqueda"
+    // Solo para docentes y admins, cuando aún no buscaron
+    const isAwaitingSearch = esDocenteOAdmin && !loading && !error && !academicData && currentEntityId === null;
 
 
     return (
@@ -178,7 +108,7 @@ const AcademicDashboard = () => {
                     <div className="mt-3 mt-md-0 d-flex flex-column align-items-end">
 
                         {/* 1. Bloque de Búsqueda de Alumno (Fila horizontal, visible solo para Admin/Docente) */}
-                        {isAdmin && ( // COMENTARIO: Se usa 'isAdmin' en lugar de la variable obsoleta 'isTeacherOrAdmin'
+                        {esDocenteOAdmin && (
                             <div className="d-flex align-items-center bg-white p-1 rounded-4 shadow-sm mb-2">
                                 <label className="fw-bold text-muted small me-2 px-2">ID Alumno:</label>
                                 <input
@@ -200,7 +130,7 @@ const AcademicDashboard = () => {
                             </div>
                         )}
 
-                        {/* 2. Bloque del Año (Fila horizontal) - Queda automáticamente debajo del bloque 1 */}
+                        {/* Selector de Año (Siempre visible) */}
                         <div className="d-flex align-items-center bg-white p-2 rounded-4 shadow-sm">
                             <label className="fw-bold text-muted small me-2 px-2">Año:</label>
                             <select
@@ -217,8 +147,8 @@ const AcademicDashboard = () => {
                     </div>
                 </div>
 
+                {/* Estados de la carga */}
                 {loading ? (
-                    //  Bloque de Carga
                     <div className="text-center py-5 fade-in">
                         <CSpinner color="primary" variant="grow" />
                         <p className="text-muted mt-3 animate-pulse">Sincronizando registros...</p>
@@ -236,18 +166,19 @@ const AcademicDashboard = () => {
                             <CIcon icon={cilSearch} size="4xl" className="text-primary" />
                         </div>
                         <h3 className="text-dark fw-bold">Búsqueda de Expediente</h3>
-                        <p className="text-muted">Por favor, ingrese el ID del estudiante para iniciar la búsqueda de su historial académico en el año **{year}**.</p>
+                        <p className="text-muted">
+                            Por favor, ingrese el ID del estudiante para visualizar su historial académico en el año <strong>{year} </strong>.
+                        </p>
                     </div>
-                ) : data ? (
+                ) : academicData ? (
                     //  Bloque de contenido
                     <div className="fade-in-up">
-
                         {/* KPIs / Métricas  - Uso de statCards */}
                         <CRow className="g-4 mb-5">
                             <CCol sm={6} lg={3}>
                                 <StatCard
                                     title="Promedio General"
-                                    value={data.summary.average}
+                                    value={academicData.summary.average}
                                     icon={cilChartLine}
                                     color="primary"
                                     subtext="Escala de 1 a 10"
@@ -255,16 +186,14 @@ const AcademicDashboard = () => {
                             </CCol>
                             <CCol sm={6} lg={3}>
                                 <StatCard
-                                    title="Materias Aprobadas"
-                                    value={data.summary.approved}
-                                    icon={cilCheckCircle}
-                                    color="success"
+                                    title="Materias Aprobadas" value={academicData.summary.approved}
+                                    icon={cilCheckCircle} color="success"
                                 />
                             </CCol>
                             <CCol sm={6} lg={3}>
                                 <StatCard
                                     title="Asistencia Global"
-                                    value={data.summary.attendance}
+                                    value={academicData.summary.attendance}
                                     icon={cilCalendar}
                                     color="info"
                                 />
@@ -272,7 +201,7 @@ const AcademicDashboard = () => {
                             <CCol sm={6} lg={3}>
                                 <StatCard
                                     title="Requieren Atención"
-                                    value={data.summary.failed}
+                                    value={academicData.summary.failed}
                                     icon={cilWarning}
                                     color="danger"
                                 />
@@ -283,13 +212,13 @@ const AcademicDashboard = () => {
                         <div className="mb-4 d-flex align-items-center justify-content-between">
                             <h4 className="fw-bold text-dark m-0">Materias & Calificaciones</h4>
                             <span className="badge bg-white text-dark border shadow-sm rounded-pill">
-                                {data.subjects.length} Cursadas
+                                {academicData.subjects.length} Cursadas
                             </span>
                         </div>
 
                         <div>
-                            {data.subjects.length > 0 ? (
-                                data.subjects.map((sub) => (
+                            {academicData.subjects.length > 0 ? (
+                                academicData.subjects.map((sub) => (
                                     <SubjectCard
                                         key={sub.id}
                                         subject={sub}
@@ -308,7 +237,7 @@ const AcademicDashboard = () => {
                         <div className="mt-5">
                             <h4 className="fw-bold text-dark m-0 mb-3">Registro de Asistencias</h4>
                             <AttendanceSection
-                                attendanceData={data.attendance}
+                                attendanceData={academicData.attendance}
                                 year={year}
                             />
                         </div>

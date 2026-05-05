@@ -1,7 +1,11 @@
 #   backend-master\backend-master\main.py
 
 # Importamos FastAPI para crear la aplicación
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Importamos OAuth2PasswordBearer para autenticación con JWT
 from fastapi.security import OAuth2PasswordBearer
@@ -63,12 +67,18 @@ from models import (
 
 
    
+# Rate limiter — identifica clientes por IP
+limiter = Limiter(key_func=get_remote_address)
+
 # Creamos la instancia de FASTAPI
 app = FastAPI(
     title="AcademIA API",
     description="API para el sistema académico",
     version="1.0.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # Create table database
@@ -139,7 +149,8 @@ def root():
 
 # Registro
 @app.post("/api/register", response_model=UserAuthData)
-async def register(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     # Crea el usuario usando la función CRUD
     db_user, verification_token = crud.c_create_user(db, user)
     # Enviar email de verificación

@@ -1,0 +1,260 @@
+/*  frontend_AcademiA\src\views\estudiantes\Estudiantes.css */
+
+/* =======================================================
+   CONFIGURACIONES DE TABLA
+   ======================================================= */
+
+   /* Cuerpo de la tabla */
+   .estudiantes-wrapper .p-datatable-tbody {
+    border: 1px solid #dee2e6 !important;     /* Color gris suave de Bootstrap/CoreUI */
+    border-bottom: none;     /* Evita doble borde con el header de las columnas */
+    padding: 1rem;
+}
+
+/* Head de la tabla */
+.estudiantes-wrapper .p-datatable-thead{
+    border: 1px solid #dee2e6 !important;     /* Color gris suave de Bootstrap/CoreUI */
+    border-bottom: none;     /* Evita doble bordes columnas */
+    border-top: none;     
+    padding: 1rem;
+}
+
+/* =======================================================
+   CONFIGURACIÓN TAMAÑOS DE TABLA
+   ======================================================= */
+/* Transición suave para que el cambio de tamaño se vea elegante */
+.estudiantes-wrapper .p-datatable-tbody>tr>td,
+.estudiantes-wrapper .p-datatable-thead>tr>th {
+    transition: all 0.1s ease;
+    color: inherit !important;
+}
+
+/* Modo Compacto */
+.estudiantes-wrapper.modo-small .p-datatable .p-datatable-tbody>tr>td,
+.estudiantes-wrapper.modo-small .p-datatable .p-datatable-thead>tr>th {
+    padding: 6px 6px !important;
+    /*color: red !important; */
+    font-size: 12px !important;
+}
+
+/* Modo Normal */
+.estudiantes-wrapper.modo-normal .p-datatable .p-datatable-tbody>tr>td,
+.estudiantes-wrapper.modo-normal .p-datatable .p-datatable-thead>tr>th {
+    padding: 10px 10px !important;
+    /*color: blue !important; */
+    font-size: 13x !important;
+    height: auto !important;
+}
+
+/* Amplio */
+.estudiantes-wrapper.modo-large .p-datatable .p-datatable-tbody>tr>td,
+.estudiantes-wrapper.modo-large .p-datatable .p-datatable-thead>tr>th {
+    padding: 24px 24px !important;
+    /*color: green !important; */
+    font-size: 18px !important;
+    height: auto !important;
+}
+
+/* Aseguramos que el texto interno (spans, divs) herede el color */
+.estudiantes-wrapper .p-datatable-tbody>tr>td * {
+    color: inherit !important;
+}
+
+/* =======================================================
+   UX: MANEJO DE CONTENIDO LARGO (Text Ellipsis)
+   ======================================================= */
+.estudiantes-wrapper .p-datatable-tbody>tr>td {
+    white-space: nowrap;
+    /* No permite saltos de línea (siempre 1 renglón) */
+    overflow: hidden;
+    /* Oculta lo que sobra */
+    text-overflow: ellipsis;
+    /* Agrega "..." al final */
+
+    /* Opcional: Para que el usuario sepa que hay más texto */
+    cursor: default;
+}
+
+
+    
+
+
+/* PrimeReact envuelve el contenido del header de la tabla, en un contenedor con la clase .p-datatable-header.*/
+/* Seleccionamos el header específico dentro del wrapper */
+.estudiantes-wrapper .p-datatable-header {
+    border: 1px solid #dee2e6 !important;
+    /* Color gris suave de Bootstrap/CoreUI */
+    border-bottom: none;
+    /* Evita doble borde con el header de las columnas */
+    border-radius: 8px 8px 0 0;
+    /* Redondea solo las esquinas superiores */
+    padding: 1rem;
+    background-color: #f8f9fa;
+    /* Fondo sutilmente gris */
+}
+
+.estudiantes-wrapper .p-datatable-footer {
+    border: 1px solid #dee2e6 !important;
+    /* Color gris suave de Bootstrap/CoreUI */
+    border-bottom: none;
+    /* Evita doble borde con el header de las columnas */
+    border-radius: 0px 0px 8px 8px;
+    /* Redondea solo las esquinas inferiores */
+    padding: 1rem;
+    background-color: #f8f9fa;
+    /* Fondo sutilmente gris */
+}
+
+/* =======================================================
+   PERSONALIZACIÓN DE BOTONES SELECTOR TAMAÑO
+   ======================================================= */
+.density-selector .p-button {
+    padding: 4px 12px !important;
+    /* Menos relleno interno */
+    font-size: 14px !important;
+    /* Letra más pequeña */
+    height: 30px !important;
+    /* Altura fija controlada */
+    min-height: 0 !important;
+    /* Elimina altura mínima de CoreUI/Bootstrap */
+    line-height: 1 !important;
+    /* Centrado vertical */
+}
+
+/* Texto interno centrado */
+.density-selector .p-button .p-button-label {
+    margin-top: 1px;
+    font-weight: 400 !important;
+}
+
+/* =======================================================
+   PAGINADOR DE LA TABLA
+   ======================================================= */
+.estudiantes-wrapper .p-paginator {
+    border: 1px solid #dee2e6 !important; /* Mismo borde que el header */
+    border-top: none; /* Evita doble línea con la última fila de la tabla */
+    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
+    padding: 0.5rem;
+    background-color: #f8f9fa; /* Fondo gris claro igual al header */
+}
+
+/* Opcional: Estilo para los botones del paginador */
+.estudiantes-wrapper .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: #e9ecef; /* Color de fondo cuando la página está seleccionada */
+    color: #0d6efd; /* Color del texto (Azul Bootstrap) */
+    border-color: #dee2e6;
+}
+
+/* =======================================================
+   FILTROS EN COLUMNAS
+   ======================================================= */
+/* Reducimos el contenedor de la fila de filtros */
+.estudiantes-wrapper .p-datatable-thead > tr.p-datatable-filter-row > td {
+    padding: 0.3rem !important; /* Reducimos el espacio interno de la celda */
+}
+
+/* Estilizamos el input de texto del filtro */
+.estudiantes-wrapper .p-column-filter-element .p-inputtext {
+    padding: 0.25rem 0.5rem !important; /* Padding interno tipo "small" */
+    font-size: 0.75rem !important;      /* Fuente más chica para el placeholder */
+    height: 28px !important;            /* Altura fija compacta */
+    width: 100% !important;             /* Que no se salga del borde de la celda */
+}
+
+/* Ocultamos el icono de filtro  (menú de opciones) */
+/* (gana espacio horizontal para que se vea el texto 'Buscar') */
+.estudiantes-wrapper .p-column-filter-menu-button {
+    display: none !important;
+}
+
+/* Ajuste específico para placeholders en columnas angostas */
+.estudiantes-wrapper .p-inputtext::placeholder {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+
+/* =======================================================
+   BOTONES DE ACCIÓN (Columna de opciones)
+   ======================================================= */
+
+/* Estado Normal (Reposo): Transparente total */
+.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary {
+    background-color: transparent !important; /* Fondo transparente */
+    border: none !important;                  /* Sin bordes */
+    box-shadow: none !important;              /* Sin sombras cuadradas */
+    color: #6c757d !important;                /* Color del ícono (gris medio) */
+    
+    /* Mantenemos la forma redonda y tamaño fijo */
+    border-radius: 50% !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    min-width: unset !important;
+    transition: background-color 0.2s, color 0.2s; /* Transición suave */
+}
+
+/* Estado Hover (Al pasar el mouse): Círculo gris oscuro */
+.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:hover {
+    background-color: rgba(0, 0, 0, 0.1) !important; /* Gris semitransparente (se adapta al fondo) */
+    color: #212529 !important;                       /* Ícono más oscuro */
+    transform: scale(1.05);                          /* (Opcional) Efecto zoom muy sutil */
+}
+
+/* Estado Active/Focus (Al hacer clic): Gris un poco más fuerte */
+.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:active,
+.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:focus {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    box-shadow: none !important; /* Evita el anillo de foco azul/cuadrado */
+    border: none !important;
+}
+
+/* 4. Asegurar que el contenedor div no tenga fondo */
+.estudiantes-wrapper .p-datatable-tbody td .text-center {
+    background: transparent !important;
+}
+
+/* =======================================================
+   UX: MANEJO DE CONTENIDO LARGO (Text Ellipsis)
+   ======================================================= */
+.estudiantes-wrapper .p-datatable-tbody > tr > td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
+}
+
+/* =======================================================
+   MENÚ DE ACCIONES (TieredMenu) - CORRECCIONES VISUALES
+   ======================================================= */
+
+/* Quitar padding por defecto de la lista (causa del espacio extra a la izquierda) */
+body .p-tieredmenu .p-menu-list {
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+}
+
+/* Estilo del item (Link) */
+body .p-tieredmenu .p-menuitem-link {
+    padding: 0.6rem 1rem !important; /* Espaciado cómodo */
+    display: flex !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    color: #343a40 !important;
+    border-radius: 0 !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Iconos: Ajustar margen y color */
+body .p-tieredmenu .p-menuitem-icon {
+    margin-right: 0.6rem !important;
+    font-size: 1rem !important;
+    color: #6c757d !important;
+}
+
+/* Hover: Fondo gris suave para destacar el item */
+body .p-tieredmenu .p-menuitem-link:hover {
+    background-color: #e9ecef !important; /* Gris visible */
+    color: #212529 !important;
+}

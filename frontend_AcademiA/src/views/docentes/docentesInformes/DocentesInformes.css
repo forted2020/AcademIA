@@ -1,0 +1,45 @@
+/* frontend_AcademiA\src\views\docentes\docentesInformes\DocentesInformes.css */
+
+/*
+Aplicamos el Estilizado Encapsulado y el Ensamblaje Final. 
+Esto da estética "profesional y compacta", asegurando que los estilos de PrimeReact y CoreUI convivan en armonía sin afectar al resto del sistema, mediante wrappers.
+*/
+
+.informes-wrapper {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Ajustes para compactar PrimeReact DataTable */
+.informes-wrapper .custom-datatable .p-datatable-thead > tr > th {
+    background-color: #f1f4f9;
+    color: #4f5d73;
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #d8dbe0;
+}
+
+.informes-wrapper .custom-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+}
+
+/* Estilo para los Badges dentro de la tabla */
+.informes-wrapper .badge {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.4em 0.8em;
+}
+
+/* Efecto hover en las filas de la tabla */
+.informes-wrapper .p-highlight {
+    background: rgba(50, 31, 219, 0.08) !important;
+    color: #321fdb !important;
+}
+
+/* Contenedor de la tabla con sombra suave */
+.informes-wrapper .table-container {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: white;
+    overflow: hidden;
+}

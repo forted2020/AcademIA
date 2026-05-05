@@ -1,0 +1,38 @@
+ /*  frontend_AcademiA\src\components\enrollment\GenericEnrollment.css*/
+
+ /* Ajuste para que el input de búsqueda del PickList se vea bien con Bootstrap */
+ .p-picklist .p-picklist-filter-container .p-picklist-filter-input {
+     width: 100%;
+     padding: 0.5rem 0.75rem;
+     /* Padding similar a Bootstrap form-control */
+ }
+
+ /* Ajuste de los botones del centro para que no queden pegados */
+ .p-picklist .p-picklist-buttons {
+     padding: 1rem;
+ }
+
+/* Tamaño mñas pequeño de cada item 
+
+.p-picklist .p-picklist-item {
+  padding: 0.5rem 0.5rem;
+  line-height: 1.2;
+  font-size: 0.85rem;
+}
+*/
+
+ /* Sombra suave en las listas al hacer hover */
+ .p-picklist .p-picklist-list .p-picklist-item:hover {
+     background-color: #f8f9fa !important;
+     /* gris muy claro bootstrap */
+     cursor: pointer;
+
+ }
+
+ /* Color de selección (CoreUI Primary Blue) */
+ .p-picklist .p-picklist-list .p-picklist-item.p-highlight {
+     background-color: rgba(50, 31, 219, 0.1) !important;
+     /* CoreUI primary con opacidad */
+     color: #321fdb !important;
+     border-left: 4px solid #321fdb;
+ }

@@ -1,0 +1,86 @@
+/* AdvancedFilters.css */
+
+/* Contenedor principal para aislar estilos */
+.af-wrapper {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.9rem; /* Tamaño de fuente legible */
+}
+
+/* Ajuste del Encabezado del Acordeón */
+.af-wrapper .accordion-button {
+  padding: 0.4rem 1rem !important; /* Reduce drásticamente la altura del encabezado */
+  background-color: #f8f9fa;
+  box-shadow: none !important; /* Quita el brillo azul por defecto */
+  font-weight: 600;
+  color: #495057;
+}
+
+.af-wrapper .accordion-body {
+  padding: 0.75rem !important; /* Menos espacio interno en el cuerpo */
+  background-color: #fff;
+}
+
+/* ESTILO CRÍTICO: Inputs y Selects más compactos pero con letra normal */
+.af-wrapper .form-control,
+.af-wrapper .form-select,
+.af-wrapper .input-group-text {
+  height: 32px !important; /* Fuerza una altura "chica" */
+  padding: 2px 8px !important; /* Reduce el relleno interno */
+  font-size: 0.9rem !important; /* Mantiene la letra legible */
+  border-color: #dee2e6;
+}
+
+/* Quitar bordes dobles visualmente para que parezca una sola pieza */
+.af-wrapper .af-label {
+  background-color: #e9ecef;
+  color: #6c757d;
+  font-weight: 500;
+  border-right: 0;
+  width: 90px; /* Ancho fijo para etiquetas */
+  justify-content: center;
+}
+
+.af-wrapper .af-select {
+  border-radius: 0;
+  border-right: 0;
+  border-left: 0;
+  max-width: 130px;
+  background-color: #fcfcfc;
+}
+
+.af-wrapper .af-input {
+  border-left: 1px solid #dee2e6; /* Pequeña separación visual */
+}
+
+/* Efectos al hacer foco (UX) */
+.af-wrapper .form-control:focus,
+.af-wrapper .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1); /* Sombra muy sutil */
+  z-index: 3;
+}
+
+/* Ocultar la flecha por defecto de CoreUI/Bootstrap que aparece a la derecha */
+.af-wrapper .accordion-button::after {
+  display: none !important;
+}
+
+/* Estilo para nuestra flecha personalizada */
+.af-arrow-custom {
+  display: inline-block;
+  width: 1.4rem; /* 16px */
+  height: 1.4rem; /* 16px */
+  margin-left: 0.5rem; /* Separación del texto */
+
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  transition: transform 0.3s ease; /* Suavidad al girar */
+  transform: rotate(-180deg);      /* Estado ABIERTO: flecha apunta arriba */
+}
+
+/* 3. Lógica de rotación: Cuando el acordeón está cerrado (.collapsed) */
+.accordion-button.collapsed .af-arrow-custom {
+  transform: rotate(0deg);         /* Estado CERRADO: flecha apunta abajo */
+}

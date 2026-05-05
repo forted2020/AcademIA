@@ -1,0 +1,69 @@
+{
+  "name": "@coreui/coreui-free-react-admin-template",
+  "version": "5.4.0",
+  "description": "CoreUI Free React Admin Template",
+  "homepage": ".",
+  "bugs": {
+    "url": "https://github.com/coreui/coreui-free-react-admin-template/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:coreui/coreui-free-react-admin-template.git"
+  },
+  "license": "MIT",
+  "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",
+  "scripts": {
+    "build": "vite build",
+    "lint": "eslint",
+    "serve": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@coreui/chartjs": "^4.1.0",
+    "@coreui/coreui": "^5.5.0",
+    "@coreui/icons": "^3.0.1",
+    "@coreui/icons-react": "^2.3.0",
+    "@coreui/react": "^5.9.1",
+    "@coreui/react-chartjs": "^3.0.0",
+    "@coreui/utils": "^2.0.2",
+    "@popperjs/core": "^2.11.8",
+    "@react-pdf/renderer": "^4.3.0",
+    "@tanstack/react-table": "^8.21.2",
+    "axios": "^1.8.4",
+    "chart.js": "^4.4.7",
+    "classnames": "^2.5.1",
+    "core-js": "^3.40.0",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^12.23.25",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.7",
+    "prop-types": "^15.8.1",
+    "react": "^19.0.0",
+    "react-csv": "^2.2.2",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.1.5",
+    "redux": "5.0.1",
+    "simplebar-react": "^3.3.0",
+    "web-vitals": "^4.2.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.15.0",
+    "postcss": "^8.5.6",
+    "prettier": "3.5.1",
+    "sass": "^1.97.0",
+    "tailwindcss": "^4.1.17",
+    "vite": "^6.1.0"
+  }
+}

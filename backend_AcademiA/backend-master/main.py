@@ -70,6 +70,11 @@ from models import (
 # Rate limiter — identifica clientes por IP
 limiter = Limiter(key_func=get_remote_address)
 
+# Crear tabla de blacklist si no existe
+from models import Base, TokenBlacklist
+from database import engine
+Base.metadata.create_all(bind=engine, tables=[TokenBlacklist.__table__])
+
 # Creamos la instancia de FASTAPI
 app = FastAPI(
     title="AcademIA API",

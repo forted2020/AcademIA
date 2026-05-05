@@ -329,6 +329,17 @@ class Nota(Base):
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
 
 # ----------------------------------------------------------------------------------
+# MODELO TOKEN BLACKLIST — tokens revocados por logout
+# ----------------------------------------------------------------------------------
+class TokenBlacklist(Base):
+    __tablename__ = "t_token_blacklist"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    token = Column(String(512), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=func.current_timestamp())
+
+# ----------------------------------------------------------------------------------
 # MODELO CICLOS LECTIVOS
 # ----------------------------------------------------------------------------------
 class CicloLectivo(Base):

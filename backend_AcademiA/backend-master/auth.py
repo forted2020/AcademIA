@@ -5,7 +5,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session, joinedload
 from dotenv import load_dotenv
 import os
@@ -18,7 +18,7 @@ import json
 limiter = Limiter(key_func=get_remote_address)
 
 # Importamos solo User (eliminamos UsuarioTipos)
-from models import User 
+from models import User, TokenBlacklist
 
 # Importamos los nuevos esquemas de Pydantic
 from schemas import (
@@ -101,13 +101,20 @@ async def send_email(to_email: str, subject: str, body: str):
 # FUNCIÓN DE VALIDACIÓN DE TOKEN (get_current_user)
 # ----------------------------------------------------------------------
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserAuthData: 
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserAuthData:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
+    if is_token_blacklisted(token, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token revocado. Iniciá sesión nuevamente.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     # Decodificación del Token
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
@@ -144,6 +151,38 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         email=user.email,
         is_email_verified=user.is_email_verified
     )
+
+# ----------------------------------------------------------------------
+# HELPERS DE BLACKLIST
+# ----------------------------------------------------------------------
+
+def is_token_blacklisted(token: str, db: Session) -> bool:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    entry = db.query(TokenBlacklist).filter(
+        TokenBlacklist.token == token,
+        TokenBlacklist.expires_at > now,
+    ).first()
+    return entry is not None
+
+def revoke_token(token: str, db: Session):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+        exp = payload.get("exp")
+        expires_at = datetime.fromtimestamp(exp) if exp else datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    except JWTError:
+        expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    db.add(TokenBlacklist(token=token, expires_at=expires_at))
+    db.commit()
+
+# ----------------------------------------------------------------------
+# ENDPOINT DE LOGOUT
+# ----------------------------------------------------------------------
+
+@router.post("/logout")
+async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    revoke_token(token, db)
+    return {"detail": "Sesión cerrada correctamente"}
 
 # ----------------------------------------------------------------------
 # ENDPOINT DE LOGIN

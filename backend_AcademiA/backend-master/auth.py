@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.encoders import jsonable_encoder
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session, joinedload # 🚨 Importamos joinedload
+from sqlalchemy.orm import Session, joinedload
 from dotenv import load_dotenv
 import os
 import aiosmtplib
@@ -12,6 +14,8 @@ from email.message import EmailMessage
 import secrets
 from typing import Optional
 import json
+
+limiter = Limiter(key_func=get_remote_address)
 
 # Importamos solo User (eliminamos UsuarioTipos)
 from models import User 
@@ -145,106 +149,49 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 # ENDPOINT DE LOGIN
 # ----------------------------------------------------------------------
 
-# Usamos UserLogin como entrada y Token como respuesta
 @router.post("/login", response_model=Token)
-async def login(request: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(http_request: Request, body: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).options(joinedload(User.rol_sistema_obj)).filter(User.name == body.name).first()
 
-    # 1. Búsqueda y Validación de credenciales
-    # 🚨 Usamos joinedload para cargar la relación rol_sistema_obj
-    user = db.query(User).options(joinedload(User.rol_sistema_obj)).filter(User.name == request.name).first()
-
-    if not user:
-    # 🚨 Manejo de usuario no encontrado (o credenciales incorrectas)
+    if not user or not verify_password(body.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nombre de usuario o contraseña incorrectos.",
             headers={"WWW-Authenticate": "Bearer"},
-    )
-    # Capturamos el código del Rol del SISTEMA
-    if user.rol_sistema_obj and user.rol_sistema_obj.tipo_roles_usuarios:
+        )
 
-        
-        # ACCEDEMOS a la nueva relación y al nombre del campo en esa tabla
-        current_rol_sistema_code = user.rol_sistema_obj.tipo_roles_usuarios 
-        print(f"DEBUG: Código de Rol del Sistema leído de la BD: {current_rol_sistema_code}")
-    else:
-        raise HTTPException(status_code=500, detail="Error: Rol del Sistema no encontrado para el usuario.")
-
-    access_token = create_access_token(data={
-        "sub": user.name, 
-        "rol_sistema": current_rol_sistema_code, # USADO AQUÍ
-        "id_usuario": user.id_usuario,
-        "id_entidad": user.id_entidad 
-    })
-
-    if not user or not verify_password(request.password, user.password):
-        raise HTTPException(status_code=401, detail="Credenciales inválidas")
-    
     if not user.is_email_verified:
         raise HTTPException(status_code=403, detail="El email no está verificado")
-        
-    # Capturamos el código de rol de la relación
-    if user.rol_sistema_obj and user.rol_sistema_obj.tipo_roles_usuarios: # <--- Usar el campo de la tabla Roles del Sistema
-        current_rol_sistema_code = user.rol_sistema_obj.tipo_roles_usuarios # Debería ser 'ADMIN_SISTEMA', 'ALUMNO_APP'
-        
-        # 🚨 Debug: Muestra el código de rol leído
-        print(f"DEBUG: Código de Rol del Sistema leído de la BD: {current_rol_sistema_code}")
-    
-    else:
-        # Este 'else' es importante por si el usuario existe pero el rol no está mapeado
-        raise HTTPException(status_code=500, detail="Error: Rol del Sistema no encontrado para el usuario.")
 
-    # Si el código de permisos antiguo necesita el atributo 'tipos_usuario' como lista:
-    # user.tipos_usuario = [current_rol_code] 
+    if not user.rol_sistema_obj or not user.rol_sistema_obj.tipo_roles_usuarios:
+        raise HTTPException(status_code=500, detail="Rol del sistema no configurado para este usuario.")
 
-    
-    # 2. Generación del Token JWT
-    # Usamos el Rol del Sistema en el JWT
+    current_rol_sistema_code = user.rol_sistema_obj.tipo_roles_usuarios
+
     access_token = create_access_token(data={
-        "sub": user.name, 
-        "rol_sistema": current_rol_sistema_code, # <--- ADMIN_SISTEMA o ALUMNO_APP
+        "sub": user.name,
+        "rol_sistema": current_rol_sistema_code,
         "id_usuario": user.id_usuario,
-        "id_entidad": user.id_entidad 
+        "id_entidad": user.id_entidad,
     })
 
-    
-    # 3. Preparación de la respuesta (UserAuthData)
-    # Creamos el objeto rol para UserAuthData
     tipo_rol_data = TipoRolResponse(cod_tipo_usuario=current_rol_sistema_code)
-    
     user_auth_data = UserAuthData(
         id_usuario=user.id_usuario,
         name=user.name,
-        rol_sistema=current_rol_sistema_code, # <-- Enviamos el rol del sistema al frontend
+        rol_sistema=current_rol_sistema_code,
         id_entidad=user.id_entidad,
-        tipo_rol=tipo_rol_data, # Esto contendrá el rol de la entidad (ej: 'ALUMNO'), si se necesita en el frontend.
+        tipo_rol=tipo_rol_data,
         email=user.email,
-        is_email_verified=user.is_email_verified
-    
+        is_email_verified=user.is_email_verified,
     )
-    
 
-    # 4. Retorno de la respuesta final (Esquema Token)
-
-    # 4.1 Asignar el diccionario a una variable (response_data)
-    response_data = {
+    return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": user_auth_data 
+        "user": user_auth_data,
     }
-    
-    # 🚨 DEBUG: Muestra el JSON FINAL ANTES DE ENVIAR
-    from fastapi.encoders import jsonable_encoder
-    import json
-    
-    response_json = jsonable_encoder(response_data)
-    print("--------------------------------------------------")
-    print("DEBUG: JSON FINAL DE RESPUESTA:")
-    print(json.dumps(response_json, indent=4))
-    print("--------------------------------------------------")
-    
-    # 4.2 Retornar la variable de respuesta (SOLO UN RETURN)
-    return response_data
 
 # ----------------------------------------------------------------------
 # ENDPOINTS ADICIONALES (Sin cambios mayores, excepto TipoRolResponse)
@@ -261,7 +208,8 @@ async def verify_email(request: EmailVerifyRequest, db: Session = Depends(get_db
     return {"detail": "Email verificado correctamente"}
 
 @router.post("/api/forgot-password")
-async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def forgot_password(http_request: Request, request: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

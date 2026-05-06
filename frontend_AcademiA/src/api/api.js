@@ -49,7 +49,7 @@ export const login = (data) => api.post('/api/login', data); // Login de usuario
 // =====================================================
 
 // Obtener (GET) todos los docentes (tipo_entidad = 'DOC')
-export const getDocentes = () => api.get('/api/docentes');
+export const getDocentes = (config = {}) => api.get('/api/docentes', config);
 
 //  Obtener (GET) un Docente específico por ID
 export const getDocente = (id_entidad) => api.get(`/api/docentes/${id_entidad}`);

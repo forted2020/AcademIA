@@ -36,11 +36,12 @@ export default function Materias() {
 
 
     // ---------- Estados principales ----------
-    const [tableData, setTableData] = useState([]) // Datos de la tabla de docentes
-    const [searchTerm, setSearchTerm] = useState('') // Búsqueda global
-    const [columnFilters, setColumnFilters] = useState(initialFilters) // Filtros por columna
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 }) // Paginación
-    const [sorting, setSorting] = useState([]) // Ordenamiento
+    const [tableData, setTableData] = useState([])
+    const [total, setTotal] = useState(0)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [columnFilters, setColumnFilters] = useState(initialFilters)
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+    const [sorting, setSorting] = useState([])
 
     // ---------- Estados para modales ----------
     const [deleteModalVisible, setDeleteModalVisible] = useState(false) // Modal de confirmación de eliminación
@@ -53,32 +54,17 @@ export default function Materias() {
 
     // ---------- Obtener docentes al cargar el componente ----------
     useEffect(() => {
-        fetchMaterias()
-    }, [])
-
-
-    // Obtiene la lista de docentes desde el backend, llamando al endpoint /api/docentes que filtra por tipo_entidad = 'DOC'
-
-    const fetchMaterias = async () => {
-        try {
-            const response = await getMateriasTabla()
-
-            const { data } = response;
-
-            if (Array.isArray(data)) {
-                setTableData(data)
-            } else {
-                console.error('El formato de datos no es un array:', data);
-                setTableData([]);
-            }
-        } catch (error) {
-            console.error('Error al obtener docentes:', error)
-            if (error.response) {
-                console.error('Detalles del error:', error.response.data);
-                console.error('Status:', error.response.status);
-            }
-        }
-    }
+        const skip = pagination.pageIndex * pagination.pageSize
+        const limit = pagination.pageSize
+        getMateriasTabla({ params: { skip, limit } })
+            .then((res) => {
+                const payload = res?.data
+                const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
+                setTableData(items)
+                setTotal(payload?.total ?? items.length)
+            })
+            .catch(console.error)
+    }, [pagination.pageIndex, pagination.pageSize])
 
 
 
@@ -199,6 +185,8 @@ export default function Materias() {
         getFilteredRowModel: getFilteredRowModel(),
         onGlobalFilterChange: setSearchTerm,
         onColumnFiltersChange: setColumnFilters,
+        manualPagination: true,
+        rowCount: total,
         state: {
             pagination,
             sorting,

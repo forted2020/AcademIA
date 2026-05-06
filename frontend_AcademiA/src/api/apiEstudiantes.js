@@ -10,7 +10,7 @@ Si el backend decide cambiar la ruta base de Estudiantes a, por ejemplo, /api/al
 //   ---------- Funciones CRUD para Estudiantes (Usando Nombres Genéricos)    ----------
 
 //  Obtiene todos los estudiantes [getAll]
-export const getAll = () => api.get(ENDPOINT);
+export const getAll = (config = {}) => api.get(ENDPOINT, config);
 
 //   Obtiene un estudiante específico por ID [get]
 //  Nota: Esta función no es usada por useGenericCrud, pero es buena práctica incluirla.

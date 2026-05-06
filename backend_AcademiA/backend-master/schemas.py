@@ -13,6 +13,16 @@ from typing import Optional, List, Any, Dict
 from datetime import date, datetime
 import re
 
+class PagedResponse(BaseModel):
+    data: List[Any]
+    total: int
+    skip: int
+    limit: int
+
+    class Config:
+        from_attributes = True
+
+
 def validate_password_strength(v: str) -> str:
     if len(v) < 8:
         raise ValueError("La contraseña debe tener al menos 8 caracteres")
@@ -212,6 +222,7 @@ class EstudianteBase(BaseModel):
     email: Optional[str] = None
     domicilio: Optional[str] = None
     telefono: Optional[str] = None
+    dni: Optional[int] = None
     
 class EstudianteCreate(EstudianteBase):
     pass
@@ -261,7 +272,7 @@ class DocenteBase(BaseModel):
     nacionalidad: str= "No especificada"
     telefono: Optional[str] = "-"
     cel: str = "-"
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 
 # Para CREAR
@@ -733,9 +744,62 @@ class InscripcionesCreate(InscripcionesBase):
 class InscripcionesUpdate(BaseModel):
     id_entidad: Optional[int] = None # ID del Alumno
     id_materia: Optional[int] = None
-    id_tipo_inc: Optional[int] = None 
+    id_tipo_inc: Optional[int] = None
     fecha_insc: Optional[date] = None
     id_ciclo_lectivo: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+
+# ============================================================
+#   ESQUEMAS PARA NOTIFICACIONES (t_notificaciones)
+# ============================================================
+
+class NotificacionCreate(BaseModel):
+    id_usuario_destino: int
+    mensaje: str
+    tipo: str = 'sistema'   # 'nota', 'inasistencia', 'inscripcion', 'sistema'
+
+
+class NotificacionResponse(BaseModel):
+    id: int
+    id_usuario_destino: int
+    mensaje: str
+    tipo: str
+    leida: bool
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MarcarLeidaRequest(BaseModel):
+    ids: List[int]   # Lista de IDs de notificaciones a marcar como leídas
+
+
+# ============================================================
+#   ESQUEMAS PARA CONFIGURACIÓN DE NOTIFICACIONES (t_notif_config)
+# ============================================================
+
+class NotifConfigItem(BaseModel):
+    tipo: str
+    activa: bool
+
+    class Config:
+        from_attributes = True
+
+
+class NotifConfigResponse(BaseModel):
+    id: int
+    id_usuario: int
+    tipo: str
+    activa: bool
+
+    class Config:
+        from_attributes = True
+
+
+class NotifConfigUpdate(BaseModel):
+    # Lista de preferencias a actualizar (upsert)
+    preferencias: List[NotifConfigItem]

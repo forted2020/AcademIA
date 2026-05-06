@@ -30,11 +30,12 @@ const initialFilters = []
 export default function Personal() {
 
   // ---------- Estados principales ----------
-  const [tableData, setTableData] = useState([]) // Datos de la tabla de personal
-  const [searchTerm, setSearchTerm] = useState('') // Búsqueda global
-  const [columnFilters, setColumnFilters] = useState(initialFilters) // Filtros por columna
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 }) // Paginación
-  const [sorting, setSorting] = useState([]) // Ordenamiento
+  const [tableData, setTableData] = useState([])
+  const [total, setTotal] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [columnFilters, setColumnFilters] = useState(initialFilters)
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [sorting, setSorting] = useState([])
 
   // ---------- Estados para modales ----------
   const [deleteModalVisible, setDeleteModalVisible] = useState(false) // Modal de confirmación de eliminación
@@ -44,31 +45,17 @@ export default function Personal() {
 
   // ---------- Obtener listado del personal  al cargar el componente ----------
   useEffect(() => {
-    fetchPersonal()
-  }, [])
-
-// Obtiene la lista. Llama al endpoint /api/personal que filtra por tipos de entidad
-
-  const fetchPersonal = async () => {
-    try {
-      const response = await getPersonalAll()
-
-      const { data } = response;
-
-      if (Array.isArray(data)) {
-        setTableData(data)
-      } else {
-        console.error('El formato de datos no es un array:', data);
-        setTableData([]);
-      }
-    } catch (error) {
-      console.error('Error al obtener Personal:', error)
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-        console.error('Status:', error.response.status);
-      }
-    }
-  }
+    const skip = pagination.pageIndex * pagination.pageSize
+    const limit = pagination.pageSize
+    getPersonalAll({ params: { skip, limit } })
+      .then((res) => {
+        const payload = res?.data
+        const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        setTableData(items)
+        setTotal(payload?.total ?? items.length)
+      })
+      .catch(console.error)
+  }, [pagination.pageIndex, pagination.pageSize])
 
 
 
@@ -156,6 +143,8 @@ export default function Personal() {
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setSearchTerm,
     onColumnFiltersChange: setColumnFilters,
+    manualPagination: true,
+    rowCount: total,
     state: {
       pagination,
       sorting,

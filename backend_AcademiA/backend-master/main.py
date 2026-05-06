@@ -20,6 +20,7 @@ import crud
 import auth
 
 from Routes import  routes_docentes, routes_inasistencias
+from Routes.routes_notificaciones import router as router_notificaciones
 
 from Routes.routes_materias import router as materias_router
 from Routes.routes_periodos import router as periodos_router
@@ -72,14 +73,18 @@ from models import (
 # Rate limiter — identifica clientes por IP
 limiter = Limiter(key_func=get_remote_address)
 
-from models import Base, TokenBlacklist
+from models import Base, TokenBlacklist, Notificacion, NotificacionConfig
 from database import engine
 
 # Creamos la instancia de FASTAPI
+import os
+_env = os.getenv("ENVIRONMENT", "development")
 app = FastAPI(
     title="AcademIA API",
     description="API para el sistema académico",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs" if _env != "production" else None,
+    redoc_url="/redoc" if _env != "production" else None,
 )
 
 app.state.limiter = limiter
@@ -104,8 +109,15 @@ async def generic_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Error interno del servidor."})
 
 @app.on_event("startup")
-def create_blacklist_table():
-    Base.metadata.create_all(bind=engine, tables=[TokenBlacklist.__table__])
+def create_tables_on_startup():
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[
+            TokenBlacklist.__table__,
+            Notificacion.__table__,
+            NotificacionConfig.__table__,
+        ],
+    )
 
 
 # Create table database
@@ -141,6 +153,7 @@ app.include_router(router_personal, prefix="/api")
 app.include_router(routes_estudiantes_notas, prefix="/api", tags=["Notas"])
 
 app.include_router(router_usuarios, prefix="/api/usuarios")
+app.include_router(router_notificaciones, prefix="/api")
 
 
 

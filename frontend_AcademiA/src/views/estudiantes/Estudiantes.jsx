@@ -19,7 +19,7 @@ import './Estudiantes.css'
 // Componentes
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-import ToastNotification from '../../components/toastNotification/toastNotification.jsx'
+import { useToast } from '../../context/ToastContext'
 import { ActionTableButtons } from '../../components/genericTable/actionTableButtons/ActionTableButtons.jsx'
 import { FilterMatchMode } from 'primereact/api';
 
@@ -90,12 +90,19 @@ const TruncatedCell = ({ value }) => {
 
 export default function Estudiante() {
 
+    // Estados de UI
+    const [searchTerm, setSearchTerm] = useState('')
+    const [size, setSize] = useState('normal')
+    const [selectedRows, setSelectedRows] = useState(null)
+    const [pagination, setPagination] = useState({ first: 0, rows: 10 })
+
     // Hook para traer datos y desestructurar
     const {
         studentsData: tableData,
         setStudentsData: setTableData,
+        total,
         loading
-    } = useStudentsData()
+    } = useStudentsData({ skip: pagination.first, limit: pagination.rows })
 
     console.log("Datos traidos del hook: ", { tableData });
 
@@ -104,7 +111,6 @@ export default function Estudiante() {
         editModal, deleteModal,      // Estados de los modales (visible, data, id)
         openEdit, closeEdit,         // Funciones para abrir/cerrar edición
         openDelete, closeDelete,     // Funciones para abrir/cerrar borrado
-        toast, setToast,             // Estado de notificaciones
         handleSave, handleDelete     // Funciones lógicas que llaman a la API
     } = useCrudModalManager({
         createApi: apiEstudiantes.create,  // Mapeamos las funciones de la API
@@ -114,11 +120,6 @@ export default function Estudiante() {
     });
 
 
-    // Estados de UI
-    const [searchTerm, setSearchTerm] = useState('') // Búsqueda global
-    const [size, setSize] = useState('normal')
-    const [selectedRows, setSelectedRows] = useState(null)
-    const [pagination, setPagination] = useState({ first: 0, rows: 10 }) // PrimeReact usa 'first' y 'rows'
 
     // Opciones para el selector de tamaño
     const sizeOptions = [
@@ -246,8 +247,6 @@ export default function Estudiante() {
         <div style={{ padding: '10px' }}>
             <h1 className="ms-1" >Estudiantes</h1>
 
-            {/* Componente de Notificaciones (Toast) */}
-            <ToastNotification toast={toast} setToast={setToast} />
 
             <CContainer>
                 <CCard className="mb-1">
@@ -300,31 +299,28 @@ export default function Estudiante() {
                             <DataTable
                                 value={tableData}
                                 header={headerTable}
-                                // footer = {}
-
-                                className="p-datatable-gridlines" // bordes
+                                className="p-datatable-gridlines"
                                 tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
                                 stripedRows
                                 selectionMode={'checkbox'}
                                 selection={selectedRows}
                                 onSelectionChange={(e) => setSelectedRows(e.value)}
                                 dataKey="id_entidad"
-                                //  Ordenamiento
                                 removableSort
                                 sortField="apellido"
                                 sortOrder={1}
                                 loading={loading}
 
-                                // Paginación
+                                // Paginación server-side
                                 paginator
+                                lazy
+                                totalRecords={total}
                                 rows={pagination.rows}
-                                rowsPerPageOptions={[5, 10, 25, 50]} // Opciones del selector
+                                rowsPerPageOptions={[5, 10, 25, 50]}
                                 paginatorPosition="bottom"
-                                // Diseño del paginador (Template)
                                 paginatorTemplate={paginatorTemplate}
-
                                 first={pagination.first}
-                                onPage={(e) => setPagination(e)}
+                                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
 
                                 // Filtro global
                                 globalFilter={searchTerm}

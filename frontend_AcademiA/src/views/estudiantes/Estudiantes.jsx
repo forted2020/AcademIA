@@ -12,7 +12,6 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TieredMenu } from 'primereact/tieredmenu'
 import { Button } from 'primereact/button'
-import { FilterMatchMode } from 'primereact/api'
 
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
@@ -52,7 +51,6 @@ export default function Estudiantes() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [density, setDensity] = useState('normal')   // 'compact' | 'normal' | 'comfortable'
   const [pagination, setPagination] = useState({ first: 0, rows: 10 })
-  const [selectedRows, setSelectedRows] = useState(null)
   const [selectedRowData, setSelectedRowData] = useState(null)
   const menuRef = useRef(null)
 
@@ -164,15 +162,6 @@ export default function Estudiantes() {
     ),
   }
 
-  // ── Filtros por columna ───────────────────────────────────────────────────
-  const [filters] = useState({
-    global:   { value: null, matchMode: FilterMatchMode.CONTAINS },
-    apellido: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    nombre:   { value: null, matchMode: FilterMatchMode.CONTAINS },
-    dni:      { value: null, matchMode: FilterMatchMode.CONTAINS },
-    email:    { value: null, matchMode: FilterMatchMode.CONTAINS },
-  })
-
   return (
     <div className="est-page">
 
@@ -230,9 +219,6 @@ export default function Estudiantes() {
                 dataKey="id_entidad"
                 loading={loading}
                 stripedRows
-                selectionMode="checkbox"
-                selection={selectedRows}
-                onSelectionChange={(e) => setSelectedRows(e.value)}
                 removableSort
                 sortField="apellido"
                 sortOrder={1}
@@ -246,10 +232,8 @@ export default function Estudiantes() {
                 paginatorTemplate={paginatorTemplate}
                 first={pagination.first}
                 onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
-                // Búsqueda global (client-side sobre la página cargada)
+                // Búsqueda global client-side sobre la página cargada
                 globalFilter={globalFilter}
-                filters={filters}
-                filterDisplay="row"
                 emptyMessage={
                   <div className="est-empty">
                     <span className="pi pi-users est-empty-icon" />
@@ -268,13 +252,6 @@ export default function Estudiantes() {
                 className="p-datatable-sm"
                 rowHover
               >
-                {/* Checkbox de selección */}
-                <Column
-                  selectionMode="multiple"
-                  headerStyle={{ width: '2.75rem' }}
-                  style={{ width: '2.75rem' }}
-                />
-
                 {/* Columnas dinámicas desde config */}
                 {columnsTableEstudiantesConfig.map((col) => (
                   <Column
@@ -282,9 +259,6 @@ export default function Estudiantes() {
                     field={col.field}
                     header={col.header}
                     sortable={col.sortable}
-                    filter
-                    filterPlaceholder="Filtrar"
-                    showFilterMenu={false}
                     style={{ width: col.width }}
                     body={
                       col.field === 'dni'

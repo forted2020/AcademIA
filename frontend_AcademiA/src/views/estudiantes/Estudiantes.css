@@ -264,29 +264,6 @@
   white-space: nowrap;
 }
 
-/* ── Fila de filtros ────────────────────────────────────── */
-.est-table-wrap .p-datatable-thead > tr.p-datatable-filter-row > td {
-  padding: 0.25rem 0.5rem !important;
-  background: #f8f9fa !important;
-}
-
-.est-table-wrap .p-column-filter-element .p-inputtext {
-  padding: 0.25rem 0.5rem !important;
-  font-size: 0.72rem !important;
-  height: 26px !important;
-  width: 100% !important;
-  border-radius: 0.25rem;
-}
-
-.est-table-wrap .p-column-filter-menu-button {
-  display: none !important;
-}
-
-.est-table-wrap .p-inputtext::placeholder {
-  font-size: 0.7rem;
-  opacity: 0.55;
-}
-
 /* ── Cuerpo de tabla ────────────────────────────────────── */
 .est-table-wrap .p-datatable-tbody > tr > td {
   white-space: nowrap;

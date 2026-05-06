@@ -24,7 +24,7 @@ import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.js
 import TableActions from '../../components/tableActions/TableActions.jsx'
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-import ToastNotification from '../../components/toastNotification/toastNotification.jsx'
+import { useToast } from '../../context/ToastContext'
 
 // Importar datos de configuracion de modal
 import { docenteFields } from '../../utils/FormConfigs/formConfigs.js'
@@ -34,14 +34,17 @@ const initialFilters = []
 
 export default function Docentes() {
     const [tableData, setTableData] = useState([]);
+    const [total, setTotal] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+    const { showSuccess, showError } = useToast()
 
     // 1. Inicializamos el Administrador de CRUD
     const {
         editModal, deleteModal,
         openEdit, closeEdit,
         openDelete, closeDelete,
-        toast, setToast,
         handleSave, handleDelete
     } = useCrudModalManager({
         createApi: createDocente,
@@ -50,7 +53,7 @@ export default function Docentes() {
         setData: setTableData
     });
 
-    // 2. Definición de Columnas (Memorizada para performance)
+    // 2. Definición de Columnas
     const columns = useMemo(() => getTableColumns(
         [
             { accessorKey: 'apellido', header: 'Apellido' },
@@ -63,34 +66,41 @@ export default function Docentes() {
             { accessorKey: 'email', header: 'Email' },
             { accessorKey: 'tel_cel', header: 'Tel/Cel' },
         ],
-        openDelete, // Función del Hook
-        openEdit    // Función del Hook
+        openDelete,
+        openEdit
     ), []);
 
-    // 3. Efecto de carga inicial
+    // 3. Fetch con paginación server-side
     useEffect(() => {
-        const fetch = async () => {
-            const res = await getDocentes();
-            if (res?.data) setTableData(res.data);
-        };
-        fetch();
-    }, []);
+        const skip = pagination.pageIndex * pagination.pageSize
+        const limit = pagination.pageSize
+        getDocentes({ params: { skip, limit } })
+            .then((res) => {
+                const payload = res?.data
+                const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
+                setTableData(items)
+                setTotal(payload?.total ?? items.length)
+            })
+            .catch(console.error)
+    }, [pagination.pageIndex, pagination.pageSize]);
 
-    // 4. Configuración de la tabla
+    // 4. Configuración de la tabla (manual pagination — server-side)
     const table = useReactTable({
         data: tableData,
         columns,
         getRowId: (row) => row.id_entidad,
-        state: { globalFilter: searchTerm },
+        state: { globalFilter: searchTerm, pagination },
         onGlobalFilterChange: setSearchTerm,
+        onPaginationChange: setPagination,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        manualPagination: true,
+        rowCount: total,
     });
 
     return (
         <>
-            <ToastNotification toast={toast} setToast={setToast} />
 
             <CContainer fluid className="py-3">
                 <h1>Docentes</h1>

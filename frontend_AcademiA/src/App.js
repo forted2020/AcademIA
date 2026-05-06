@@ -9,11 +9,11 @@ import './scss/style.scss'
 import './scss/examples.scss'
 
 import { isTokenExpired } from './utils/isTokenExpired'
+import InterceptorSetup from './components/InterceptorSetup'
 
 // Estilos de PrimeReact
-import "primereact/resources/themes/lara-light-blue/theme.css"; // Tema
-import "primereact/resources/primereact.min.css";           // Core
-import "primeicons/primeicons.css";                         // Iconos
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
 
 
 //  ----------  Páginas  ----------  
@@ -49,6 +49,10 @@ const Docentes = React.lazy(() => import('./views/docentes/Docentes'))
 const DocentesInformes = React.lazy(() => import('./views/docentes/docentesInformes/DocentesInformes'))
 const DocenteCargaNotas = React.lazy(() => import('./views/docentes/DocenteCargaNotas'))
 const Personal = React.lazy(() => import('./views/personal/Personal'))
+const BoletinCalificaciones = React.lazy(() => import('./views/estudiantes/BoletinCalificaciones'))
+const ActaExamen = React.lazy(() => import('./views/estudiantes/ActaExamen'))
+const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
+const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
 
 //  Usar React.lazy permite cargar el código de las páginas sólo cuando se vsite por el usuario. Mejora el tiempo de carga inicial de la aplicación.
 
@@ -115,6 +119,9 @@ const RouterContent = () => {
           <Route path="estudiante/home" element={<ProtectedRoute> <EstudiantesHome /> </ProtectedRoute>} />
           <Route path="estudiante" element={<ProtectedRoute> <Estudiante /> </ProtectedRoute>} />
           <Route path="estudiante/trayectoria" element={<ProtectedRoute> <Trayectoria /> </ProtectedRoute>} />
+          <Route path="estudiante/boletin" element={<ProtectedRoute> <BoletinCalificaciones /> </ProtectedRoute>} />
+          <Route path="estudiante/acta-examen" element={<ProtectedRoute> <ActaExamen /> </ProtectedRoute>} />
+          <Route path="estudiante/informe-asistencia" element={<ProtectedRoute> <InformeAsistencia /> </ProtectedRoute>} />
           <Route path="estudiante/informes" element={<ProtectedRoute> <EstudiantesInformes /> </ProtectedRoute>} />
 
           <Route path="cursos" element={<ProtectedRoute> <Curso /> </ProtectedRoute>} />
@@ -127,6 +134,8 @@ const RouterContent = () => {
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UserManagement /> </ProtectedRoute>} />
           <Route path="usuarios/informes" element={
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UsuariosInformes /> </ProtectedRoute>} />
+
+          <Route path="configuracion/notificaciones" element={<ProtectedRoute> <ConfiguracionNotificaciones /> </ProtectedRoute>} />
 
           {/* Ruta por defecto para cualquier otra URL no coincidente dentro del layout */}
           <Route path="*" element={<Page404 />} />
@@ -177,18 +186,41 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
 
 }
 
+const PRIMEREACT_LIGHT = 'primereact/resources/themes/lara-light-blue/theme.css'
+const PRIMEREACT_DARK = 'primereact/resources/themes/lara-dark-blue/theme.css'
+
+const syncPrimeReactTheme = (isDark) => {
+  const linkId = 'primereact-theme'
+  let link = document.getElementById(linkId)
+  if (!link) {
+    link = document.createElement('link')
+    link.id = linkId
+    link.rel = 'stylesheet'
+    document.head.appendChild(link)
+  }
+  link.href = isDark ? PRIMEREACT_DARK : PRIMEREACT_LIGHT
+}
+
 const App = () => {
   useEffect(() => {
     const token = localStorage.getItem('token')
-
-    // Se limpia sólo si el token existe pero está expirado
     if (token && isTokenExpired(token)) {
       localStorage.clear()
     }
   }, [])
 
+  useEffect(() => {
+    const html = document.documentElement
+    const apply = () => syncPrimeReactTheme(html.getAttribute('data-coreui-theme') === 'dark')
+    apply()
+    const observer = new MutationObserver(apply)
+    observer.observe(html, { attributes: true, attributeFilter: ['data-coreui-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <HashRouter>
+      <InterceptorSetup />
       <RouterContent />
     </HashRouter>
   )

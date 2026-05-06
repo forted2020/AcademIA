@@ -2,7 +2,7 @@
 # backend-master\models.py
 
 # Importamos los tipos y funciones necesarias de SQLAlchemy para definir modelos ORM
-from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, DateTime, Float 
+from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, DateTime, Float, Index
 
 # Para funciones como CURRENT_TIMESTAMP
 from sqlalchemy.sql import func
@@ -198,10 +198,14 @@ class Inscripcion(Base):
 
     # Relaciones (para que Pydantic pueda navegar entre las tablas anidadas )
     # El nombre de la variable debe coincidir con el campo en InscripcionesResponse
-    estudiantes = relationship("Entidad") 
+    estudiantes = relationship("Entidad")
     materia = relationship("Materia")
-    tipo_inscripcion = relationship("TipoInscripcion") 
-    ciclo_lectivo = relationship("CicloLectivo")       
+    tipo_inscripcion = relationship("TipoInscripcion")
+    ciclo_lectivo = relationship("CicloLectivo")
+
+    __table_args__ = (
+        Index("idx_inscripciones_entidad_ciclo", "id_entidad", "id_ciclo_lectivo"),
+    )
 
 # ----------------------------------------------------------------------------------
 # MODELOS PARA TIPOS DE INSCRIPCIONES
@@ -235,10 +239,13 @@ class Inasistencia(Base):
     fecha_inasistencia = Column(Date)
     id_tipo_inasistencia = Column(Integer, ForeignKey("t_tipo_inasistencia.id_tipo_inasistencia")) # Relación con Tipo de asistencia
     
-    # Relación (para acceder a .tipo_obj.valor)
-    tipo_obj = relationship("TipoInasistencia") 
+    tipo_obj = relationship("TipoInasistencia")
     justificada = Column(Boolean, default=False)
     motivo_inasistencia = Column(String(255))
+
+    __table_args__ = (
+        Index("idx_inasistencia_entidad_fecha", "id_entidad", "fecha_inasistencia"),
+    )
 
 
 # ----------------------------------------------------------------------------------
@@ -328,6 +335,21 @@ class Nota(Base):
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
 
+    __table_args__ = (
+        Index("idx_nota_estudiante_materia_periodo", "id_entidad_estudiante", "id_materia", "id_periodo"),
+    )
+
+# ----------------------------------------------------------------------------------
+# MODELO TOKEN BLACKLIST — tokens revocados por logout
+# ----------------------------------------------------------------------------------
+class TokenBlacklist(Base):
+    __tablename__ = "t_token_blacklist"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    token = Column(String(512), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=func.current_timestamp())
+
 # ----------------------------------------------------------------------------------
 # MODELO CICLOS LECTIVOS
 # ----------------------------------------------------------------------------------
@@ -370,3 +392,46 @@ class Curso(Base):
 
     # Relación: Un curso pertenece a un ciclo
     ciclo = relationship("CicloLectivo", back_populates="cursos")   # Busca "cursos" en CicloLectivo
+
+
+# ----------------------------------------------------------------------------------
+# MODELO NOTIFICACIONES (t_notificaciones)
+# ----------------------------------------------------------------------------------
+class Notificacion(Base):
+    __tablename__ = "t_notificaciones"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+
+    # Destino: usuario que recibe la notificación (FK a t_usuarios)
+    id_usuario_destino = Column(Integer, ForeignKey("t_usuarios.id_usuario"), nullable=False, index=True)
+
+    mensaje = Column(String(500), nullable=False)
+
+    # Tipo de evento: 'nota', 'inasistencia', 'inscripcion', 'sistema'
+    tipo = Column(String(50), nullable=False, default='sistema')
+
+    leida = Column(Boolean, default=False, nullable=False)
+
+    timestamp = Column(DateTime, default=func.current_timestamp(), nullable=False)
+
+    # Relación con el usuario destino
+    usuario_destino = relationship("User", foreign_keys=[id_usuario_destino])
+
+
+# ----------------------------------------------------------------------------------
+# MODELO CONFIGURACIÓN DE NOTIFICACIONES (t_notif_config)
+# Cada fila es una preferencia de un usuario para un tipo de notificación.
+# ----------------------------------------------------------------------------------
+class NotificacionConfig(Base):
+    __tablename__ = "t_notif_config"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_usuario = Column(Integer, ForeignKey("t_usuarios.id_usuario"), nullable=False, index=True)
+
+    # Tipo al que aplica esta config: 'nota', 'inasistencia', 'inscripcion', 'sistema'
+    tipo = Column(String(50), nullable=False)
+
+    # Si el usuario quiere recibir este tipo de notificación en el panel
+    activa = Column(Boolean, default=True, nullable=False)
+
+    usuario = relationship("User", foreign_keys=[id_usuario])

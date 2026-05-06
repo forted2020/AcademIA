@@ -34,12 +34,8 @@ export const useCursosCompletoData = () => {
             console.log("Datos recibidos (data):", data)
 
 
-            if (Array.isArray(data)) {
-                setCursosCompletoData(data)
-            } else {
-                console.error('El formato de datos no es un array:', data)
-                setCursosCompletoData([])
-            }
+            const items = Array.isArray(data) ? data : (data?.data ?? [])
+            setCursosCompletoData(items)
         } catch (error) {
             console.error('Error al obtener Curos:', error)
             if (error.response) {

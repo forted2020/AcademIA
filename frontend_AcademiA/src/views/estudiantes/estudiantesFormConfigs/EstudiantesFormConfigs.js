@@ -15,13 +15,11 @@ const getTodayDate = () => new Date().toISOString().split('T')[0];
 // Campos tabla
 //  Configuración de columnas
 export const columnsTableEstudiantesConfig = [
+    { field: 'dni', header: 'DNI', sortable: true, width: '110px' },
     { field: 'apellido', header: 'Apellido', sortable: true, width: '20%' },
     { field: 'nombre', header: 'Nombre', sortable: true, width: '20%' },
     { field: 'fec_nac', header: 'Fecha Nac.', body: dateBodyTemplate, sortable: true, width: '120px' },
     { field: 'email', header: 'Email', sortable: true, width: '25%' },
-    { field: 'domicilio', header: 'Domicilio', sortable: false, width: '15%' },
-    { field: 'telefono', header: 'Teléfono', sortable: false, width: '140px' },
-    
 ];
 
 // Campos modal Nuevo / Editar. Tienen que coincidir exactamente con el nombre traído de la base.

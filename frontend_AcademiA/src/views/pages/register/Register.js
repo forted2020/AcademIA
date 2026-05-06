@@ -11,80 +11,78 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
-  CAlert, // Para mensajes de éxito/error
+  CAlert,
 } from '@coreui/react'
 
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeOpen } from '@coreui/icons'
-import axios from 'axios'; // Importamos Axios para solicitudes HTTP al endpoint /api/register.
+import axios from 'axios'
+
+const PASSWORD_RULES = [
+  { test: (p) => p.length >= 8,              label: 'Mínimo 8 caracteres' },
+  { test: (p) => /\d/.test(p),               label: 'Al menos un número' },
+  { test: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=/\\]/.test(p), label: 'Al menos un carácter especial' },
+]
+
+function getPasswordErrors(password) {
+  return PASSWORD_RULES.filter((r) => !r.test(password)).map((r) => r.label)
+}
 
 const Register = () => {
-  // Estados para los campos del formulario y mensajes
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [repeatPassword, setRepeatPassword] = useState('');
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [repeatPassword, setRepeatPassword] = useState('')
+  const [passwordTouched, setPasswordTouched] = useState(false)
 
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
-  // Función para manejar cambios en los inputs
-   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setErrorMessage(''); // Limpiar errores al escribir
-    setSuccessMessage(''); // Limpiar mensaje de éxito al escribir
-    if (name === 'name') setName(value);
-    if (name === 'email') setEmail(value);
-    if (name === 'password') setPassword(value);
-    if (name === 'repeatPassword') setRepeatPassword(value);
-  };
+  const passwordErrors = getPasswordErrors(password)
+  const passwordValid = passwordErrors.length === 0
 
-  // Función para manejar el envío del formulario
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setErrorMessage('')
+    setSuccessMessage('')
+    if (name === 'name') setName(value)
+    if (name === 'email') setEmail(value)
+    if (name === 'password') { setPassword(value); setPasswordTouched(true) }
+    if (name === 'repeatPassword') setRepeatPassword(value)
+  }
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+    e.preventDefault()
+    setErrorMessage('')
+    setSuccessMessage('')
 
-    // Validaciones en el frontend
     if (!name.trim() || !email.trim() || !password.trim() || !repeatPassword.trim()) {
-      setErrorMessage('Por favor, completa todos los campos.');
-      return;
+      setErrorMessage('Por favor, completá todos los campos.')
+      return
+    }
+    if (!passwordValid) {
+      setErrorMessage('La contraseña no cumple los requisitos de seguridad.')
+      return
     }
     if (password !== repeatPassword) {
-      setErrorMessage('Las contraseñas no coinciden.');
-      return;
+      setErrorMessage('Las contraseñas no coinciden.')
+      return
     }
 
     try {
-      const response = await axios.post('/api/register', {
-        name,
-        email,
-        password,
-        tipo_usuario: 'EST', // Enviar tipo_usuario fijo como "EST"
-      });
-      
-      // Mostrar mensaje de éxito
-      setSuccessMessage('Usuario registrado. Por favor, verifica tu correo.');
-      
-      // Limpiar formulario
-      setName('');
-      setEmail('');
-      setPassword('');
-      setRepeatPassword('');
+      await axios.post('/api/register', { name, email, password, tipo_usuario: 'EST' })
+      setSuccessMessage('Usuario registrado. Por favor, verificá tu correo.')
+      setName(''); setEmail(''); setPassword(''); setRepeatPassword('')
+      setPasswordTouched(false)
     } catch (err) {
-      if (err.response) {
-        const errorDetail = err.response.data?.detail || 'Error desconocido';
-        if (err.response.status === 400) {
-          setErrorMessage(`Error: ${errorDetail}`); // Ej. "El nombre de usuario ya existe"
-        } else {
-          setErrorMessage(`Error del servidor: ${errorDetail}`);
-        }
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setErrorMessage(detail.map((d) => d.msg).join(' · '))
       } else {
-                setErrorMessage('Error de red. Por favor, verifica tu conexión.');
+        setErrorMessage(detail || 'Error del servidor.')
       }
     }
-  };
-  
+  }
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
@@ -97,82 +95,75 @@ const Register = () => {
                   <h1>Registro</h1>
                   <p className="text-body-secondary">Cree su cuenta de usuario</p>
 
-                  {/* Mostrar mensajes de éxito o error */}
-                  {successMessage && (
-                    <CAlert color="success" className="mb-3">
-                      {successMessage}
-                    </CAlert>
-                  )}
-                  {errorMessage && (
-                    <CAlert color="danger" className="mb-3">
-                      {errorMessage}
-                    </CAlert>
-                  )}
+                  {successMessage && <CAlert color="success" className="mb-3">{successMessage}</CAlert>}
+                  {errorMessage   && <CAlert color="danger"  className="mb-3">{errorMessage}</CAlert>}
 
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput 
-                      placeholder="Nombre de Usuario" 
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                    <CFormInput
+                      placeholder="Nombre de Usuario"
                       autoComplete="username"
                       name="name"
-                      value={name}  // Vincular con el estado
-                      onChange={handleChange} // Manejar cambios
+                      value={name}
+                      onChange={handleChange}
                     />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilEnvelopeOpen} />
-                    </CInputGroupText>
-                    <CFormInput 
-                      type = "emil"
-                      placeholder="Correo electrónico" 
+                    <CInputGroupText><CIcon icon={cilEnvelopeOpen} /></CInputGroupText>
+                    <CFormInput
+                      type="email"
+                      placeholder="Correo electrónico"
                       autoComplete="email"
                       name="email"
                       value={email}
-                      onChange={handleChange} 
+                      onChange={handleChange}
                     />
                   </CInputGroup>
 
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
+                  <CInputGroup className="mb-1">
+                    <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
                     <CFormInput
                       type="password"
                       placeholder="Contraseña"
                       autoComplete="new-password"
                       name="password"
-                      value={password}  // Vincular con estado
-                      onChange={handleChange} // Manejar cambios
+                      value={password}
+                      onChange={handleChange}
+                      invalid={passwordTouched && !passwordValid}
+                      valid={passwordTouched && passwordValid}
                     />
                   </CInputGroup>
 
+                  {/* Indicador de requisitos en tiempo real */}
+                  {passwordTouched && (
+                    <ul className="mb-3 ps-3" style={{ fontSize: '0.8rem' }}>
+                      {PASSWORD_RULES.map((r) => (
+                        <li key={r.label} style={{ color: r.test(password) ? 'green' : 'red' }}>
+                          {r.test(password) ? '✓' : '✗'} {r.label}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
                   <CInputGroup className="mb-4">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
+                    <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
                     <CFormInput
                       type="password"
                       placeholder="Repetir contraseña"
                       autoComplete="new-password"
                       name="repeatPassword"
-                      value={repeatPassword} // Vincular con estado
-                      onChange={handleChange} // Manejar cambios
+                      value={repeatPassword}
+                      onChange={handleChange}
+                      invalid={repeatPassword.length > 0 && password !== repeatPassword}
+                      valid={repeatPassword.length > 0 && password === repeatPassword}
                     />
                   </CInputGroup>
 
-
                   <div className="d-grid">
-                    <CButton 
-                      color="success"
-                      type="submit"
-                    >
+                    <CButton color="success" type="submit">
                       Crear cuenta
                     </CButton>
-
                   </div>
                 </CForm>
               </CCardBody>

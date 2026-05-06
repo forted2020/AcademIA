@@ -33,11 +33,8 @@ export const useGenericCrud = (apiFunctions, getColumns) => {
         try {
             const response = await apiFunctions.getAll()
             const { data } = response
-            if (Array.isArray(data)) {
-                setTableData(data)
-            } else {
-                setTableData([])
-            }
+            const items = Array.isArray(data) ? data : (data?.data ?? [])
+            setTableData(items)
         } catch (error) {
             console.error('Error al obtener datos:', error)
         } finally {

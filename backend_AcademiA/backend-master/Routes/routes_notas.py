@@ -118,7 +118,6 @@ def obtener_acta_calificaciones(
         )
 
     except Exception as e:
-        print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     
 
@@ -131,10 +130,6 @@ def upsert_nota(
     db: Session = Depends(database.get_db)
 ):
     try:
-        print("="*60)
-        print("📥 PAYLOAD RECIBIDO:", payload.dict())
-        print("="*60)
-        
         # 1. Buscar si la nota ya existe
         nota_db = db.query(models.Nota).filter(
             models.Nota.id_entidad_estudiante == payload.id_alumno,
@@ -143,8 +138,6 @@ def upsert_nota(
         ).first()
         
         if nota_db:
-            # ===== ACTUALIZAR nota existente =====
-            print(f"📝 Actualizando nota existente ID: {nota_db.id_nota}")
             nota_db.nota = payload.valor
             
             # Actualizar campos opcionales si vienen
@@ -155,8 +148,6 @@ def upsert_nota(
                 
             db.commit()
             db.refresh(nota_db)
-            
-            print(f"✅ Nota actualizada: {nota_db.nota}")
             return {
                 "status": "success", 
                 "message": "Nota actualizada correctamente",
@@ -166,9 +157,6 @@ def upsert_nota(
                 }
             }
         else:
-            # ===== CREAR nueva nota =====
-            print(f"✨ Creando nueva nota para alumno {payload.id_alumno}")
-            
             nueva_nota = models.Nota(
                 id_entidad_estudiante=payload.id_alumno,
                 id_materia=payload.id_materia,
@@ -181,8 +169,6 @@ def upsert_nota(
             db.add(nueva_nota)
             db.commit()
             db.refresh(nueva_nota)
-            
-            print(f"✅ Nota creada con ID: {nueva_nota.id_nota}")
             return {
                 "status": "success", 
                 "message": "Nota creada correctamente",
@@ -194,20 +180,8 @@ def upsert_nota(
             
     except Exception as e:
         db.rollback()
-        print(f"❌ ERROR DE BASE DE DATOS:")
-        print(f"   Tipo: {type(e).__name__}")
-        print(f"   Detalle: {str(e)}")
         raise HTTPException(
-            status_code=500, 
-            detail=f"Error de base de datos: {str(e)}"
-        )
-    except Exception as e:
-        db.rollback()
-        print(f"❌ ERROR GENERAL:")
-        print(f"   Tipo: {type(e).__name__}")
-        print(f"   Detalle: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Error al guardar nota: {str(e)}"
         )
     

@@ -34,12 +34,8 @@ export const usePersonalData = () => {
             console.log("Datos recibidos (data):", data)
 
 
-            if (Array.isArray(data)) {
-                setPersonalData(data)
-            } else {
-                console.error('El formato de datos no es un array:', data)
-                setPersonalData([])
-            }
+            const items = Array.isArray(data) ? data : (data?.data ?? [])
+            setPersonalData(items)
         } catch (error) {
             console.error('Error al obtener datos del Personal:', error)
             if (error.response) {

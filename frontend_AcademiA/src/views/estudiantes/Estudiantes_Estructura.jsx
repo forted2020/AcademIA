@@ -65,12 +65,8 @@ export default function Estudiante() {
 
             const { data } = response;
 
-            if (Array.isArray(data)) {
-                setTableData(data)
-            } else {
-                console.error('El formato de datos no es un array:', data);
-                setTableData([]);
-            }
+            const items = Array.isArray(data) ? data : (data?.data ?? [])
+            setTableData(items)
         } catch (error) {
             console.error('Error al obtener estudiantes:', error)
             if (error.response) {

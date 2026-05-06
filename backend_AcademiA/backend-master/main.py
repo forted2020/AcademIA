@@ -1,7 +1,13 @@
 #   backend-master\backend-master\main.py
 
 # Importamos FastAPI para crear la aplicación
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from sqlalchemy.exc import SQLAlchemyError
 
 # Importamos OAuth2PasswordBearer para autenticación con JWT
 from fastapi.security import OAuth2PasswordBearer
@@ -14,6 +20,7 @@ import crud
 import auth
 
 from Routes import  routes_docentes, routes_inasistencias
+from Routes.routes_notificaciones import router as router_notificaciones
 
 from Routes.routes_materias import router as materias_router
 from Routes.routes_periodos import router as periodos_router
@@ -63,12 +70,54 @@ from models import (
 
 
    
+# Rate limiter — identifica clientes por IP
+limiter = Limiter(key_func=get_remote_address)
+
+from models import Base, TokenBlacklist, Notificacion, NotificacionConfig
+from database import engine
+
 # Creamos la instancia de FASTAPI
+import os
+_env = os.getenv("ENVIRONMENT", "development")
 app = FastAPI(
     title="AcademIA API",
     description="API para el sistema académico",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs" if _env != "production" else None,
+    redoc_url="/redoc" if _env != "production" else None,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = [{"campo": e["loc"][-1], "mensaje": e["msg"]} for e in exc.errors()]
+    return JSONResponse(status_code=422, content={"detail": errors})
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(status_code=500, content={"detail": "Error de base de datos. Intente nuevamente."})
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        raise exc
+    return JSONResponse(status_code=500, content={"detail": "Error interno del servidor."})
+
+@app.on_event("startup")
+def create_tables_on_startup():
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[
+            TokenBlacklist.__table__,
+            Notificacion.__table__,
+            NotificacionConfig.__table__,
+        ],
+    )
 
 
 # Create table database
@@ -104,6 +153,7 @@ app.include_router(router_personal, prefix="/api")
 app.include_router(routes_estudiantes_notas, prefix="/api", tags=["Notas"])
 
 app.include_router(router_usuarios, prefix="/api/usuarios")
+app.include_router(router_notificaciones, prefix="/api")
 
 
 
@@ -139,7 +189,8 @@ def root():
 
 # Registro
 @app.post("/api/register", response_model=UserAuthData)
-async def register(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     # Crea el usuario usando la función CRUD
     db_user, verification_token = crud.c_create_user(db, user)
     # Enviar email de verificación
@@ -252,16 +303,4 @@ async def migrate_db(db: Session = Depends(get_db)):
         return {"error": str(e)}
     
 
-print("🔍 --- REVISIÓN DE RUTAS REGISTRADAS ---")
-for route in app.routes:
-    if hasattr(route, "path"):
-        print(f"Ruta: {route.path} | Nombre: {route.name}")
-print("🔍 ------------------------------------")
-
-
-print("\n" + "="*50)
-print("SISTEMA DE RUTAS ACTIVAS")
-for route in app.routes:
-    print(f"URL: {route.path} --> Name: {route.name}")
-print("="*50 + "\n")
 

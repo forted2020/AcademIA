@@ -8,9 +8,19 @@
 
 
 # Importamos las clases y tipos necesarios de Pydantic para definir esquemas
-from pydantic import BaseModel, EmailStr, Field, computed_field, field_serializer
+from pydantic import BaseModel, EmailStr, Field, computed_field, field_serializer, field_validator
 from typing import Optional, List, Any, Dict
 from datetime import date, datetime
+import re
+
+def validate_password_strength(v: str) -> str:
+    if len(v) < 8:
+        raise ValueError("La contraseña debe tener al menos 8 caracteres")
+    if not re.search(r"\d", v):
+        raise ValueError("La contraseña debe contener al menos un número")
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=/\\]", v):
+        raise ValueError("La contraseña debe contener al menos un carácter especial")
+    return v
 
 
 # =========================================================================
@@ -70,20 +80,18 @@ class Token(BaseModel):
 
 # Esquema para crear un nuevo usuario
 class UserCreate(BaseModel):
-    name: str 
-    email: EmailStr 
-    password: str 
-    
-    # Campo para la Clave Foránea (FK) del rol.
-    # Usamos 'tipo_rol_code' para que sea más explícito al crear.
-    tipo_rol_code: Optional[str] = 'ALUMNO_APP' 
-
-    # Incluimos id_entidad si el endpoint de creación lo va a manejar
-    # (Ej. un administrador crea un usuario asociado a una Entidad existente)
+    name: str
+    email: EmailStr
+    password: str
+    tipo_rol_code: Optional[str] = 'ALUMNO_APP'
     id_entidad: Optional[int] = None
-    
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v):
+        return validate_password_strength(v)
+
     class Config:
-        # Requereido para recibir datos en un PUT/PATCH
         from_attributes = True
 
 # Esquema para la solicitud de olvido de contraseña
@@ -94,6 +102,11 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v):
+        return validate_password_strength(v)
 
 # Esquema para la solicitud de verificación de email
 class EmailVerifyRequest(BaseModel):

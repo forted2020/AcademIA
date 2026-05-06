@@ -1,407 +1,331 @@
-//  frontend_AcademiA\src\views\estudiantes\Estudiantes.jsx
+// frontend_AcademiA/src/views/estudiantes/Estudiantes.jsx
 
-import React, { useState, useEffect, useRef } from 'react'
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer, CTooltip } from '@coreui/react'
-import { cilPlus, cilPencil, cilTrash } from '@coreui/icons'
-import { CIcon } from '@coreui/icons-react'
+import React, { useState, useRef, useEffect } from 'react'
+import {
+  CCard, CCardHeader, CCardBody, CContainer,
+  CButton, CBadge,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPlus, cilPeople } from '@coreui/icons'
 
-// Componentes de PrimeReact
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { SelectButton } from 'primereact/selectbutton';
-import { Menu } from 'primereact/menu'; // Menu más ligero que TieredMenu si solo hay un nivel
-import { Button } from 'primereact/button';
 import { TieredMenu } from 'primereact/tieredmenu'
+import { Button } from 'primereact/button'
+import { FilterMatchMode } from 'primereact/api'
 
-// Estilos personalizados
-import './Estudiantes.css'
-
-// Componentes
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-import { useToast } from '../../context/ToastContext'
-import { ActionTableButtons } from '../../components/genericTable/actionTableButtons/ActionTableButtons.jsx'
-import { FilterMatchMode } from 'primereact/api';
-
-// Datos de configuración de Modales
-import { modalNewEditEstudiantesFields, columnsTableEstudiantesConfig } from './estudiantesFormConfigs/EstudiantesFormConfigs.js'
-
-// API y Hooks de Lógica
-// Importamos funciones API para estudiantes
-import apiEstudiantes from '../../api/apiEstudiantes.js'
-
-//  Hook para obtener datos de los estudiantes
 import { useStudentsData } from '../../hooks/useStudentsData.js'
-// Custom Hook para manejar modales, manejar errores y actualizar la tabla 
 import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
+import apiEstudiantes from '../../api/apiEstudiantes.js'
+import {
+  modalNewEditEstudiantesFields,
+  columnsTableEstudiantesConfig,
+} from './estudiantesFormConfigs/EstudiantesFormConfigs.js'
 
+import './Estudiantes.css'
 
-
-// Configuración de botones de menú de filas
-
-/*
-const menuItemsConfig = (openEdit, openDelete) => [
-    {
-        label: 'Acciones',
-        items: [
-            { label: 'Editar', icon: 'pi pi-pencil', command: (e) => openEdit(e) },
-            { label: 'Eliminar', icon: 'pi pi-trash', className: 'text-danger', command: (e) => openDelete(selectedRowData) },
-            // Línea divisoria para separar acciones de gestión
-            { separator: true },
-            // Cierre del menú
-            { label: 'Cancelar', icon: 'pi pi-times', command: () => { } }
-        ]
-    }
-];
-*/
-
-
-// Componente auxiliar para detectar desbordamiento
+// ─── Celda con truncado y tooltip nativo ─────────────────────────────────────
 const TruncatedCell = ({ value }) => {
-    const spanRef = useRef(null);
-    const [isOverflowing, setIsOverflowing] = useState(false);
+  const spanRef = useRef(null)
+  const [overflow, setOverflow] = useState(false)
 
-    useEffect(() => {
-        if (spanRef.current) {
-            const el = spanRef.current;
-            setIsOverflowing(el.scrollWidth > el.clientWidth + 1);
-        }
-    }, [value]);
+  useEffect(() => {
+    const el = spanRef.current
+    if (el) setOverflow(el.scrollWidth > el.clientWidth + 1)
+  }, [value])
 
-    const content = (
-        <span
-            ref={spanRef}
-            className="d-inline-block text-truncate w-100"
-            style={{ cursor: isOverflowing ? 'pointer' : 'default' }}
-        >
-            {value}
-        </span>
-    );
+  return (
+    <span
+      ref={spanRef}
+      className="est-cell-text"
+      title={overflow ? String(value ?? '') : undefined}
+    >
+      {value ?? '—'}
+    </span>
+  )
+}
 
-    // Solo renderizamos Tooltip si hay truncamiento
-    return isOverflowing ? (
-        <CTooltip content={String(value)} placement="top">
-            {content}
-        </CTooltip>
-    ) : (
-        content
-    );
-};
+// ─── Componente principal ─────────────────────────────────────────────────────
+export default function Estudiantes() {
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [density, setDensity] = useState('normal')   // 'compact' | 'normal' | 'comfortable'
+  const [pagination, setPagination] = useState({ first: 0, rows: 10 })
+  const [selectedRows, setSelectedRows] = useState(null)
+  const [selectedRowData, setSelectedRowData] = useState(null)
+  const menuRef = useRef(null)
 
-export default function Estudiante() {
+  const { studentsData, setStudentsData, total, loading } = useStudentsData({
+    skip: pagination.first,
+    limit: pagination.rows,
+  })
 
-    // Estados de UI
-    const [searchTerm, setSearchTerm] = useState('')
-    const [size, setSize] = useState('normal')
-    const [selectedRows, setSelectedRows] = useState(null)
-    const [pagination, setPagination] = useState({ first: 0, rows: 10 })
+  const { editModal, deleteModal, openEdit, closeEdit, openDelete, closeDelete, handleSave, handleDelete } =
+    useCrudModalManager({
+      createApi: apiEstudiantes.create,
+      updateApi: apiEstudiantes.update,
+      deleteApi: apiEstudiantes.remove,
+      setData: setStudentsData,
+    })
 
-    // Hook para traer datos y desestructurar
-    const {
-        studentsData: tableData,
-        setStudentsData: setTableData,
-        total,
-        loading
-    } = useStudentsData({ skip: pagination.first, limit: pagination.rows })
+  // Cierra el menú popup al desmontar
+  useEffect(() => () => menuRef.current?.hide(), [])
 
-    console.log("Datos traidos del hook: ", { tableData });
+  // ── Menú contextual por fila ──────────────────────────────────────────────
+  const rowMenuItems = [
+    {
+      label: 'Editar',
+      icon: 'pi pi-pencil',
+      command: () => { openEdit(selectedRowData); menuRef.current?.hide() },
+    },
+    { separator: true },
+    {
+      label: 'Eliminar',
+      icon: 'pi pi-trash',
+      className: 'est-menu-danger',
+      command: () => { openDelete(selectedRowData); menuRef.current?.hide() },
+    },
+  ]
 
-    // Hook de Lógica CRUD ("Administrador")
-    const {
-        editModal, deleteModal,      // Estados de los modales (visible, data, id)
-        openEdit, closeEdit,         // Funciones para abrir/cerrar edición
-        openDelete, closeDelete,     // Funciones para abrir/cerrar borrado
-        handleSave, handleDelete     // Funciones lógicas que llaman a la API
-    } = useCrudModalManager({
-        createApi: apiEstudiantes.create,  // Mapeamos las funciones de la API
-        updateApi: apiEstudiantes.update,
-        deleteApi: apiEstudiantes.remove,
-        setData: setTableData              // Actualizar la tabla al terminar
-    });
+  // ── Templates de columna ─────────────────────────────────────────────────
+  const dniBadgeTemplate = (row) => (
+    <span className="est-dni-badge">{row.dni ?? '—'}</span>
+  )
 
+  const actionsTemplate = (row) => (
+    <Button
+      icon="pi pi-ellipsis-v"
+      rounded
+      text
+      severity="secondary"
+      className="est-action-btn"
+      aria-label="Opciones"
+      onClick={(e) => {
+        e.stopPropagation()
+        setSelectedRowData(row)
+        menuRef.current?.toggle(e)
+      }}
+    />
+  )
 
+  // ── Header de la tabla ────────────────────────────────────────────────────
+  const tableHeader = (
+    <div className="est-table-header">
+      {/* Selector de densidad */}
+      <div className="est-density-group" role="group" aria-label="Densidad de tabla">
+        {[
+          { key: 'compact', label: 'Compacto' },
+          { key: 'normal',  label: 'Normal'   },
+          { key: 'comfortable', label: 'Amplio' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            className={`est-density-btn${density === key ? ' active' : ''}`}
+            onClick={() => setDensity(key)}
+            aria-pressed={density === key}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-    // Opciones para el selector de tamaño
-    const sizeOptions = [
-        { label: 'Compacto', value: 'small' },
-        { label: 'Normal', value: 'normal' },
-        { label: 'Amplio', value: 'large' }
-    ]
+      {/* Buscador global */}
+      <div className="est-search-wrap">
+        <span className="est-search-icon pi pi-search" aria-hidden="true" />
+        <input
+          className="est-search-input"
+          type="text"
+          placeholder="Buscar estudiante..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          aria-label="Buscar estudiante"
+        />
+        {globalFilter && (
+          <button
+            className="est-search-clear"
+            onClick={() => setGlobalFilter('')}
+            aria-label="Limpiar búsqueda"
+          >
+            <span className="pi pi-times" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
 
-    // Template para renderizar los botones de acción
-    const actionBodyTemplate = (rowData) => {
-        return (
-            <div className="text-center">
-                <Button
-                    icon="pi pi-ellipsis-v" // Ícono de tres puntos verticales
-                    rounded
-                    text
-                    severity="secondary"
-                    aria-controls="popup_menu_left"
-                    //aria-haspopup
-                    onClick={(event) => {
-                        // event.preventDefault();
-                        event.stopPropagation();
-                        setSelectedRowData(rowData); // Guardamos la fila actual
-                        menuRef.current?.toggle(event); // Mostramos el menú
-                    }}
-                />
+  // ── Paginador personalizado ───────────────────────────────────────────────
+  const paginatorTemplate = {
+    layout: 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
+    CurrentPageReport: ({ first, last, totalRecords }) => (
+      <span className="est-paginator-info">
+        {first}–{last} de <strong>{totalRecords}</strong> estudiantes
+      </span>
+    ),
+  }
+
+  // ── Filtros por columna ───────────────────────────────────────────────────
+  const [filters] = useState({
+    global:   { value: null, matchMode: FilterMatchMode.CONTAINS },
+    apellido: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    nombre:   { value: null, matchMode: FilterMatchMode.CONTAINS },
+    dni:      { value: null, matchMode: FilterMatchMode.CONTAINS },
+    email:    { value: null, matchMode: FilterMatchMode.CONTAINS },
+  })
+
+  return (
+    <div className="est-page">
+
+      {/* ── Page title ── */}
+      <div className="est-page-title">
+        <CIcon icon={cilPeople} className="est-page-icon" />
+        <div>
+          <h1 className="est-h1">Estudiantes</h1>
+          <p className="est-subtitle">Gestión de alumnos del establecimiento</p>
+        </div>
+      </div>
+
+      <CContainer fluid className="px-0">
+        <CCard className="est-card">
+
+          {/* ── Encabezado ── */}
+          <CCardHeader className="est-card-header">
+            <div className="est-header-left">
+              <span className="est-header-title">Listado de estudiantes</span>
+              {!loading && (
+                <CBadge color="primary" className="est-total-badge">
+                  {total}
+                </CBadge>
+              )}
             </div>
-        );
-    };
-
-
-    
-    // Cleanup para el menú de acciones
-    useEffect(() => {
-        return () => {
-            menuRef.current?.hide()
-        }
-    }, [])
-
-    //  Componente para Header de tabla
-    const headerTable = () => {
-        return (
-            <div className="d-flex justify-content-between align-items-center " >
-                {/* Selector de tamaño */}
-                <SelectButton
-                    value={size}
-                    onChange={(e) => { if (e.value) setSize(e.value); }}
-                    options={sizeOptions}
-                    className="density-selector"
-                />
-                {/* Buscador global */}
-                <input
-                    className="form-control form-control-sm w-25"
-                    type="text"
-                    placeholder="Buscar..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="est-header-actions">
+              <CButton
+                color="primary"
+                size="sm"
+                className="est-btn-new"
+                onClick={() => openEdit()}
+              >
+                <CIcon icon={cilPlus} className="me-1" />
+                Nuevo estudiante
+              </CButton>
             </div>
-        );
-    }
+          </CCardHeader>
 
-    const paginatorTemplate = {
-        'CurrentPageReport': (options) => {
-            return (
-                <span className="mx-3" style={{ color: 'var(--text-color-secondary)', userSelect: 'none' }}>
-                    Mostrando {options.first} a {options.last} de <b style={{ color: 'var(--primary-color)' }}>{options.totalRecords} estudiantes</b>
-                </span>
-            )
-        },
+          {/* ── Cuerpo ── */}
+          <CCardBody className="est-card-body">
 
-        layout: ' FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
+            <TieredMenu
+              model={rowMenuItems}
+              popup
+              ref={menuRef}
+              appendTo={document.body}
+              onHide={() => setSelectedRowData(null)}
+              className="est-context-menu"
+            />
 
-    };
-
-    // Configuración de filtros
-    const [filters, setFilters] = useState({
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        nombre: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        apellido: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        dni: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        email: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    });
-
-    // Configuración tiredMenu
-    const menuRef = useRef(null);
-    const [selectedRowData, setSelectedRowData] = useState(null); // Para saber qué fila se clickeó
-
-    const menuItems = [
-        {
-            label: 'Editar',
-            icon: 'pi pi-pencil',
-            command: () => {
-                if (selectedRowData) {
-                    openEdit(selectedRowData);
-                    menuRef.current?.hide()
+            <div className={`est-table-wrap density-${density}`}>
+              <DataTable
+                value={studentsData}
+                header={tableHeader}
+                dataKey="id_entidad"
+                loading={loading}
+                stripedRows
+                selectionMode="checkbox"
+                selection={selectedRows}
+                onSelectionChange={(e) => setSelectedRows(e.value)}
+                removableSort
+                sortField="apellido"
+                sortOrder={1}
+                // Paginación server-side
+                paginator
+                lazy
+                totalRecords={total}
+                rows={pagination.rows}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                paginatorPosition="bottom"
+                paginatorTemplate={paginatorTemplate}
+                first={pagination.first}
+                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
+                // Búsqueda global (client-side sobre la página cargada)
+                globalFilter={globalFilter}
+                filters={filters}
+                filterDisplay="row"
+                emptyMessage={
+                  <div className="est-empty">
+                    <span className="pi pi-users est-empty-icon" />
+                    <p>No se encontraron estudiantes.</p>
+                    {globalFilter && (
+                      <p className="est-empty-hint">
+                        Intentá con otro término o{' '}
+                        <button className="est-empty-clear" onClick={() => setGlobalFilter('')}>
+                          limpiar la búsqueda
+                        </button>.
+                      </p>
+                    )}
+                  </div>
                 }
-            }
-        },
-        {
-            label: 'Eliminar',
-            icon: 'pi pi-trash',
-            className: 'text-danger',
-            command: () => {
-                if (selectedRowData) {
-                    openDelete(selectedRowData);
-                    menuRef.current?.hide()
-                }
-            }
-        },
-        { separator: true },
-        {
-            label: 'Cancelar',
-            icon: 'pi pi-times',
-            command: () => {
-                menuRef.current?.hide()
-            }
-        }
-    ];
-
-
-
-
-    return (
-        <div style={{ padding: '10px' }}>
-            <h1 className="ms-1" >Estudiantes</h1>
-
-
-            <CContainer>
-                <CCard className="mb-1">
-
-                    {/* ---------- ENCABEZADO ---------- */}
-                    <CCardHeader className="py-2 bg-white">
-                        <CRow className="justify-content-between align-items-center">
-                            <CCol xs={12} sm="auto">
-
-                                <h4 id="titulo" className="mb-0">
-                                    Gestión de Estudiantes
-                                </h4>
-
-                                <div className="small text-body-secondary">
-                                    Administración de alumnos del establecimiento
-                                </div>
-                            </CCol>
-
-                            {/* Botón para agregar nuevo estudiante */}
-                            <CCol xs={12} sm="auto" className="text-md-end">
-                                <CButton
-                                    color="primary" className="shadow-sm" size="sm"
-                                    onClick={() => openEdit()}  // Función openEdit() del hook sin argumentos = Nuevo
-                                >
-                                    <CIcon icon={cilPlus} className="me-1" />
-                                    Nuevo
-                                </CButton>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
-
-                    {/* ---------- CUERPO ---------- */}
-                    <CCardBody className="px-4 pt-1 pb-2 border border-light">
-
-                        {/* ---------- TABLA ---------- */}
-                        {/* TABLA CON WRAPPER DE ESTILOS 
-                         estudiantes-wrapper' es el nombre del contenedor, para referirlo en el .css */}
-                        <div className={`estudiantes-wrapper modo-${size}`} >
-
-
-                            <TieredMenu
-                                model={menuItems}
-                                popup
-                                ref={menuRef}
-                                appendTo={document.body}
-                                onHide={() => setSelectedRowData(null)}
-                            />
-
-
-                            <DataTable
-                                value={tableData}
-                                header={headerTable}
-                                className="p-datatable-gridlines"
-                                tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
-                                stripedRows
-                                selectionMode={'checkbox'}
-                                selection={selectedRows}
-                                onSelectionChange={(e) => setSelectedRows(e.value)}
-                                dataKey="id_entidad"
-                                removableSort
-                                sortField="apellido"
-                                sortOrder={1}
-                                loading={loading}
-
-                                // Paginación server-side
-                                paginator
-                                lazy
-                                totalRecords={total}
-                                rows={pagination.rows}
-                                rowsPerPageOptions={[5, 10, 25, 50]}
-                                paginatorPosition="bottom"
-                                paginatorTemplate={paginatorTemplate}
-                                first={pagination.first}
-                                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
-
-                                // Filtro global
-                                globalFilter={searchTerm}
-
-                                // Filtros por Columna
-                                filters={filters}
-                                onFilter={(e) => setFilters(e.filters)} // Actualiza el estado cuando el usuario escribe
-                                filterDisplay="row"
-
-                                emptyMessage="No se encontraron estudiantes."
-
-                            >
-                                <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
-
-                                {/* Renderizado dinámico de columnas de datos */}
-                                {columnsTableEstudiantesConfig.map((col) => (
-                                    <Column
-                                        key={col.field}
-                                        field={col.field}
-                                        header={col.header}
-                                        body={
-                                            col.body
-                                                ? col.body
-                                                : (rowData) => <TruncatedCell value={rowData[col.field]} />
-                                        }
-
-
-
-                                        sortable={col.sortable}
-
-
-                                        // body={col.body} // Si no tiene body, valor por defecto
-                                        // sortable={col.sortable}
-                                        filter
-                                        filterPlaceholder="Buscar"
-                                        // Desactivamos el menú de opciones (para que sea solo texto directo)
-                                        showFilterMenu={false}
-                                        style={{ width: col.width }}
-
-                                    />
-                                ))}
-
-                                <Column header="" body={actionBodyTemplate}
-                                    style={{ width: '3.5rem', textAlign: 'center' }}
-                                />
-                            </DataTable>
-                        </div>
-                    </CCardBody>
-
-                    {/* ---------- PIE DE PÁGINA ---------- */}
-                    <CCardFooter
-                        className="bg-white border-top px-3 py-1"
-                        style={{
-                            position: 'sticky',
-                            bottom: 0,
-                            zIndex: 1,
-                            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
-                        }}
-                    >
-                    </CCardFooter>
-
-                </CCard>
-
-                {/* MODAL NUEVO / EDITAR usando los estados del Hook 'editModal' */}
-                <ModalNewEdit
-                    visible={editModal.visible}
-                    onClose={closeEdit}
-                    title={editModal.item ? 'Editar Estudiante' : 'Nuevo Estudiante'}
-                    initialData={editModal.item || {}}
-                    onSave={handleSave} // El hook maneja la lógica de Create vs Update
-                    fields={modalNewEditEstudiantesFields}
+                tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
+                className="p-datatable-sm"
+                rowHover
+              >
+                {/* Checkbox de selección */}
+                <Column
+                  selectionMode="multiple"
+                  headerStyle={{ width: '2.75rem' }}
+                  style={{ width: '2.75rem' }}
                 />
 
-                {/* MODAL BORRAR conectado a los estados del Hook 'deleteModal' */}
-                <ModalConfirmDel
-                    visible={deleteModal.visible}
-                    onClose={closeDelete}
-                    onConfirm={handleDelete} // El hook maneja la llamada a la API y el Toast
-                    userId={deleteModal.id}
-                />
-            </CContainer >
+                {/* Columnas dinámicas desde config */}
+                {columnsTableEstudiantesConfig.map((col) => (
+                  <Column
+                    key={col.field}
+                    field={col.field}
+                    header={col.header}
+                    sortable={col.sortable}
+                    filter
+                    filterPlaceholder="Filtrar"
+                    showFilterMenu={false}
+                    style={{ width: col.width }}
+                    body={
+                      col.field === 'dni'
+                        ? dniBadgeTemplate
+                        : col.body
+                          ? col.body
+                          : (row) => <TruncatedCell value={row[col.field]} />
+                    }
+                  />
+                ))}
 
-        </div >)
+                {/* Columna de acciones */}
+                <Column
+                  header=""
+                  body={actionsTemplate}
+                  style={{ width: '3.25rem', textAlign: 'center' }}
+                  frozen
+                  alignFrozen="right"
+                />
+              </DataTable>
+            </div>
+          </CCardBody>
+        </CCard>
+
+        {/* ── Modales ── */}
+        <ModalNewEdit
+          visible={editModal.visible}
+          onClose={closeEdit}
+          title={editModal.item ? 'Editar estudiante' : 'Nuevo estudiante'}
+          initialData={editModal.item || {}}
+          onSave={handleSave}
+          fields={modalNewEditEstudiantesFields}
+        />
+
+        <ModalConfirmDel
+          visible={deleteModal.visible}
+          onClose={closeDelete}
+          onConfirm={handleDelete}
+          userId={deleteModal.id}
+        />
+      </CContainer>
+    </div>
+  )
 }

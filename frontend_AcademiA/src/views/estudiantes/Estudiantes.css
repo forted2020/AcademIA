@@ -1,260 +1,473 @@
-/*  frontend_AcademiA\src\views\estudiantes\Estudiantes.css */
+/* frontend_AcademiA/src/views/estudiantes/Estudiantes.css
+   Prefijo: .est-  (evita colisiones con CoreUI y PrimeReact)
+   Paleta: variables del tema CoreUI + colores académicos neutros
+*/
 
-/* =======================================================
-   CONFIGURACIONES DE TABLA
-   ======================================================= */
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT DE PÁGINA
+   ═══════════════════════════════════════════════════════════ */
 
-   /* Cuerpo de la tabla */
-   .estudiantes-wrapper .p-datatable-tbody {
-    border: 1px solid #dee2e6 !important;     /* Color gris suave de Bootstrap/CoreUI */
-    border-bottom: none;     /* Evita doble borde con el header de las columnas */
-    padding: 1rem;
+.est-page {
+  padding: 1.25rem 1rem;
 }
 
-/* Head de la tabla */
-.estudiantes-wrapper .p-datatable-thead{
-    border: 1px solid #dee2e6 !important;     /* Color gris suave de Bootstrap/CoreUI */
-    border-bottom: none;     /* Evita doble bordes columnas */
-    border-top: none;     
-    padding: 1rem;
+.est-page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
-/* =======================================================
-   CONFIGURACIÓN TAMAÑOS DE TABLA
-   ======================================================= */
-/* Transición suave para que el cambio de tamaño se vea elegante */
-.estudiantes-wrapper .p-datatable-tbody>tr>td,
-.estudiantes-wrapper .p-datatable-thead>tr>th {
-    transition: all 0.1s ease;
-    color: inherit !important;
+.est-page-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--cui-primary, #321fdb);
+  flex-shrink: 0;
 }
 
-/* Modo Compacto */
-.estudiantes-wrapper.modo-small .p-datatable .p-datatable-tbody>tr>td,
-.estudiantes-wrapper.modo-small .p-datatable .p-datatable-thead>tr>th {
-    padding: 6px 6px !important;
-    /*color: red !important; */
-    font-size: 12px !important;
+.est-h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--cui-body-color, #212529);
+  margin: 0;
+  line-height: 1.2;
 }
 
-/* Modo Normal */
-.estudiantes-wrapper.modo-normal .p-datatable .p-datatable-tbody>tr>td,
-.estudiantes-wrapper.modo-normal .p-datatable .p-datatable-thead>tr>th {
-    padding: 10px 10px !important;
-    /*color: blue !important; */
-    font-size: 13x !important;
-    height: auto !important;
+.est-subtitle {
+  font-size: 0.8125rem;
+  color: var(--cui-secondary-color, #6c757d);
+  margin: 0.125rem 0 0;
 }
 
-/* Amplio */
-.estudiantes-wrapper.modo-large .p-datatable .p-datatable-tbody>tr>td,
-.estudiantes-wrapper.modo-large .p-datatable .p-datatable-thead>tr>th {
-    padding: 24px 24px !important;
-    /*color: green !important; */
-    font-size: 18px !important;
-    height: auto !important;
+/* ═══════════════════════════════════════════════════════════
+   CARD PRINCIPAL
+   ═══════════════════════════════════════════════════════════ */
+
+.est-card {
+  border: 1px solid var(--cui-border-color, #d8dbe0);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
-/* Aseguramos que el texto interno (spans, divs) herede el color */
-.estudiantes-wrapper .p-datatable-tbody>tr>td * {
-    color: inherit !important;
+/* ── Encabezado ─────────────────────────────────────────── */
+.est-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid var(--cui-border-color, #d8dbe0);
 }
 
-/* =======================================================
-   UX: MANEJO DE CONTENIDO LARGO (Text Ellipsis)
-   ======================================================= */
-.estudiantes-wrapper .p-datatable-tbody>tr>td {
-    white-space: nowrap;
-    /* No permite saltos de línea (siempre 1 renglón) */
-    overflow: hidden;
-    /* Oculta lo que sobra */
-    text-overflow: ellipsis;
-    /* Agrega "..." al final */
-
-    /* Opcional: Para que el usuario sepa que hay más texto */
-    cursor: default;
+.est-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-
-    
-
-
-/* PrimeReact envuelve el contenido del header de la tabla, en un contenedor con la clase .p-datatable-header.*/
-/* Seleccionamos el header específico dentro del wrapper */
-.estudiantes-wrapper .p-datatable-header {
-    border: 1px solid #dee2e6 !important;
-    /* Color gris suave de Bootstrap/CoreUI */
-    border-bottom: none;
-    /* Evita doble borde con el header de las columnas */
-    border-radius: 8px 8px 0 0;
-    /* Redondea solo las esquinas superiores */
-    padding: 1rem;
-    background-color: #f8f9fa;
-    /* Fondo sutilmente gris */
+.est-header-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--cui-body-color, #212529);
 }
 
-.estudiantes-wrapper .p-datatable-footer {
-    border: 1px solid #dee2e6 !important;
-    /* Color gris suave de Bootstrap/CoreUI */
-    border-bottom: none;
-    /* Evita doble borde con el header de las columnas */
-    border-radius: 0px 0px 8px 8px;
-    /* Redondea solo las esquinas inferiores */
-    padding: 1rem;
-    background-color: #f8f9fa;
-    /* Fondo sutilmente gris */
+.est-total-badge {
+  font-size: 0.6875rem;
+  padding: 0.25em 0.55em;
+  border-radius: 999px;
 }
 
-/* =======================================================
-   PERSONALIZACIÓN DE BOTONES SELECTOR TAMAÑO
-   ======================================================= */
-.density-selector .p-button {
-    padding: 4px 12px !important;
-    /* Menos relleno interno */
-    font-size: 14px !important;
-    /* Letra más pequeña */
-    height: 30px !important;
-    /* Altura fija controlada */
-    min-height: 0 !important;
-    /* Elimina altura mínima de CoreUI/Bootstrap */
-    line-height: 1 !important;
-    /* Centrado vertical */
+.est-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-/* Texto interno centrado */
-.density-selector .p-button .p-button-label {
-    margin-top: 1px;
-    font-weight: 400 !important;
+.est-btn-new {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  border-radius: 0.375rem;
+  transition: filter 0.15s ease;
 }
 
-/* =======================================================
-   PAGINADOR DE LA TABLA
-   ======================================================= */
-.estudiantes-wrapper .p-paginator {
-    border: 1px solid #dee2e6 !important; /* Mismo borde que el header */
-    border-top: none; /* Evita doble línea con la última fila de la tabla */
-    border-radius: 0 0 8px 8px; /* Redondeado solo abajo */
-    padding: 0.5rem;
-    background-color: #f8f9fa; /* Fondo gris claro igual al header */
+.est-btn-new:hover {
+  filter: brightness(0.93);
 }
 
-/* Opcional: Estilo para los botones del paginador */
-.estudiantes-wrapper .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-    background: #e9ecef; /* Color de fondo cuando la página está seleccionada */
-    color: #0d6efd; /* Color del texto (Azul Bootstrap) */
-    border-color: #dee2e6;
+/* ── Cuerpo ─────────────────────────────────────────────── */
+.est-card-body {
+  padding: 0 !important;   /* La tabla ocupa todo el espacio disponible */
+  background: #fff;
 }
 
-/* =======================================================
-   FILTROS EN COLUMNAS
-   ======================================================= */
-/* Reducimos el contenedor de la fila de filtros */
-.estudiantes-wrapper .p-datatable-thead > tr.p-datatable-filter-row > td {
-    padding: 0.3rem !important; /* Reducimos el espacio interno de la celda */
+/* ═══════════════════════════════════════════════════════════
+   HEADER DE LA TABLA (buscador + densidad)
+   ═══════════════════════════════════════════════════════════ */
+
+.est-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--cui-border-color, #d8dbe0);
+  flex-wrap: wrap;
 }
 
-/* Estilizamos el input de texto del filtro */
-.estudiantes-wrapper .p-column-filter-element .p-inputtext {
-    padding: 0.25rem 0.5rem !important; /* Padding interno tipo "small" */
-    font-size: 0.75rem !important;      /* Fuente más chica para el placeholder */
-    height: 28px !important;            /* Altura fija compacta */
-    width: 100% !important;             /* Que no se salga del borde de la celda */
+/* Grupo selector de densidad */
+.est-density-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--cui-border-color, #d8dbe0);
+  border-radius: 0.375rem;
+  overflow: hidden;
 }
 
-/* Ocultamos el icono de filtro  (menú de opciones) */
-/* (gana espacio horizontal para que se vea el texto 'Buscar') */
-.estudiantes-wrapper .p-column-filter-menu-button {
-    display: none !important;
+.est-density-btn {
+  background: #fff;
+  border: none;
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--cui-secondary-color, #6c757d);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border-right: 1px solid var(--cui-border-color, #d8dbe0);
+  line-height: 1;
 }
 
-/* Ajuste específico para placeholders en columnas angostas */
-.estudiantes-wrapper .p-inputtext::placeholder {
-    font-size: 0.7rem;
-    opacity: 0.6;
+.est-density-btn:last-child {
+  border-right: none;
 }
 
-
-/* =======================================================
-   BOTONES DE ACCIÓN (Columna de opciones)
-   ======================================================= */
-
-/* Estado Normal (Reposo): Transparente total */
-.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary {
-    background-color: transparent !important; /* Fondo transparente */
-    border: none !important;                  /* Sin bordes */
-    box-shadow: none !important;              /* Sin sombras cuadradas */
-    color: #6c757d !important;                /* Color del ícono (gris medio) */
-    
-    /* Mantenemos la forma redonda y tamaño fijo */
-    border-radius: 50% !important;
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    padding: 0 !important;
-    min-width: unset !important;
-    transition: background-color 0.2s, color 0.2s; /* Transición suave */
+.est-density-btn:hover {
+  background: #e9ecef;
+  color: var(--cui-body-color, #212529);
 }
 
-/* Estado Hover (Al pasar el mouse): Círculo gris oscuro */
-.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:hover {
-    background-color: rgba(0, 0, 0, 0.1) !important; /* Gris semitransparente (se adapta al fondo) */
-    color: #212529 !important;                       /* Ícono más oscuro */
-    transform: scale(1.05);                          /* (Opcional) Efecto zoom muy sutil */
+.est-density-btn.active {
+  background: var(--cui-primary, #321fdb);
+  color: #fff;
+  font-weight: 500;
 }
 
-/* Estado Active/Focus (Al hacer clic): Gris un poco más fuerte */
-.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:active,
-.estudiantes-wrapper .p-datatable-tbody .p-button.p-button-rounded.p-button-text.p-button-secondary:focus {
-    background-color: rgba(0, 0, 0, 0.15) !important;
-    box-shadow: none !important; /* Evita el anillo de foco azul/cuadrado */
-    border: none !important;
+/* Buscador global */
+.est-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* 4. Asegurar que el contenedor div no tenga fondo */
-.estudiantes-wrapper .p-datatable-tbody td .text-center {
-    background: transparent !important;
+.est-search-icon {
+  position: absolute;
+  left: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--cui-secondary-color, #6c757d);
+  pointer-events: none;
 }
 
-/* =======================================================
-   UX: MANEJO DE CONTENIDO LARGO (Text Ellipsis)
-   ======================================================= */
-.estudiantes-wrapper .p-datatable-tbody > tr > td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: default;
+.est-search-input {
+  padding: 0.34375rem 2rem 0.34375rem 2rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--cui-border-color, #d8dbe0);
+  border-radius: 0.375rem;
+  width: 18rem;
+  max-width: 100%;
+  background: #fff;
+  color: var(--cui-body-color, #212529);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
 }
 
-/* =======================================================
-   MENÚ DE ACCIONES (TieredMenu) - CORRECCIONES VISUALES
-   ======================================================= */
-
-/* Quitar padding por defecto de la lista (causa del espacio extra a la izquierda) */
-body .p-tieredmenu .p-menu-list {
-    padding: 0 !important;
-    margin: 0 !important;
-    list-style: none !important;
+.est-search-input:focus {
+  border-color: var(--cui-primary, #321fdb);
+  box-shadow: 0 0 0 2px rgba(50, 31, 219, 0.12);
 }
 
-/* Estilo del item (Link) */
-body .p-tieredmenu .p-menuitem-link {
-    padding: 0.6rem 1rem !important; /* Espaciado cómodo */
-    display: flex !important;
-    align-items: center !important;
-    text-decoration: none !important;
-    color: #343a40 !important;
-    border-radius: 0 !important;
-    transition: background-color 0.2s ease;
+.est-search-input::placeholder {
+  color: #adb5bd;
+  font-size: 0.75rem;
 }
 
-/* Iconos: Ajustar margen y color */
-body .p-tieredmenu .p-menuitem-icon {
-    margin-right: 0.6rem !important;
-    font-size: 1rem !important;
-    color: #6c757d !important;
+.est-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #adb5bd;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
 }
 
-/* Hover: Fondo gris suave para destacar el item */
-body .p-tieredmenu .p-menuitem-link:hover {
-    background-color: #e9ecef !important; /* Gris visible */
-    color: #212529 !important;
+.est-search-clear:hover {
+  color: var(--cui-body-color, #212529);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WRAPPER DE TABLA + DENSIDADES
+   ═══════════════════════════════════════════════════════════ */
+
+.est-table-wrap {
+  overflow-x: auto;
+}
+
+/* Transición suave al cambiar densidad */
+.est-table-wrap .p-datatable-tbody > tr > td,
+.est-table-wrap .p-datatable-thead > tr > th {
+  transition: padding 0.12s ease, font-size 0.12s ease;
+}
+
+/* Densidad compacta */
+.est-table-wrap.density-compact .p-datatable .p-datatable-tbody > tr > td,
+.est-table-wrap.density-compact .p-datatable .p-datatable-thead > tr > th {
+  padding: 0.3rem 0.5rem !important;
+  font-size: 0.75rem !important;
+}
+
+/* Densidad normal (default) */
+.est-table-wrap.density-normal .p-datatable .p-datatable-tbody > tr > td,
+.est-table-wrap.density-normal .p-datatable .p-datatable-thead > tr > th {
+  padding: 0.625rem 0.75rem !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Densidad cómoda */
+.est-table-wrap.density-comfortable .p-datatable .p-datatable-tbody > tr > td,
+.est-table-wrap.density-comfortable .p-datatable .p-datatable-thead > tr > th {
+  padding: 1rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+/* ── Encabezado de la tabla ─────────────────────────────── */
+.est-table-wrap .p-datatable-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ── Cabeceras de columna ───────────────────────────────── */
+.est-table-wrap .p-datatable-thead > tr > th {
+  background: #f1f3f5 !important;
+  color: #495057 !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #dee2e6 !important;
+  white-space: nowrap;
+}
+
+/* ── Fila de filtros ────────────────────────────────────── */
+.est-table-wrap .p-datatable-thead > tr.p-datatable-filter-row > td {
+  padding: 0.25rem 0.5rem !important;
+  background: #f8f9fa !important;
+}
+
+.est-table-wrap .p-column-filter-element .p-inputtext {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.72rem !important;
+  height: 26px !important;
+  width: 100% !important;
+  border-radius: 0.25rem;
+}
+
+.est-table-wrap .p-column-filter-menu-button {
+  display: none !important;
+}
+
+.est-table-wrap .p-inputtext::placeholder {
+  font-size: 0.7rem;
+  opacity: 0.55;
+}
+
+/* ── Cuerpo de tabla ────────────────────────────────────── */
+.est-table-wrap .p-datatable-tbody > tr > td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-color: #f1f3f5 !important;
+}
+
+.est-table-wrap .p-datatable-tbody > tr:hover > td {
+  background: #f0f4ff !important;
+}
+
+/* ── Paginador ─────────────────────────────────────────── */
+.est-table-wrap .p-paginator {
+  background: #f8f9fa !important;
+  border-top: 1px solid #dee2e6 !important;
+  border-bottom: none !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.8125rem;
+}
+
+.est-table-wrap .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: var(--cui-primary, #321fdb) !important;
+  color: #fff !important;
+  border-color: transparent;
+}
+
+.est-paginator-info {
+  color: #6c757d;
+  font-size: 0.78rem;
+  margin-left: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CELDA DE TEXTO (truncado)
+   ═══════════════════════════════════════════════════════════ */
+
+.est-cell-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  cursor: default;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BADGE DNI
+   ═══════════════════════════════════════════════════════════ */
+
+.est-dni-badge {
+  display: inline-block;
+  padding: 0.2em 0.55em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: #e8f0fe;
+  color: #2d4ab3;
+  border-radius: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTÓN DE ACCIONES (columna de tres puntos)
+   ═══════════════════════════════════════════════════════════ */
+
+.est-action-btn.p-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #adb5bd !important;
+  border-radius: 50% !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+  min-width: unset !important;
+  transition: background 0.15s, color 0.15s;
+}
+
+.est-action-btn.p-button:hover {
+  background: rgba(50, 31, 219, 0.08) !important;
+  color: var(--cui-primary, #321fdb) !important;
+}
+
+.est-action-btn.p-button:focus {
+  box-shadow: 0 0 0 2px rgba(50, 31, 219, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MENÚ CONTEXTUAL
+   ═══════════════════════════════════════════════════════════ */
+
+.est-context-menu.p-tieredmenu {
+  min-width: 10rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid #dee2e6;
+  padding: 0.25rem 0;
+}
+
+.est-context-menu .p-menu-list {
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+}
+
+.est-context-menu .p-menuitem-link {
+  padding: 0.5rem 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem;
+  color: #343a40 !important;
+  font-size: 0.8125rem;
+  border-radius: 0 !important;
+  transition: background 0.12s ease;
+}
+
+.est-context-menu .p-menuitem-icon {
+  font-size: 0.875rem !important;
+  color: #6c757d !important;
+  margin: 0 !important;
+}
+
+.est-context-menu .p-menuitem-link:hover {
+  background: #f1f3f5 !important;
+}
+
+/* Item peligroso */
+.est-menu-danger > .p-menuitem-content .p-menuitem-link {
+  color: #dc3545 !important;
+}
+
+.est-menu-danger > .p-menuitem-content .p-menuitem-link .p-menuitem-icon {
+  color: #dc3545 !important;
+}
+
+.est-menu-danger > .p-menuitem-content .p-menuitem-link:hover {
+  background: #fff5f5 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ESTADO VACÍO
+   ═══════════════════════════════════════════════════════════ */
+
+.est-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #6c757d;
+}
+
+.est-empty-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+  opacity: 0.3;
+}
+
+.est-empty p {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+}
+
+.est-empty-hint {
+  font-size: 0.8rem;
+  color: #adb5bd;
+}
+
+.est-empty-clear {
+  background: none;
+  border: none;
+  color: var(--cui-primary, #321fdb);
+  cursor: pointer;
+  font-size: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERENCIA DE COLOR EN CELDAS
+   ═══════════════════════════════════════════════════════════ */
+
+.est-table-wrap .p-datatable-tbody > tr > td * {
+  color: inherit;
 }

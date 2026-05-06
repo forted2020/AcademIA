@@ -7,7 +7,7 @@ import api from './api.js';
 const ENDPOINT = '/api'; 
 
 //  Obtiene todos las entidades tipo Personal [getAll]
-export const getPersonalAll = () => api.get(`${ENDPOINT}/personal/`);
+export const getPersonalAll = (config = {}) => api.get(`${ENDPOINT}/personal/`, config);
 
 // Exportamos todas las funciones CRUD bajo un objeto para ser consumido por el front
 const apiPersonal = {

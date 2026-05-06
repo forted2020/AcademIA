@@ -11,7 +11,7 @@ const ENDPOINT = '/api';
 export const getCiclosAll = () => api.get(`${ENDPOINT}/ciclos/`);
 
 //  Obtiene todas las materias con datos para la tabla [getMateriasTabla)
-export const getMateriasTabla = () => api.get(`${ENDPOINT}/materias/tabla/`);
+export const getMateriasTabla = (config = {}) => api.get(`${ENDPOINT}/materias/tabla/`, config);
 
 //  Obtiene tas las materias de un curso
 export const getMateriasCurso = (idCurso) => api.get(`/api/materias/curso/${idCurso}`);

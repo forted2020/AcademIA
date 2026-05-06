@@ -1,7 +1,7 @@
 //  AcademIA\src\_nav.js
 import React from 'react'
 import { CIcon } from '@coreui/icons-react'
-import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription } from '@coreui/icons'
+import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription, cilBell } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
 import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../src/constants/Roles';
@@ -89,8 +89,20 @@ const fullNavigation = [
         items: [
             { component: CNavItem, name: 'Gestión de Estudiantes', to: '/estudiante', roles: [ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Trayectoria', to: '/estudiante/trayectoria', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Boletín de Calificaciones', to: '/estudiante/boletin', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Acta de Examen', to: '/estudiante/acta-examen', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informe de Asistencia', to: '/estudiante/informe-asistencia', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Informes', to: '/estudiante/informes', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
         ],
+    },
+
+    // --- CONFIGURACIÓN ---
+    {
+        component: CNavItem,
+        name: 'Notificaciones',
+        to: '/configuracion/notificaciones',
+        icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+        roles: [ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE],
     },
 
     // --- CERRAR SESIÓN ---

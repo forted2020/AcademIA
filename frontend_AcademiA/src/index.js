@@ -8,17 +8,19 @@ import 'core-js'
 import App from './App'
 import store from './store'
 
-// Para probar
-import './index.css';   //Borrar el archivo despues de prueba
-import reportWebVitals from './reportWebVitals';    //Borrar el archivo despues de prueba
-
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import ErrorBoundary from './components/ErrorBoundary'
 
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    <AuthProvider> 
-      <App />
+    <AuthProvider>
+      <ToastProvider>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </ToastProvider>
     </AuthProvider>
   </Provider>,
 )

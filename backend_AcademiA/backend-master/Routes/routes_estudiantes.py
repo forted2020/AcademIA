@@ -1,6 +1,6 @@
 # Routes/routes_estudiantes.py
 
-from fastapi import APIRouter, Depends, HTTPException, status 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from sqlalchemy.orm import Session,joinedload
 from database import localSession
@@ -13,12 +13,13 @@ from models import (
 
 )
 from schemas import (
-    EstudianteResponse, 
-    EstudianteCreate, 
+    EstudianteResponse,
+    EstudianteCreate,
     EstudianteUpdate,
-    UserAuthData, # Para obtener el rol
+    UserAuthData,
     CicloLectivoSimple,
-    MateriaResponse
+    MateriaResponse,
+    PagedResponse,
 )
 
 from auth import get_current_user # Para obtener el usuario actual
@@ -36,29 +37,25 @@ router = APIRouter()
  
  # ==================== ENDPOINTS ESTUDIANTES ====================
  
-@router.get("/", response_model=list[EstudianteResponse])
+@router.get("/", response_model=PagedResponse)
 async def get_estudiantes(
-    db: Session = Depends(get_db), 
-    current_user: UserAuthData = Depends(get_current_user) # Seguridad activa
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: UserAuthData = Depends(get_current_user),
 ):
-    # 1. Validación de permisos (Solo Admins)
     if current_user.tipo_rol.tipo_entidad != 'ADMIN_SISTEMA':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="No tienes permisos de administrador."
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos de administrador.")
 
-    # 2. Consulta a la base de datos
-    estudiantes_db = db.query(EntidadORM).filter(
-        # Buscar entidades que tengan un tipo relacionado cuyo nombre sea ALUMNO".
-        EntidadORM.tipo_entidad.has(TipoEntidad.tipo_entidad =="ESTUDIANTE"),
-        
+    query = db.query(EntidadORM).filter(
+        EntidadORM.tipo_entidad.has(TipoEntidad.tipo_entidad == "ESTUDIANTE"),
         EntidadORM.apellido != "",
         EntidadORM.deleted_at.is_(None)
-    ).all()
-    
-    # 3. Mapeo y entrega de datos
-    return [
+    )
+    total = query.count()
+    estudiantes_db = query.offset(skip).limit(limit).all()
+
+    data = [
         EstudianteResponse(
             id_entidad=est.id_entidad,
             name=f"{est.apellido}, {est.nombre}".strip(),
@@ -67,9 +64,11 @@ async def get_estudiantes(
             fec_nac=est.fec_nac,
             email=est.email,
             domicilio=est.domicilio,
-            telefono=est.telefono
+            telefono=est.telefono,
+            dni=est.dni,
         ) for est in estudiantes_db
     ]
+    return PagedResponse(data=data, total=total, skip=skip, limit=limit)
 
 
  
@@ -227,7 +226,7 @@ async def get_materias_por_estudiante(estudiante_id: int,
 
 
 # Lógica de Permisos (Ejemplo: Solo el ADMIN o el PROPIO estudiante pueden ver sus materias)
-    rol_actual = current_user.tipo_rol.tipo_roles_usuarios
+    rol_actual = current_user.tipo_rol.tipo_entidad
     if rol_actual not in ['ADMIN_SISTEMA'] and current_user.entidad_id != estudiante_id:
          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos para ver estas materias.")
     

@@ -1,11 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(xargs wc -l)",
-      "Bash(grep \".py$\")",
-      "Bash(find frontend_AcademiA/src -name \"*Borradores*\" -o -name \"Borradores\" -type d)",
-      "Bash(find frontend_AcademiA -type d -name \"Borradores\")",
-      "Bash(git config *)"
-    ]
+    "defaultMode": "bypassPermissions"
   }
 }

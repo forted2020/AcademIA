@@ -1,6 +1,7 @@
 //  frontend_AcademiA\src\hooks\UseCrudModalManager\useCrudModalManager.js
 
 import { useState } from 'react';
+import { useToast } from '../../context/ToastContext';
 
 export const useCrudModalManager = ({
     createApi,
@@ -8,6 +9,8 @@ export const useCrudModalManager = ({
     deleteApi,
     setData
 }) => {
+    const { showSuccess, showError } = useToast();
+
     // Estados para Edición/Creación
     const [editModal, setEditModal] = useState({ visible: false, item: null });
     // Estados para Eliminación
@@ -19,9 +22,6 @@ export const useCrudModalManager = ({
 
     const openDelete = (item) => setDeleteModal({ visible: true, item });
     const closeDelete = () => setDeleteModal({ visible: false, item: null });
-
-    // Estado para el mensaje temporal del toast
-    const [toast, setToast] = useState(null);
 
     // --- Acción: Guardar (Create/Update) ---
     const handleSave = async (formData) => {
@@ -46,11 +46,7 @@ export const useCrudModalManager = ({
                     : [...prev, response.data]
             );
 
-            setToast({
-                title: isEdit ? 'Actualización' : 'Éxito',
-                message: isEdit ? 'Docente actualizado correctamente' : 'Docente creado con éxito',
-                color: 'success'
-            });
+            showSuccess(isEdit ? 'Registro actualizado correctamente' : 'Registro creado con éxito');
 
 
             closeEdit();
@@ -85,12 +81,12 @@ export const useCrudModalManager = ({
 
             closeDelete();
 
-            setToast({ title: 'Éxito', message: 'Eliminado correctamente', color: 'success' });
+            showSuccess('Eliminado correctamente');
 
             return true;
         } catch (error) {
             console.error("Error al eliminar:", error);
-            setToast({ title: 'Error', message: 'No se pudo eliminar el registro', color: 'danger' });
+            showError('No se pudo eliminar el registro');
             throw error;
         }
     };
@@ -102,8 +98,6 @@ export const useCrudModalManager = ({
         closeEdit,
         openDelete,
         closeDelete,
-        toast,
-        setToast, // Para poder resetearlo
         handleSave,
         handleDelete
     };

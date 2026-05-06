@@ -114,7 +114,8 @@ export default function CargaNotaAlumno() {
         const fetchCiclos = async () => {
             try {
                 const response = await apiMaterias.getCiclosAll();  // Ejecuto la apiMaterias.getCiclos
-                setCiclos(response.data);   // Guardo los datos en la variable ciclos
+                const payload = response.data
+                setCiclos(Array.isArray(payload) ? payload : (payload?.data ?? []))
             } catch (err) {
                 console.error("Error al cargar ciclos lectivos:", err);
             }

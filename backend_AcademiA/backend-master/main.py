@@ -70,10 +70,8 @@ from models import (
 # Rate limiter — identifica clientes por IP
 limiter = Limiter(key_func=get_remote_address)
 
-# Crear tabla de blacklist si no existe
 from models import Base, TokenBlacklist
 from database import engine
-Base.metadata.create_all(bind=engine, tables=[TokenBlacklist.__table__])
 
 # Creamos la instancia de FASTAPI
 app = FastAPI(
@@ -84,6 +82,10 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.on_event("startup")
+def create_blacklist_table():
+    Base.metadata.create_all(bind=engine, tables=[TokenBlacklist.__table__])
 
 
 # Create table database

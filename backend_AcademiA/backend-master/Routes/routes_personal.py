@@ -24,20 +24,12 @@ def get_db():
 @router.get("/personal", response_model=list[PersonalResponse])
 def get_personal(db: Session = Depends(get_db)):
     
-    # Información de conexión y tabla
-    print(f"Base de datos conectada → {db.bind.url}")
-    print(f"Tabla usada → {EntidadORM.__tablename__}")
-    print("-"*60)
-
     # Hacemos la consulta con el JOIN
     resultados = db.query(EntidadORM).join(TipoEntidadORM).filter(
         TipoEntidadORM.id_tipo_entidad.in_([3, 4, 5, 6, 8, 9]),
         EntidadORM.deleted_at.is_(None) # Filtramos los no eliminados
     ).all()
     
-    print(f"Datos leidos: {resultados}")
-    print(f"\n🔍 Total registros: {len(resultados)}")
-
     # Mapeamos los datos al esquema
     return [
         PersonalResponse(

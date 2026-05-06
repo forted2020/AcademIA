@@ -3,9 +3,11 @@
 # Importamos FastAPI para crear la aplicación
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.exc import SQLAlchemyError
 
 # Importamos OAuth2PasswordBearer para autenticación con JWT
 from fastapi.security import OAuth2PasswordBearer
@@ -82,6 +84,24 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = [{"campo": e["loc"][-1], "mensaje": e["msg"]} for e in exc.errors()]
+    return JSONResponse(status_code=422, content={"detail": errors})
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(status_code=500, content={"detail": "Error de base de datos. Intente nuevamente."})
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        raise exc
+    return JSONResponse(status_code=500, content={"detail": "Error interno del servidor."})
 
 @app.on_event("startup")
 def create_blacklist_table():
@@ -270,16 +290,4 @@ async def migrate_db(db: Session = Depends(get_db)):
         return {"error": str(e)}
     
 
-print("🔍 --- REVISIÓN DE RUTAS REGISTRADAS ---")
-for route in app.routes:
-    if hasattr(route, "path"):
-        print(f"Ruta: {route.path} | Nombre: {route.name}")
-print("🔍 ------------------------------------")
-
-
-print("\n" + "="*50)
-print("SISTEMA DE RUTAS ACTIVAS")
-for route in app.routes:
-    print(f"URL: {route.path} --> Name: {route.name}")
-print("="*50 + "\n")
 

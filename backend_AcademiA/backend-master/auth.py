@@ -190,7 +190,7 @@ async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
 
 @router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
-async def login(http_request: Request, body: UserLogin, db: Session = Depends(get_db)):
+async def login(request: Request, body: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).options(joinedload(User.rol_sistema_obj)).filter(User.name == body.name).first()
 
     if not user or not verify_password(body.password, user.password):
@@ -248,8 +248,8 @@ async def verify_email(request: EmailVerifyRequest, db: Session = Depends(get_db
 
 @router.post("/api/forgot-password")
 @limiter.limit("5/minute")
-async def forgot_password(http_request: Request, request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
+async def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == body.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     reset_token = generate_token()

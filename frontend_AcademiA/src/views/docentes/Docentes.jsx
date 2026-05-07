@@ -1,152 +1,306 @@
-//  frontend_AcademiA\src\views\docentes\Docentes.jsx
+// frontend_AcademiA/src/views/docentes/Docentes.jsx
 
-// Gestiona la visualización y administración de docentes (tbl_entidad donde tipo_entidad = 'DOC')
-import React, { useState, useEffect, useMemo } from 'react'
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer } from '@coreui/react'
-import { cilPlus } from '@coreui/icons'
-import { CIcon } from '@coreui/icons-react'
-import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  CCard, CCardHeader, CCardBody, CContainer,
+  CButton, CBadge,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPlus, cilPeople } from '@coreui/icons'
 
-// Hooks y Servicios
-import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js';
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
+import { TieredMenu } from 'primereact/tieredmenu'
+import { Button } from 'primereact/button'
 
-// UI y Utils
-import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js';
-// Importar configuración de columnas
-import { getTableColumns } from '../../utils/columns';
-// Importar funciones API para Docentes
-import { getDocentes, createDocente, updateDocente, deleteDocente } from '../../api/api.js'
-
-// Importar componentes reutilizables
-import GenericTable from '../../components/usersTable/GenericTable.jsx'
-import TablePagination from '../../components/tablePagination/TablePagination.jsx'
-import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'
-import TableActions from '../../components/tableActions/TableActions.jsx'
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-import { useToast } from '../../context/ToastContext'
-
-// Importar datos de configuracion de modal
+import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
+import { getDocentes, createDocente, updateDocente, deleteDocente } from '../../api/api.js'
 import { docenteFields } from '../../utils/FormConfigs/formConfigs.js'
+import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js'
 
-// Estado inicial para filtros
-const initialFilters = []
+import './Docentes.css'
 
+// ─── Celda con truncado + tooltip nativo ──────────────────────────────────────
+const TruncatedCell = ({ value }) => {
+  const spanRef = useRef(null)
+  const [overflow, setOverflow] = useState(false)
+
+  useEffect(() => {
+    const el = spanRef.current
+    if (el) setOverflow(el.scrollWidth > el.clientWidth + 1)
+  }, [value])
+
+  return (
+    <span
+      ref={spanRef}
+      className="doc-cell-text"
+      title={overflow ? String(value ?? '') : undefined}
+    >
+      {value ?? '—'}
+    </span>
+  )
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 export default function Docentes() {
-    const [tableData, setTableData] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [tableData, setTableData]       = useState([])
+  const [total, setTotal]               = useState(0)
+  const [loading, setLoading]           = useState(false)
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [density, setDensity]           = useState('normal')
+  const [pagination, setPagination]     = useState({ first: 0, rows: 10 })
+  const [selectedRowData, setSelectedRowData] = useState(null)
+  const menuRef = useRef(null)
 
-    const { showSuccess, showError } = useToast()
+  const { editModal, deleteModal, openEdit, closeEdit, openDelete, closeDelete, handleSave, handleDelete } =
+    useCrudModalManager({
+      createApi: createDocente,
+      updateApi: updateDocente,
+      deleteApi: deleteDocente,
+      setData: setTableData,
+    })
 
-    // 1. Inicializamos el Administrador de CRUD
-    const {
-        editModal, deleteModal,
-        openEdit, closeEdit,
-        openDelete, closeDelete,
-        handleSave, handleDelete
-    } = useCrudModalManager({
-        createApi: createDocente,
-        updateApi: updateDocente,
-        deleteApi: deleteDocente,
-        setData: setTableData
-    });
+  // Fetch server-side
+  useEffect(() => {
+    setLoading(true)
+    getDocentes({ params: { skip: pagination.first, limit: pagination.rows } })
+      .then((res) => {
+        const payload = res?.data
+        const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        setTableData(items)
+        setTotal(payload?.total ?? items.length)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [pagination.first, pagination.rows])
 
-    // 2. Definición de Columnas
-    const columns = useMemo(() => getTableColumns(
-        [
-            { accessorKey: 'apellido', header: 'Apellido' },
-            { accessorKey: 'nombre', header: 'Nombre' },
-            {
-                accessorKey: 'fec_nac',
-                header: 'Fecha Nac.',
-                cell: (info) => formatDisplayDate(info.getValue())
-            },
-            { accessorKey: 'email', header: 'Email' },
-            { accessorKey: 'tel_cel', header: 'Tel/Cel' },
-        ],
-        openDelete,
-        openEdit
-    ), []);
+  useEffect(() => () => menuRef.current?.hide(), [])
 
-    // 3. Fetch con paginación server-side
-    useEffect(() => {
-        const skip = pagination.pageIndex * pagination.pageSize
-        const limit = pagination.pageSize
-        getDocentes({ params: { skip, limit } })
-            .then((res) => {
-                const payload = res?.data
-                const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
-                setTableData(items)
-                setTotal(payload?.total ?? items.length)
-            })
-            .catch(console.error)
-    }, [pagination.pageIndex, pagination.pageSize]);
+  // ── Menú contextual ───────────────────────────────────────────────────────
+  const rowMenuItems = [
+    {
+      label: 'Editar',
+      icon: 'pi pi-pencil',
+      command: () => { openEdit(selectedRowData); menuRef.current?.hide() },
+    },
+    { separator: true },
+    {
+      label: 'Eliminar',
+      icon: 'pi pi-trash',
+      className: 'doc-menu-danger',
+      command: () => { openDelete(selectedRowData); menuRef.current?.hide() },
+    },
+  ]
 
-    // 4. Configuración de la tabla (manual pagination — server-side)
-    const table = useReactTable({
-        data: tableData,
-        columns,
-        getRowId: (row) => row.id_entidad,
-        state: { globalFilter: searchTerm, pagination },
-        onGlobalFilterChange: setSearchTerm,
-        onPaginationChange: setPagination,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        manualPagination: true,
-        rowCount: total,
-    });
+  // ── Templates ─────────────────────────────────────────────────────────────
+  const actionsTemplate = (row) => (
+    <Button
+      icon="pi pi-ellipsis-v"
+      rounded text severity="secondary"
+      className="doc-action-btn"
+      aria-label="Opciones"
+      onClick={(e) => {
+        e.stopPropagation()
+        setSelectedRowData(row)
+        menuRef.current?.toggle(e)
+      }}
+    />
+  )
 
-    return (
-        <>
+  const fechaTemplate = (row) => (
+    <TruncatedCell value={formatDisplayDate(row.fec_nac)} />
+  )
 
-            <CContainer fluid className="py-3">
-                <h1>Docentes</h1>
-                <CCard className="shadow-sm">
-                    <CCardHeader className="bg-white py-3">
-                        <CRow className="align-items-center">
-                            <CCol>
-                                <h4 className="mb-0">Gestión de Docentes</h4>
-                            </CCol>
-                            <CCol xs="auto">
-                                <CButton color="primary" size="sm" onClick={() => openEdit()}>
-                                    <CIcon icon={cilPlus} className="me-1" /> Nuevo Docente
-                                </CButton>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
+  // ── Header de tabla ───────────────────────────────────────────────────────
+  const tableHeader = (
+    <div className="doc-table-header">
+      <div className="doc-density-group" role="group" aria-label="Densidad">
+        {[
+          { key: 'compact',     label: 'Compacto' },
+          { key: 'normal',      label: 'Normal'   },
+          { key: 'comfortable', label: 'Amplio'   },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            className={`doc-density-btn${density === key ? ' active' : ''}`}
+            onClick={() => setDensity(key)}
+            aria-pressed={density === key}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-                    <AdvancedFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                    <TableActions table={table} title="Listado de Docentes" />
+      <div className="doc-search-wrap">
+        <span className="doc-search-icon pi pi-search" aria-hidden="true" />
+        <input
+          className="doc-search-input"
+          type="text"
+          placeholder="Buscar docente..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          aria-label="Buscar docente"
+        />
+        {globalFilter && (
+          <button
+            className="doc-search-clear"
+            onClick={() => setGlobalFilter('')}
+            aria-label="Limpiar búsqueda"
+          >
+            <span className="pi pi-times" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
 
-                    <CCardBody>
-                        <GenericTable table={table} />
-                    </CCardBody>
+  // ── Paginador ─────────────────────────────────────────────────────────────
+  const paginatorTemplate = {
+    layout: 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
+    CurrentPageReport: (options) => (
+      <span className="doc-paginator-info">
+        {options.first}–{options.last} de <strong>{options.totalRecords}</strong> docentes
+      </span>
+    ),
+  }
 
-                    <CCardFooter className="bg-white">
-                        <TablePagination table={table} />
-                    </CCardFooter>
-                </CCard>
+  // ── Columnas ──────────────────────────────────────────────────────────────
+  const columnas = [
+    { field: 'apellido', header: 'Apellido',    sortable: true,  width: '20%' },
+    { field: 'nombre',   header: 'Nombre',      sortable: true,  width: '20%' },
+    { field: 'fec_nac',  header: 'Fecha Nac.',  sortable: true,  width: '120px', body: fechaTemplate },
+    { field: 'email',    header: 'Email',        sortable: false, width: '28%' },
+    { field: 'tel_cel',  header: 'Tel / Cel',    sortable: false, width: '130px' },
+  ]
 
-                {/* Modales Vinculadas al Hook */}
-                <ModalNewEdit
-                    visible={editModal.visible}
-                    onClose={closeEdit}
-                    title={editModal.item ? 'Editar Docente' : 'Nuevo Docente'}
-                    initialData={editModal.item || { created_at: getTodayDate() }}
-                    onSave={handleSave}
-                    fields={docenteFields}
+  return (
+    <div className="doc-page">
+
+      {/* ── Título de página ── */}
+      <div className="doc-page-title">
+        <CIcon icon={cilPeople} className="doc-page-icon" />
+        <div>
+          <h1 className="doc-h1">Docentes</h1>
+          <p className="doc-subtitle">Gestión del cuerpo docente del establecimiento</p>
+        </div>
+      </div>
+
+      <CContainer fluid className="px-0">
+        <CCard className="doc-card">
+
+          {/* ── Encabezado ── */}
+          <CCardHeader className="doc-card-header">
+            <div className="doc-header-left">
+              <span className="doc-header-title">Listado de docentes</span>
+              {!loading && (
+                <CBadge color="primary" className="doc-total-badge">{total}</CBadge>
+              )}
+            </div>
+            <div className="doc-header-actions">
+              <CButton
+                color="primary"
+                size="sm"
+                className="doc-btn-new"
+                onClick={() => openEdit()}
+              >
+                <CIcon icon={cilPlus} className="me-1" />
+                Nuevo docente
+              </CButton>
+            </div>
+          </CCardHeader>
+
+          {/* ── Cuerpo ── */}
+          <CCardBody className="doc-card-body">
+
+            <TieredMenu
+              model={rowMenuItems}
+              popup
+              ref={menuRef}
+              appendTo={document.body}
+              onHide={() => setSelectedRowData(null)}
+              className="doc-context-menu"
+            />
+
+            <div className={`doc-table-wrap density-${density}`}>
+              <DataTable
+                value={tableData}
+                header={tableHeader}
+                dataKey="id_entidad"
+                loading={loading}
+                stripedRows
+                removableSort
+                sortField="apellido"
+                sortOrder={1}
+                paginator
+                lazy
+                totalRecords={total}
+                rows={pagination.rows}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                paginatorPosition="bottom"
+                paginatorTemplate={paginatorTemplate}
+                first={pagination.first}
+                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
+                globalFilter={globalFilter}
+                emptyMessage={
+                  <div className="doc-empty">
+                    <span className="pi pi-users doc-empty-icon" />
+                    <p>No se encontraron docentes.</p>
+                    {globalFilter && (
+                      <p className="doc-empty-hint">
+                        Intentá con otro término o{' '}
+                        <button className="doc-empty-clear" onClick={() => setGlobalFilter('')}>
+                          limpiar la búsqueda
+                        </button>.
+                      </p>
+                    )}
+                  </div>
+                }
+                tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
+                className="p-datatable-sm"
+                rowHover
+              >
+                {columnas.map((col) => (
+                  <Column
+                    key={col.field}
+                    field={col.field}
+                    header={col.header}
+                    sortable={col.sortable}
+                    style={{ width: col.width }}
+                    body={col.body ?? ((row) => <TruncatedCell value={row[col.field]} />)}
+                  />
+                ))}
+
+                <Column
+                  header=""
+                  body={actionsTemplate}
+                  style={{ width: '3.25rem', textAlign: 'center' }}
+                  frozen
+                  alignFrozen="right"
                 />
+              </DataTable>
+            </div>
+          </CCardBody>
+        </CCard>
 
-                <ModalConfirmDel
-                    visible={deleteModal.visible}
-                    docente={deleteModal.item}
-                    onConfirm={handleDelete}
-                    onClose={closeDelete}
-                />
-            </CContainer>
-        </>
-    );
+        {/* ── Modales ── */}
+        <ModalNewEdit
+          visible={editModal.visible}
+          onClose={closeEdit}
+          title={editModal.item ? 'Editar docente' : 'Nuevo docente'}
+          initialData={editModal.item || { created_at: getTodayDate() }}
+          onSave={handleSave}
+          fields={docenteFields}
+        />
+
+        <ModalConfirmDel
+          visible={deleteModal.visible}
+          onClose={closeDelete}
+          onConfirm={handleDelete}
+          userId={deleteModal.id}
+        />
+      </CContainer>
+    </div>
+  )
 }

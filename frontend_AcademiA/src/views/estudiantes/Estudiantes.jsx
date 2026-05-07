@@ -52,6 +52,7 @@ export default function Estudiantes() {
   const [density, setDensity] = useState('normal')   // 'compact' | 'normal' | 'comfortable'
   const [pagination, setPagination] = useState({ first: 0, rows: 10 })
   const [selectedRowData, setSelectedRowData] = useState(null)
+  const [expandedRows, setExpandedRows] = useState(null)
   const menuRef = useRef(null)
 
   const { studentsData, setStudentsData, total, loading } = useStudentsData({
@@ -106,6 +107,42 @@ export default function Estudiantes() {
       }}
     />
   )
+
+  // ── Template de expansión de fila ────────────────────────────────────────
+  const formatDate = (val) => {
+    if (!val) return '—'
+    const [y, m, d] = String(val).split('-')
+    return d && m && y ? `${d}/${m}/${y}` : val
+  }
+
+  const rowExpansionTemplate = (row) => {
+    const fields = [
+      { label: 'Domicilio',     value: row.domicilio    },
+      { label: 'Localidad',     value: row.localidad    },
+      { label: 'Nacionalidad',  value: row.nacionalidad },
+      { label: 'Celular',       value: row.telefono     },
+      { label: 'Fecha de Alta', value: formatDate(row.created_at) },
+    ]
+
+    const hasAny = fields.some((f) => f.value)
+
+    return (
+      <div className="est-expansion-panel">
+        {hasAny ? (
+          <div className="est-expansion-grid">
+            {fields.map(({ label, value }) => (
+              <div key={label} className="est-expansion-field">
+                <span className="est-expansion-label">{label}</span>
+                <span className="est-expansion-value">{value || '—'}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="est-expansion-empty">Sin datos adicionales registrados.</span>
+        )}
+      </div>
+    )
+  }
 
   // ── Header de la tabla ────────────────────────────────────────────────────
   const tableHeader = (
@@ -222,6 +259,10 @@ export default function Estudiantes() {
                 removableSort
                 sortField="apellido"
                 sortOrder={1}
+                // Expansión de fila
+                expandedRows={expandedRows}
+                onRowToggle={(e) => setExpandedRows(e.data)}
+                rowExpansionTemplate={rowExpansionTemplate}
                 // Paginación server-side
                 paginator
                 lazy
@@ -252,6 +293,9 @@ export default function Estudiantes() {
                 className="p-datatable-sm"
                 rowHover
               >
+                {/* Expander de fila */}
+                <Column expander style={{ width: '3rem' }} className="est-expander-col" />
+
                 {/* Columnas dinámicas desde config */}
                 {columnsTableEstudiantesConfig.map((col) => (
                   <Column

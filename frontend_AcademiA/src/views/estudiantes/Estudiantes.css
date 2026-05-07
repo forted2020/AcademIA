@@ -448,3 +448,91 @@
 .est-table-wrap .p-datatable-tbody > tr > td * {
   color: inherit;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   COLUMNA EXPANDER
+   ═══════════════════════════════════════════════════════════ */
+
+.est-expander-col {
+  text-align: center !important;
+}
+
+/* Botón chevron nativo de PrimeReact */
+.est-table-wrap .p-row-toggler {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #adb5bd !important;
+  border-radius: 50% !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+  transition: background 0.15s, color 0.15s;
+}
+
+.est-table-wrap .p-row-toggler:hover {
+  background: rgba(3, 105, 161, 0.08) !important;
+  color: var(--acad-blue, #0369A1) !important;
+}
+
+.est-table-wrap .p-row-toggler:focus {
+  box-shadow: 0 0 0 2px rgba(3, 105, 161, 0.2) !important;
+}
+
+/* Fila expandida — resalte sutil */
+.est-table-wrap .p-datatable-tbody > tr.p-row-expanded > td {
+  background: #f0f7ff !important;
+  border-bottom: none !important;
+}
+
+/* Fila padre cuando está expandida */
+.est-table-wrap .p-datatable-tbody > tr.p-datatable-row-expansion-open > td {
+  background: #e8f3fb !important;
+  border-bottom: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANEL DE EXPANSIÓN DE FILA
+   ═══════════════════════════════════════════════════════════ */
+
+.est-expansion-panel {
+  padding: 0.875rem 1.25rem 0.875rem 3.5rem; /* indenta bajo el ícono expander */
+  background: #f0f7ff;
+  border-top: 1px solid #bfdbf7;
+  border-bottom: 2px solid #bfdbf7;
+}
+
+/* Grid de 2 columnas adaptable */
+.est-expansion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.625rem 2rem;
+}
+
+/* Campo individual */
+.est-expansion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.est-expansion-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--acad-blue, #0369A1);
+  opacity: 0.8;
+}
+
+.est-expansion-value {
+  font-size: 0.8125rem;
+  color: #1e293b;
+  font-weight: 400;
+}
+
+.est-expansion-empty {
+  font-size: 0.8125rem;
+  color: #adb5bd;
+  font-style: italic;
+}

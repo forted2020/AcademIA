@@ -1,306 +1,234 @@
 // frontend_AcademiA/src/views/docentes/Docentes.jsx
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CContainer,
-  CButton, CBadge,
+  CButton, CCard, CCardHeader, CCardBody, CCardFooter,
+  CCol, CRow, CContainer, CSpinner,
 } from '@coreui/react'
+import { cilPlus, cilSchool, cilSearch, cilPrint, cilCloudDownload } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPeople } from '@coreui/icons'
+import {
+  useReactTable, getCoreRowModel, getPaginationRowModel,
+  getSortedRowModel, getFilteredRowModel,
+} from '@tanstack/react-table'
 
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
-import { TieredMenu } from 'primereact/tieredmenu'
-import { Button } from 'primereact/button'
-
-import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
-import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
 import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
+import { getTableColumns } from '../../utils/columns'
+import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js'
 import { getDocentes, createDocente, updateDocente, deleteDocente } from '../../api/api.js'
 import { docenteFields } from '../../utils/FormConfigs/formConfigs.js'
-import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js'
+
+import GenericTable from '../../components/usersTable/GenericTable.jsx'
+import TablePagination from '../../components/tablePagination/TablePagination.jsx'
+import { generateTablePDF } from '../../components/tableActions/PDFService'
+import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
+import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
 
 import './Docentes.css'
 
-// ─── Celda con truncado + tooltip nativo ──────────────────────────────────────
-const TruncatedCell = ({ value }) => {
-  const spanRef = useRef(null)
-  const [overflow, setOverflow] = useState(false)
-
-  useEffect(() => {
-    const el = spanRef.current
-    if (el) setOverflow(el.scrollWidth > el.clientWidth + 1)
-  }, [value])
-
-  return (
-    <span
-      ref={spanRef}
-      className="doc-cell-text"
-      title={overflow ? String(value ?? '') : undefined}
-    >
-      {value ?? '—'}
-    </span>
-  )
-}
-
-// ─── Componente principal ─────────────────────────────────────────────────────
 export default function Docentes() {
-  const [tableData, setTableData]       = useState([])
-  const [total, setTotal]               = useState(0)
-  const [loading, setLoading]           = useState(false)
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [density, setDensity]           = useState('normal')
-  const [pagination, setPagination]     = useState({ first: 0, rows: 10 })
-  const [selectedRowData, setSelectedRowData] = useState(null)
-  const menuRef = useRef(null)
+  const [tableData, setTableData]     = useState([])
+  const [total, setTotal]             = useState(0)
+  const [searchTerm, setSearchTerm]   = useState('')
+  const [pagination, setPagination]   = useState({ pageIndex: 0, pageSize: 10 })
+  const [isGenerating, setIsGenerating] = useState(false)
 
-  const { editModal, deleteModal, openEdit, closeEdit, openDelete, closeDelete, handleSave, handleDelete } =
-    useCrudModalManager({
-      createApi: createDocente,
-      updateApi: updateDocente,
-      deleteApi: deleteDocente,
-      setData: setTableData,
-    })
+  const {
+    editModal, deleteModal,
+    openEdit, closeEdit,
+    openDelete, closeDelete,
+    handleSave, handleDelete,
+  } = useCrudModalManager({
+    createApi: createDocente,
+    updateApi: updateDocente,
+    deleteApi: deleteDocente,
+    setData: setTableData,
+  })
+
+  const columns = useMemo(() => getTableColumns(
+    [
+      { accessorKey: 'apellido', header: 'Apellido' },
+      { accessorKey: 'nombre',   header: 'Nombre' },
+      {
+        accessorKey: 'fec_nac',
+        header: 'Fecha Nac.',
+        cell: (info) => formatDisplayDate(info.getValue()),
+      },
+      { accessorKey: 'email',   header: 'Email' },
+      { accessorKey: 'tel_cel', header: 'Tel/Cel' },
+    ],
+    openDelete,
+    openEdit,
+  ), [])
 
   // Fetch server-side
   useEffect(() => {
-    setLoading(true)
-    getDocentes({ params: { skip: pagination.first, limit: pagination.rows } })
+    const skip  = pagination.pageIndex * pagination.pageSize
+    const limit = pagination.pageSize
+    getDocentes({ params: { skip, limit } })
       .then((res) => {
         const payload = res?.data
-        const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        const items   = Array.isArray(payload) ? payload : (payload?.data ?? [])
         setTableData(items)
         setTotal(payload?.total ?? items.length)
       })
       .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [pagination.first, pagination.rows])
+  }, [pagination.pageIndex, pagination.pageSize])
 
-  useEffect(() => () => menuRef.current?.hide(), [])
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getRowId: (row) => row.id_entidad,
+    state: { globalFilter: searchTerm, pagination },
+    onGlobalFilterChange: setSearchTerm,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
+    rowCount: total,
+  })
 
-  // ── Menú contextual ───────────────────────────────────────────────────────
-  const rowMenuItems = [
-    {
-      label: 'Editar',
-      icon: 'pi pi-pencil',
-      command: () => { openEdit(selectedRowData); menuRef.current?.hide() },
-    },
-    { separator: true },
-    {
-      label: 'Eliminar',
-      icon: 'pi pi-trash',
-      className: 'doc-menu-danger',
-      command: () => { openDelete(selectedRowData); menuRef.current?.hide() },
-    },
-  ]
-
-  // ── Templates ─────────────────────────────────────────────────────────────
-  const actionsTemplate = (row) => (
-    <Button
-      icon="pi pi-ellipsis-v"
-      rounded text severity="secondary"
-      className="doc-action-btn"
-      aria-label="Opciones"
-      onClick={(e) => {
-        e.stopPropagation()
-        setSelectedRowData(row)
-        menuRef.current?.toggle(e)
-      }}
-    />
-  )
-
-  const fechaTemplate = (row) => (
-    <TruncatedCell value={formatDisplayDate(row.fec_nac)} />
-  )
-
-  // ── Header de tabla ───────────────────────────────────────────────────────
-  const tableHeader = (
-    <div className="doc-table-header">
-      <div className="doc-density-group" role="group" aria-label="Densidad">
-        {[
-          { key: 'compact',     label: 'Compacto' },
-          { key: 'normal',      label: 'Normal'   },
-          { key: 'comfortable', label: 'Amplio'   },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            className={`doc-density-btn${density === key ? ' active' : ''}`}
-            onClick={() => setDensity(key)}
-            aria-pressed={density === key}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="doc-search-wrap">
-        <span className="doc-search-icon pi pi-search" aria-hidden="true" />
-        <input
-          className="doc-search-input"
-          type="text"
-          placeholder="Buscar docente..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          aria-label="Buscar docente"
-        />
-        {globalFilter && (
-          <button
-            className="doc-search-clear"
-            onClick={() => setGlobalFilter('')}
-            aria-label="Limpiar búsqueda"
-          >
-            <span className="pi pi-times" />
-          </button>
-        )}
-      </div>
-    </div>
-  )
-
-  // ── Paginador ─────────────────────────────────────────────────────────────
-  const paginatorTemplate = {
-    layout: 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
-    CurrentPageReport: (options) => (
-      <span className="doc-paginator-info">
-        {options.first}–{options.last} de <strong>{options.totalRecords}</strong> docentes
-      </span>
-    ),
+  const handlePDF = async (download = false) => {
+    setIsGenerating(true)
+    const blob = await generateTablePDF({ table, title: 'Listado de Docentes', download })
+    if (!download && blob) {
+      const url = URL.createObjectURL(blob)
+      const w = window.open(url, '_blank')
+      if (w) w.onload = () => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 1000) }
+    }
+    setIsGenerating(false)
   }
 
-  // ── Columnas ──────────────────────────────────────────────────────────────
-  const columnas = [
-    { field: 'apellido', header: 'Apellido',    sortable: true,  width: '20%' },
-    { field: 'nombre',   header: 'Nombre',      sortable: true,  width: '20%' },
-    { field: 'fec_nac',  header: 'Fecha Nac.',  sortable: true,  width: '120px', body: fechaTemplate },
-    { field: 'email',    header: 'Email',        sortable: false, width: '28%' },
-    { field: 'tel_cel',  header: 'Tel / Cel',    sortable: false, width: '130px' },
-  ]
-
   return (
-    <div className="doc-page">
+    <CContainer fluid className="py-3">
 
-      {/* ── Título de página ── */}
-      <div className="doc-page-title">
-        <CIcon icon={cilPeople} className="doc-page-icon" />
-        <div>
-          <h1 className="doc-h1">Docentes</h1>
-          <p className="doc-subtitle">Gestión del cuerpo docente del establecimiento</p>
-        </div>
-      </div>
+      <h1>Docentes</h1>
 
-      <CContainer fluid className="px-0">
-        <CCard className="doc-card">
+      <CCard className="shadow-sm">
 
-          {/* ── Encabezado ── */}
-          <CCardHeader className="doc-card-header">
-            <div className="doc-header-left">
-              <span className="doc-header-title">Listado de docentes</span>
-              {!loading && (
-                <CBadge color="primary" className="doc-total-badge">{total}</CBadge>
-              )}
-            </div>
-            <div className="doc-header-actions">
-              <CButton
-                color="primary"
-                size="sm"
-                className="doc-btn-new"
-                onClick={() => openEdit()}
-              >
-                <CIcon icon={cilPlus} className="me-1" />
-                Nuevo docente
-              </CButton>
-            </div>
-          </CCardHeader>
+        {/* ── Encabezado ── */}
+        <CCardHeader className="py-2 bg-white">
+          <CRow className="justify-content-between align-items-center g-2">
 
-          {/* ── Cuerpo ── */}
-          <CCardBody className="doc-card-body">
-
-            <TieredMenu
-              model={rowMenuItems}
-              popup
-              ref={menuRef}
-              appendTo={document.body}
-              onHide={() => setSelectedRowData(null)}
-              className="doc-context-menu"
-            />
-
-            <div className={`doc-table-wrap density-${density}`}>
-              <DataTable
-                value={tableData}
-                header={tableHeader}
-                dataKey="id_entidad"
-                loading={loading}
-                stripedRows
-                removableSort
-                sortField="apellido"
-                sortOrder={1}
-                paginator
-                lazy
-                totalRecords={total}
-                rows={pagination.rows}
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                paginatorPosition="bottom"
-                paginatorTemplate={paginatorTemplate}
-                first={pagination.first}
-                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
-                globalFilter={globalFilter}
-                emptyMessage={
-                  <div className="doc-empty">
-                    <span className="pi pi-users doc-empty-icon" />
-                    <p>No se encontraron docentes.</p>
-                    {globalFilter && (
-                      <p className="doc-empty-hint">
-                        Intentá con otro término o{' '}
-                        <button className="doc-empty-clear" onClick={() => setGlobalFilter('')}>
-                          limpiar la búsqueda
-                        </button>.
-                      </p>
-                    )}
+            {/* Título + ícono */}
+            <CCol xs={12} sm="auto">
+              <div className="d-flex align-items-center gap-2">
+                <CIcon icon={cilSchool} className="text-primary" style={{ width: '1.1rem', height: '1.1rem', flexShrink: 0 }} />
+                <div>
+                  <h4 className="mb-0 lh-1">Gestión de Docentes</h4>
+                  <div className="small text-body-secondary mt-1">
+                    Administración del cuerpo docente
                   </div>
-                }
-                tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
-                className="p-datatable-sm"
-                rowHover
-              >
-                {columnas.map((col) => (
-                  <Column
-                    key={col.field}
-                    field={col.field}
-                    header={col.header}
-                    sortable={col.sortable}
-                    style={{ width: col.width }}
-                    body={col.body ?? ((row) => <TruncatedCell value={row[col.field]} />)}
+                </div>
+              </div>
+            </CCol>
+
+            {/* Buscador + acciones */}
+            <CCol xs={12} sm="auto">
+              <div className="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+
+                {/* Buscador dinámico */}
+                <div className="doc-search-box">
+                  <CIcon icon={cilSearch} className="doc-search-icon-inline" />
+                  <input
+                    className="doc-search-field"
+                    type="text"
+                    placeholder="Buscar docente..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    aria-label="Buscar docente"
                   />
-                ))}
+                  {searchTerm && (
+                    <button className="doc-search-x" onClick={() => setSearchTerm('')} aria-label="Limpiar">
+                      ×
+                    </button>
+                  )}
+                </div>
 
-                <Column
-                  header=""
-                  body={actionsTemplate}
-                  style={{ width: '3.25rem', textAlign: 'center' }}
-                  frozen
-                  alignFrozen="right"
-                />
-              </DataTable>
-            </div>
-          </CCardBody>
-        </CCard>
+                {/* Imprimir */}
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  disabled={isGenerating}
+                  onClick={() => handlePDF(false)}
+                  className="doc-action-btn-top"
+                >
+                  {isGenerating
+                    ? <CSpinner size="sm" className="me-1" />
+                    : <CIcon icon={cilPrint} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+                  }
+                  Imprimir
+                </CButton>
 
-        {/* ── Modales ── */}
-        <ModalNewEdit
-          visible={editModal.visible}
-          onClose={closeEdit}
-          title={editModal.item ? 'Editar docente' : 'Nuevo docente'}
-          initialData={editModal.item || { created_at: getTodayDate() }}
-          onSave={handleSave}
-          fields={docenteFields}
-        />
+                {/* Exportar PDF */}
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  disabled={isGenerating}
+                  onClick={() => handlePDF(true)}
+                  className="doc-action-btn-top"
+                >
+                  <CIcon icon={cilCloudDownload} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+                  Exportar
+                </CButton>
 
-        <ModalConfirmDel
-          visible={deleteModal.visible}
-          onClose={closeDelete}
-          onConfirm={handleDelete}
-          userId={deleteModal.id}
-        />
-      </CContainer>
-    </div>
+                {/* Nuevo docente */}
+                <CButton
+                  color="primary"
+                  size="sm"
+                  className="doc-btn-new-top"
+                  onClick={() => openEdit()}
+                >
+                  <CIcon icon={cilPlus} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+                  Nuevo Docente
+                </CButton>
+
+              </div>
+            </CCol>
+          </CRow>
+        </CCardHeader>
+
+        {/* ── Cuerpo ── */}
+        <CCardBody className="px-4 pt-1 pb-2 border border-light">
+          <GenericTable table={table} />
+        </CCardBody>
+
+        {/* ── Footer con paginación ── */}
+        <CCardFooter
+          className="bg-white border-top px-3 py-1"
+          style={{
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 1,
+            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
+          }}
+        >
+          <TablePagination table={table} />
+        </CCardFooter>
+
+      </CCard>
+
+      {/* ── Modales ── */}
+      <ModalNewEdit
+        visible={editModal.visible}
+        onClose={closeEdit}
+        title={editModal.item ? 'Editar Docente' : 'Nuevo Docente'}
+        initialData={editModal.item || { created_at: getTodayDate() }}
+        onSave={handleSave}
+        fields={docenteFields}
+      />
+
+      <ModalConfirmDel
+        visible={deleteModal.visible}
+        onClose={closeDelete}
+        onConfirm={handleDelete}
+        userId={deleteModal.id}
+      />
+
+    </CContainer>
   )
 }

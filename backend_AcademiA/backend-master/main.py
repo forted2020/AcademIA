@@ -164,6 +164,7 @@ origins = [
     'http://localhost:3001',
     'http://localhost:1500',
     'http://localhost:3002',
+    'https://academia-nu-seven.vercel.app',
 ]
 
 # Configuración de CORS

@@ -1,59 +1,76 @@
-// frontend_AcademiA\src\views\gestion\inscripciones\Inscripciones.jsx
+// frontend_AcademiA/src/views/gestion/inscripciones/Inscripciones.jsx
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import {
+  CCard, CCardHeader, CCardBody, CCardFooter,
+  CContainer, CButton, CSpinner,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPeople, cilOptions } from '@coreui/icons'
 
-import { CCard, CCardHeader, CCardBody, CRow, CCol, CFormLabel, CFormSelect, CContainer } from '@coreui/react';
-import { InscripcionesConfig } from './InscripcionesConfig';
-import GenericEnrollment from '../../../components/enrollment/GenericEnrollment'; 
+import { InscripcionesConfig } from './InscripcionesConfig'
+import GenericEnrollment from '../../../components/enrollment/GenericEnrollment'
+
+import './Inscripciones.css'
 
 export default function Inscripciones() {
-    // Por defecto seleccionamos el primer modo disponible
-    const [selectedModeKey, setSelectedModeKey] = useState(InscripcionesConfig.mainSelector.options[0].value);
-    
-    const activeConfig = InscripcionesConfig.configs[selectedModeKey];
+  const [selectedModeKey, setSelectedModeKey] = useState(
+    InscripcionesConfig.mainSelector.options[0].value
+  )
 
-    return (
-        <div className="inscripciones-container" style={{ padding: '10px' }}>
-            <h1 className="ms-1">{InscripcionesConfig.title}</h1>
-            <CContainer>
-                <CCard className="mb-4">
-                    <CCardHeader className="py-2 bg-white">
-                        <CRow className="justify-content-between align-items-center">
-                            <CCol>
-                                <h4 className="mb-0">{activeConfig ? activeConfig.title : 'Seleccione Opción'}</h4>
-                                <small className="text-muted">{activeConfig?.subtitle}</small>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
+  const activeConfig = InscripcionesConfig.configs[selectedModeKey]
 
-                    <CCardBody className="px-4 pt-4 pb-2">
-                        {/* SELECTOR DE MODO (Si tuvieras más de uno, como exámenes) */}
-                        <CRow className="mb-4">
-                            <CCol md={4}>
-                                <CFormLabel className="fw-bold text-primary">
-                                    {InscripcionesConfig.mainSelector.label}
-                                </CFormLabel>
-                                <CFormSelect
-                                    value={selectedModeKey}
-                                    onChange={(e) => setSelectedModeKey(e.target.value)}
-                                >
-                                    {InscripcionesConfig.mainSelector.options.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                    ))}
-                                </CFormSelect>
-                            </CCol>
-                        </CRow>
+  return (
+    <CContainer fluid className="py-3">
+      <CCard className="insc-card">
 
-                        {/* MOTOR GENÉRICO DE INSCRIPCIÓN */}
-                        {activeConfig && (
-                            <GenericEnrollment 
-                                key={selectedModeKey} // Fuerza reinicio si cambia el modo
-                                config={activeConfig} 
-                            />
-                        )}
-                    </CCardBody>
-                </CCard>
-            </CContainer>
-        </div>
-    );
+        {/* ── Encabezado ── */}
+        <CCardHeader className="insc-card-header">
+          <div className="insc-header-left">
+
+            <div className="insc-header-brand">
+              <div className="insc-header-brand-icon">
+                <CIcon icon={cilPeople} className="insc-brand-icon" />
+              </div>
+              <div>
+                <h2 className="insc-header-h2">Inscripciones</h2>
+                <p className="insc-header-sub">Gestión de matriculación a cursos y materias</p>
+              </div>
+            </div>
+
+            {/* Selector de tipo de inscripción debajo del subtítulo */}
+            <div className="insc-mode-selector">
+              <label className="insc-mode-label">
+                <CIcon icon={cilOptions} className="insc-mode-label-icon" />
+                {InscripcionesConfig.mainSelector.label}
+              </label>
+              <div className="insc-mode-pills">
+                {InscripcionesConfig.mainSelector.options.map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`insc-mode-pill${selectedModeKey === opt.value ? ' is-active' : ''}`}
+                    onClick={() => setSelectedModeKey(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </CCardHeader>
+
+        {/* ── Cuerpo ── */}
+        <CCardBody className="insc-card-body">
+          {activeConfig && (
+            <GenericEnrollment
+              key={selectedModeKey}
+              config={activeConfig}
+            />
+          )}
+        </CCardBody>
+
+      </CCard>
+    </CContainer>
+  )
 }

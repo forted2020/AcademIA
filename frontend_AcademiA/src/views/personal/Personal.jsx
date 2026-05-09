@@ -1,9 +1,10 @@
-//  frontend_AcademiA\src\views\personal\Personal.jsx
+﻿//  frontend_AcademiA\src\views\personal\Personal.jsx
 
 import React, { useState, useEffect } from 'react'
 import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer } from '@coreui/react'
-import { cilPlus } from '@coreui/icons'
+import { cilPlus, cilPeople } from '@coreui/icons'
 import { CIcon } from '@coreui/icons-react'
+import './Personal.css'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 
 // Importar componentes reutilizables
@@ -154,112 +155,100 @@ export default function Personal() {
   })
 
   return (
-    <div style={{ padding: '10px' }}>
-      <h1 className="ms-1" >Personal</h1>
-      <CContainer>
-        <CCard className="mb-1">
-          {/* ---------- ENCABEZADO ---------- */}
-          <CCardHeader className="py-2 bg-white">
-            <CRow className="justify-content-between align-items-center">
-              <CCol xs={12} sm="auto">
-                <h4 id="titulo" className="mb-0">
-                  Gestión de Personal Administrativo
-                </h4>
-                <div className="small text-body-secondary">
-                  Administración del Personal del establecimiento
-                </div>
-              </CCol>
+    <CContainer fluid className="py-3">
+      <CCard className="per-card mb-1">
+        {/* ---------- ENCABEZADO ---------- */}
+        <CCardHeader className="per-card-header">
+          {/* Brand: ícono + título + subtítulo */}
+          <div className="per-header-left">
+            <div className="per-header-brand">
+              <div className="per-header-brand-icon">
+                <CIcon icon={cilPeople} className="per-brand-icon" />
+              </div>
+              <div>
+                <h2 className="per-header-h2">Gestión de Personal</h2>
+                <p className="per-header-sub">Administración del equipo institucional</p>
+              </div>
+            </div>
+          </div>
 
-              {/* Botón para agregar nuevo Docente */}
-              <CCol xs={12} sm="auto" className="text-md-end">
-                <CButton
-                  color="primary"
-                  className="shadow-sm"
-                  size="sm"
-                  onClick={() => handleClickEditar('')} // Abrir modal vacío para crear nuevo
-                >
-                  <CIcon icon={cilPlus} className="me-1" />
-                  Nuevo Administrativo
-                </CButton>
-              </CCol>
-            </CRow>
-          </CCardHeader>
+          {/* Acciones: botón nuevo */}
+          <div className="per-header-actions">
+            <CButton
+              className="per-btn-new"
+              onClick={() => handleClickEditar('')}
+            >
+              <CIcon icon={cilPlus} />
+              Nuevo Administrativo
+            </CButton>
+          </div>
+        </CCardHeader>
 
-          {/* ---------- FILTROS AVANZADOS Y BÚSQUEDA GLOBAL ---------- */}
-          <AdvancedFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            columnFilters={columnFilters}
-            setColumnFilters={setColumnFilters}
-            filterOptions={[
-              { value: 'nombre', label: 'Nombre' },
-              { value: 'apellido', label: 'Apellido' },
-              { value: 'email', label: 'Email' },
-              { value: 'domicilio', label: 'Domicilio' },
-              { value: 'telefono', label: 'Teléfono' },
-            ]}
-          />
-
-          {/* ---------- ACCIONES DE TABLA (Exportar, etc.) ---------- */}
-          <TableActions table={table} />
-
-          {/* ---------- CUERPO DE LA TABLA ---------- */}
-          <CCardBody className="px-4 pt-1 pb-2 border border-light">
-            {/* Tabla de docentes (reutiliza el componente GenericTable) */}
-            <GenericTable table={table} />
-          </CCardBody>
-
-          {/* ---------- PIE DE PÁGINA CON PAGINACIÓN ---------- */}
-          <CCardFooter
-            className="bg-white border-top px-3 py-1"
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              zIndex: 1,
-              boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
-            }}
-          >
-            <TablePagination table={table} />
-          </CCardFooter>
-        </CCard>
-
-        {/* ---------- MODALES ---------- */}
-
-        {/* Modal de edición/creación de docente */}
-        <ModalNewEdit
-          visible={editModalVisible}
-          onClose={() => {
-            setEditModalVisible(false)
-            setDocenteToEdit(null)
-          }}
-          title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
-          initialData={docenteToEdit || {}}
-          onSave={handleSaveDocente}
-          fields={[
-            //{ name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
-            // { name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
-            { name: 'nombre', label: 'Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Carlos' },
-            { name: 'apellido', label: 'Apellido', type: 'text', required: true, placeholder: 'Ejemplo: Pérez' },
-            { name: 'email', label: 'Email', type: 'email', required: false, placeholder: 'ejemplo@mail.com' },
-            { name: 'fec_nac', label: 'Fecha de Nacimiento', type: 'date', required: false },
-            { name: 'domicilio', label: 'Domicilio', type: 'text', required: false, placeholder: 'Calle 123' },
-            { name: 'telefono', label: 'Teléfono', type: 'tel', required: false, placeholder: '1234567890' },
-            { name: 'password', label: 'Contraseña', type: 'password', required: false, placeholder: 'Solo si se crea usuario', fullWidth: true },
+        {/* ---------- FILTROS AVANZADOS Y BÚSQUEDA GLOBAL ---------- */}
+        <AdvancedFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          columnFilters={columnFilters}
+          setColumnFilters={setColumnFilters}
+          filterOptions={[
+            { value: 'nombre', label: 'Nombre' },
+            { value: 'apellido', label: 'Apellido' },
+            { value: 'email', label: 'Email' },
+            { value: 'domicilio', label: 'Domicilio' },
+            { value: 'telefono', label: 'Teléfono' },
           ]}
         />
 
-        {/* Modal de confirmación de eliminación */}
-        <ModalConfirmDel
-          visible={deleteModalVisible}
-          onClose={() => {
-            setDeleteModalVisible(false)
-            setDocenteToDelete(null)
-          }}
-          onConfirm={handleDelete}
-          userId={docenteToDelete}
-        />
-      </CContainer>
-    </div>
+        {/* ---------- ACCIONES DE TABLA (Exportar, etc.) ---------- */}
+        <TableActions table={table} />
+
+        {/* ---------- CUERPO DE LA TABLA ---------- */}
+        <CCardBody className="per-card-body">
+          <GenericTable table={table} />
+        </CCardBody>
+
+        {/* ---------- PIE DE PÁGINA CON PAGINACIÓN ---------- */}
+        <CCardFooter className="per-card-footer">
+          <TablePagination table={table} />
+        </CCardFooter>
+      </CCard>
+
+      {/* ---------- MODALES ---------- */}
+
+      {/* Modal de edición/creación de personal */}
+      <ModalNewEdit
+        visible={editModalVisible}
+        onClose={() => {
+          setEditModalVisible(false)
+          setDocenteToEdit(null)
+        }}
+        title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
+        initialData={docenteToEdit || {}}
+        onSave={handleSaveDocente}
+        fields={[
+          //{ name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
+          // { name: 'name', label: 'Apellido y Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Pérez Carlos' },
+          { name: 'nombre', label: 'Nombre', type: 'text', required: true, placeholder: 'Ejemplo: Carlos' },
+          { name: 'apellido', label: 'Apellido', type: 'text', required: true, placeholder: 'Ejemplo: Pérez' },
+          { name: 'email', label: 'Email', type: 'email', required: false, placeholder: 'ejemplo@mail.com' },
+          { name: 'fec_nac', label: 'Fecha de Nacimiento', type: 'date', required: false },
+          { name: 'domicilio', label: 'Domicilio', type: 'text', required: false, placeholder: 'Calle 123' },
+          { name: 'telefono', label: 'Teléfono', type: 'tel', required: false, placeholder: '1234567890' },
+          { name: 'password', label: 'Contraseña', type: 'password', required: false, placeholder: 'Solo si se crea usuario', fullWidth: true },
+        ]}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <ModalConfirmDel
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false)
+          setDocenteToDelete(null)
+        }}
+        onConfirm={handleDelete}
+        userId={docenteToDelete}
+      />
+    </CContainer>
   )
 
 }

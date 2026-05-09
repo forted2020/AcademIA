@@ -63,10 +63,12 @@ export function useInformesData(config) {
                 // Usamos 'api.get' (en lugar de 'fetch') para que incluya el TOKEN automáticamente
                 const response = await api.get(url, { params });
 
-                // Axios devuelve la data en response.data
+                // Normaliza respuesta paginada { data: [], total } o array directo
+                const payload = response.data;
+                const items = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : payload);
                 setDataSources(prev => ({
                     ...prev,
-                    [filter.key]: response.data
+                    [filter.key]: items
                 }));
                 console.log('🎁🎁 Datos recibidos: ', response.data)
 

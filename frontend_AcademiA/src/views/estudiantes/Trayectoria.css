@@ -1,0 +1,283 @@
+/* frontend_AcademiA/src/views/estudiantes/Trayectoria.css
+   Prefijo .tray-  |  Usa variables --acad-* de style.scss
+*/
+
+/* ═══════════════════════════════════════════════════════════
+   CARD PRINCIPAL
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: var(--acad-shadow, 0 4px 12px rgba(15,23,42,.08)) !important;
+  overflow: hidden;
+  background: var(--acad-surface, #fff);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ENCABEZADO
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
+}
+
+.tray-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Brand: ícono + título + subtítulo */
+.tray-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.tray-header-brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tray-brand-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  color: var(--acad-blue, #0369a1);
+}
+
+.tray-header-h2 {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.tray-header-sub {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--acad-blue, #0369a1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0.35rem 0 0;
+}
+
+/* Columna de acciones (lado derecho del header) */
+.tray-header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUSCADOR DE ESTUDIANTE (Admin/Docente)
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tray-search-label {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--acad-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* Input de búsqueda por ID de alumno */
+.tray-search-input {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  border: 1.5px solid var(--acad-border, #cbd5e1);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 0.45rem 0.875rem;
+  background: #f8fafc;
+  color: var(--acad-text, #0f172a);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  min-width: 130px;
+}
+
+.tray-search-input:focus {
+  border-color: var(--acad-blue, #0369a1);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+}
+
+.tray-search-input::placeholder {
+  color: var(--acad-text-subtle, #94a3b8);
+  font-size: 0.78rem;
+}
+
+/* Botón buscar */
+.tray-search-btn {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: var(--acad-radius, 0.5rem);
+  background: var(--acad-navy, #0f172a);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.tray-search-btn:hover {
+  background: #1e293b;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SELECTOR CICLO LECTIVO — contenedor con step badge
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tray-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--acad-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: default;
+}
+
+/* Step badge circular */
+.tray-filter-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: var(--acad-border-light, #e2e8f0);
+  color: var(--acad-text-muted, #64748b);
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Activado cuando el ciclo ya fue seleccionado */
+.tray-filter-step.is-ready {
+  background: var(--acad-blue, #0369a1);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUERPO
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-card-body {
+  padding: 1.5rem !important;
+  background: #fafbfc;
+  min-height: 12rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STAT CARDS — aplica sistema sobre las tarjetas existentes
+   ═══════════════════════════════════════════════════════════ */
+
+/* Wrapper de fila de stats cards */
+.tray-stats-row {
+  margin-bottom: 1.5rem;
+}
+
+/* Override de estilos base de StatCard para aplicar el sistema de diseño */
+.tray-stats-row .stat-card,
+.tray-stats-row [class*="stat-card"],
+.tray-stats-row .card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.06) !important;
+  background: #fff !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECCIONES INTERNAS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Encabezados de sección (Materias, Asistencias) */
+.tray-section-title {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  margin: 0;
+}
+
+.tray-section-badge {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--acad-blue, #0369a1);
+  background: var(--acad-blue-pale, #e0f2fe);
+  padding: 0.2em 0.75em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.tray-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ESTADOS VACÍO / LOADING / ESPERANDO BÚSQUEDA
+   ═══════════════════════════════════════════════════════════ */
+
+.tray-awaiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 3.5rem 1rem;
+  color: var(--acad-text-muted, #64748b);
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.tray-awaiting-icon {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  opacity: 0.2;
+  margin-bottom: 0.5rem;
+}

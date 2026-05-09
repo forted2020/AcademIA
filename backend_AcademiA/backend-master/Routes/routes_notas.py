@@ -198,25 +198,27 @@ def obtener_informe_notas_estudiante(
     db: Session = Depends(get_db)
 ):
     try:
-        # 1. Obtener Columnas (Headers de tipos de nota)
+        # 1. Solo los tipos de nota finales (es_final = True) van al boletín
         tipos_nota = (
             db.query(models.TipoNota)
+            .filter(models.TipoNota.es_final == True)
             .order_by(models.TipoNota.id_tipo_nota)
             .all()
-)
+        )
         headers = [
             schemas.ColumnaHeader(id_tipo_nota=t.id_tipo_nota, label=t.tipo_nota)
             for t in tipos_nota
         ]
+        ids_finales = {t.id_tipo_nota for t in tipos_nota}
 
-        # 2. Obtener todas las notas del estudiante para este ciclo/curso
-        # Filtramos por id_entidad_estudiante
+        # 2. Obtener notas del estudiante para este curso, solo de tipos finales
         notas_existentes = (
             db.query(models.Nota)
             .join(models.Materia)
             .filter(
                 models.Nota.id_entidad_estudiante == id_estudiante,
-                models.Materia.id_curso == curso_id # Filtramos por el curso indicado
+                models.Materia.id_curso == curso_id,
+                models.Nota.id_tipo_nota.in_(ids_finales),
             )
             .all()
         )

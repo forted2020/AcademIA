@@ -1,9 +1,9 @@
 # Routes/routes_docentes.py
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from database import localSession
-from models import Entidad as EntidadORM
+from models import Entidad as EntidadORM, Materia, NombreMateria, Curso, CicloLectivo
 from schemas import (
     DocenteResponse,
     DocenteCreate,
@@ -12,7 +12,8 @@ from schemas import (
     PagedResponse,
 )
 from auth import get_current_user
-from datetime import datetime
+from datetime import datetime, date
+from typing import List
 
 router = APIRouter()
 
@@ -103,6 +104,42 @@ async def update_docente(id_entidad: int, docente: DocenteUpdate, db: Session = 
     db.commit()
     db.refresh(db_docente)
     return db_docente
+
+
+@router.get("/{id}/materias-actuales")
+async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
+    """Devuelve las materias que el docente dicta en el ciclo lectivo vigente (hoy entre fecha_inicio y fecha_fin)."""
+    hoy = date.today()
+
+    # Ciclo lectivo vigente: hoy está entre inicio y fin
+    ciclo_actual = db.query(CicloLectivo).filter(
+        CicloLectivo.fecha_inicio_cl <= hoy,
+        CicloLectivo.fecha_fin_cl >= hoy,
+    ).first()
+
+    # Si no hay ciclo con fechas definidas, tomar el de mayor id como fallback
+    if not ciclo_actual:
+        ciclo_actual = db.query(CicloLectivo).order_by(CicloLectivo.id_ciclo_lectivo.desc()).first()
+
+    if not ciclo_actual:
+        return {"ciclo": None, "materias": []}
+
+    materias = (
+        db.query(NombreMateria.nombre_materia)
+        .join(Materia, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
+        .join(Curso, Curso.id_curso == Materia.id_curso)
+        .filter(
+            Materia.id_entidad == id,
+            Curso.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo,
+        )
+        .distinct()
+        .all()
+    )
+
+    return {
+        "ciclo": ciclo_actual.nombre_ciclo_lectivo,
+        "materias": [m.nombre_materia for m in materias],
+    }
 
 
 @router.delete("/{id}")

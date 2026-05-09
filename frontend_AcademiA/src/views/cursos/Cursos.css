@@ -1,12 +1,13 @@
-/* frontend_AcademiA/src/views/estudiantes/Estudiantes.css
-   Prefijo .est-  |  Usa variables --acad-* de style.scss
+/* frontend_AcademiA/src/views/cursos/Cursos.css
+   Prefijo .cur-  |  Usa variables --acad-* de style.scss
 */
+
 
 /* ═══════════════════════════════════════════════════════════
    CARD
    ═══════════════════════════════════════════════════════════ */
 
-.est-card {
+.cur-card {
   border: 1px solid var(--acad-border-light, #e2e8f0) !important;
   border-radius: var(--acad-radius-lg, 0.75rem) !important;
   box-shadow: var(--acad-shadow, 0 4px 12px rgba(15,23,42,.08)) !important;
@@ -15,7 +16,7 @@
 }
 
 /* ── Encabezado principal ───────────────────────────────── */
-.est-card-header-main {
+.cur-card-header-main {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -26,7 +27,7 @@
 }
 
 /* Columna izquierda: brand + buscador */
-.est-header-left-col {
+.cur-header-left-col {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -35,13 +36,13 @@
 }
 
 /* Brand: ícono + título + subtítulo */
-.est-header-brand {
+.cur-header-brand {
   display: flex;
   align-items: center;
   gap: 0.875rem;
 }
 
-.est-header-brand-icon {
+.cur-header-brand-icon {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.5rem;
@@ -52,13 +53,13 @@
   flex-shrink: 0;
 }
 
-.est-brand-icon {
+.cur-brand-icon {
   width: 1.25rem !important;
   height: 1.25rem !important;
   color: var(--acad-blue, #0369a1);
 }
 
-.est-header-h2 {
+.cur-header-h2 {
   font-family: var(--acad-font-body, 'Inter', sans-serif);
   font-size: 1.75rem;
   font-weight: 700;
@@ -68,7 +69,7 @@
   line-height: 1.1;
 }
 
-.est-header-sub {
+.cur-header-sub {
   font-family: var(--acad-font-body, 'Inter', sans-serif);
   font-size: 0.875rem;
   font-weight: 500;
@@ -79,50 +80,14 @@
 }
 
 /* Buscador en columna izquierda */
-.est-search-box--header {
-  max-width: 24rem;
-}
-
-/* Columna derecha: acciones alineadas al fondo */
-.est-header-actions-col {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  align-self: flex-end;
-}
-
-/* Badge total */
-.est-total-pill {
-  font-family: var(--acad-font-body, 'Inter', sans-serif);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--acad-blue, #0369a1);
-  background: var(--acad-blue-pale, #e0f2fe);
-  padding: 0.25em 0.75em;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-/* Separador vertical entre grupos de acciones */
-.est-header-divider {
-  width: 1px;
-  height: 1.25rem;
-  background: var(--acad-border-light, #e2e8f0);
-  margin: 0 0.125rem;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BUSCADOR
-   ═══════════════════════════════════════════════════════════ */
-
-.est-search-box {
+.cur-search-box {
   position: relative;
   display: flex;
   align-items: center;
+  max-width: 24rem;
 }
 
-.est-search-icon-inline {
+.cur-search-icon-inline {
   position: absolute;
   left: 0.6rem;
   width: 0.8rem !important;
@@ -131,7 +96,7 @@
   pointer-events: none;
 }
 
-.est-search-field {
+.cur-search-field {
   padding: 0.4rem 2rem 0.4rem 1.9rem;
   font-family: var(--acad-font-body, 'Inter', sans-serif);
   font-size: 0.8125rem;
@@ -144,18 +109,18 @@
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.est-search-field:focus {
+.cur-search-field:focus {
   background: #fff;
   border-color: var(--acad-blue, #0369a1);
   box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
 }
 
-.est-search-field::placeholder {
+.cur-search-field::placeholder {
   color: #94a3b8;
   font-size: 0.78rem;
 }
 
-.est-search-x {
+.cur-search-x {
   position: absolute;
   right: 0.5rem;
   background: none;
@@ -170,13 +135,39 @@
   transition: color 0.12s;
 }
 
-.est-search-x:hover { color: #0f172a; }
+.cur-search-x:hover { color: #0f172a; }
 
-/* ═══════════════════════════════════════════════════════════
-   BOTONES HEADER
-   ═══════════════════════════════════════════════════════════ */
+/* Columna derecha: acciones alineadas al fondo (a la altura del buscador) */
+.cur-header-actions-col {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
 
-.est-action-btn-top {
+/* Badge total de cursos */
+.cur-total-pill {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--acad-blue, #0369a1);
+  background: var(--acad-blue-pale, #e0f2fe);
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Separador vertical entre grupos de acciones */
+.cur-header-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--acad-border-light, #e2e8f0);
+  margin: 0 0.125rem;
+}
+
+/* Botones Imprimir / Exportar */
+.cur-action-btn-top {
   font-size: 0.78rem !important;
   padding: 0.35rem 0.7rem !important;
   display: inline-flex !important;
@@ -186,7 +177,8 @@
   transition: background 0.15s, border-color 0.15s !important;
 }
 
-.est-btn-new-top {
+/* Botón Nuevo Curso */
+.cur-btn-new-top {
   font-size: 0.8125rem !important;
   font-weight: 600 !important;
   padding: 0.4rem 1rem !important;
@@ -201,30 +193,31 @@
   transition: background 0.15s, box-shadow 0.15s !important;
 }
 
-.est-btn-new-top:hover {
+.cur-btn-new-top:hover {
   background: #1e293b !important;
   border-color: #1e293b !important;
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.3) !important;
 }
 
+
 /* ═══════════════════════════════════════════════════════════
    TABLA INLINE CON EXPANSIÓN
    ═══════════════════════════════════════════════════════════ */
 
-.est-table-inline-wrap {
+.cur-table-inline-wrap {
   overflow-x: auto;
   padding: 0.75rem 1.25rem 0;
 }
 
-.est-table-inline {
+.cur-table-inline {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--acad-font-body, 'Inter', sans-serif);
   font-size: 0.9375rem;
 }
 
-/* ── Cabeceras ───────────────────────────────────────────── */
-.est-th {
+/* ── Cabeceras ────────────────────────────────────────────── */
+.cur-th {
   background: #f1f5f9 !important;
   color: #334155 !important;
   font-size: 0.8125rem !important;
@@ -242,35 +235,35 @@
   box-shadow: inset 0 2px 0 0 var(--acad-blue, #0369a1);
 }
 
-.est-th:hover {
+.cur-th:hover {
   background: #e8edf3 !important;
   color: var(--acad-navy, #0f172a) !important;
 }
 
-.est-th-expander {
+.cur-th-expander {
   width: 2.5rem;
   min-width: 2.5rem;
   padding: 0 !important;
 }
 
-.est-th-inner {
+.cur-th-inner {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
 }
 
-.est-sort-icon {
+.cur-sort-icon {
   display: inline-flex;
   align-items: center;
   color: var(--acad-blue, #0369a1);
 }
 
-.est-sort-neutral {
+.cur-sort-neutral {
   color: #cbd5e1 !important;
 }
 
-/* ── Celdas ─────────────────────────────────────────────── */
-.est-td {
+/* ── Celdas ───────────────────────────────────────────────── */
+.cur-td {
   padding: 0.8rem 1rem !important;
   vertical-align: middle !important;
   border-color: var(--acad-border-light, #e2e8f0) !important;
@@ -281,33 +274,34 @@
   text-overflow: ellipsis;
 }
 
-.est-td-expander {
+.cur-td-expander {
   width: 2.5rem;
   min-width: 2.5rem;
   text-align: center !important;
   padding: 0 !important;
 }
 
-.est-td-actions {
+.cur-td-actions {
   text-align: center !important;
 }
 
-/* ── Filas de datos ─────────────────────────────────────── */
-.est-data-row:nth-child(odd) > .est-td  { background: #fafbfc; }
-.est-data-row:nth-child(even) > .est-td { background: #ffffff; }
+/* ── Fila de datos ────────────────────────────────────────── */
+.cur-data-row:nth-child(odd) > .cur-td  { background: #fafbfc; }
+.cur-data-row:nth-child(even) > .cur-td { background: #ffffff; }
 
-.est-data-row:hover > .est-td {
+.cur-data-row:hover > .cur-td {
   background: var(--acad-blue-pale, #e0f2fe) !important;
   transition: background 0.1s ease;
 }
 
-.est-data-row.est-row-expanded > .est-td {
+/* Fila padre cuando está abierta */
+.cur-data-row.cur-row-expanded > .cur-td {
   background: #e8f3fb !important;
   border-bottom: none !important;
 }
 
-/* ── Ícono expander ─────────────────────────────────────── */
-.est-expander-icon {
+/* ── Ícono expander (decorativo) ──────────────────────────── */
+.cur-expander-icon {
   width: 0.7rem !important;
   height: 0.7rem !important;
   color: #94a3b8;
@@ -316,24 +310,24 @@
   margin: auto;
 }
 
-.est-expander-icon.is-open {
+.cur-expander-icon.is-open {
   color: var(--acad-blue, #0369a1);
 }
 
-/* ── Fila de expansión ──────────────────────────────────── */
-.est-expansion-row > .est-expansion-cell {
+/* ── Fila de expansión ────────────────────────────────────── */
+.cur-expansion-row > .cur-expansion-cell {
   padding: 0 !important;
   border-top: none !important;
   border-bottom: none !important;
 }
 
-.est-expansion-row:has(.est-expansion-animated[style*="height: 0"]) > .est-expansion-cell,
-.est-expansion-row:has(.est-expansion-animated:not([style])) > .est-expansion-cell {
+.cur-expansion-row:has(.cur-expansion-animated[style*="height: 0"]) > .cur-expansion-cell,
+.cur-expansion-row:has(.cur-expansion-animated:not([style])) > .cur-expansion-cell {
   border-bottom: none !important;
 }
 
-/* ── Wrapper de animación de altura ─────────────────────── */
-.est-expansion-animated {
+/* ── Wrapper de animación de altura ───────────────────────── */
+.cur-expansion-animated {
   height: 0;
   opacity: 0;
   overflow: hidden;
@@ -341,30 +335,31 @@
               opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+
 /* ═══════════════════════════════════════════════════════════
    PANEL DE EXPANSIÓN
    ═══════════════════════════════════════════════════════════ */
 
-.est-expansion-panel {
+.cur-expansion-panel {
   padding: 0.875rem 1.25rem 0.875rem 3.25rem;
   background: linear-gradient(to right, #eef6fd 0%, #f8fafc 60%);
   border-top: 1px solid #bfdbf7;
   border-bottom: 2px solid var(--acad-blue, #0369a1);
 }
 
-.est-expansion-grid {
+.cur-expansion-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem 2.5rem;
 }
 
-.est-expansion-field {
+.cur-expansion-field {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
 }
 
-.est-expansion-label {
+.cur-expansion-label {
   font-size: 0.6625rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -372,28 +367,29 @@
   color: var(--acad-blue, #0369a1);
 }
 
-.est-expansion-value {
+.cur-expansion-value {
   font-size: 0.8125rem;
   color: var(--acad-navy, #0f172a);
   font-weight: 400;
 }
 
-.est-expansion-empty {
+.cur-expansion-empty {
   font-size: 0.8rem;
   color: var(--acad-text-subtle, #94a3b8);
   font-style: italic;
 }
 
+
 /* ═══════════════════════════════════════════════════════════
    ESTADO VACÍO
    ═══════════════════════════════════════════════════════════ */
 
-.est-empty-cell {
+.cur-empty-cell {
   padding: 3rem 1rem !important;
   text-align: center;
 }
 
-.est-empty {
+.cur-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -401,13 +397,13 @@
   color: var(--acad-text-muted, #64748b);
 }
 
-.est-empty-icon {
+.cur-empty-icon {
   width: 2.5rem !important;
   height: 2.5rem !important;
   opacity: 0.25;
 }
 
-.est-empty p {
+.cur-empty p {
   margin: 0;
   font-size: 0.875rem;
 }

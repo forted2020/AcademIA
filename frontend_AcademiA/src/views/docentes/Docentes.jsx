@@ -20,7 +20,7 @@ import {
 import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
 import { getTableColumns } from '../../utils/columns'
 import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js'
-import { getDocentes, createDocente, updateDocente, deleteDocente } from '../../api/api.js'
+import api, { getDocentes, createDocente, updateDocente, deleteDocente } from '../../api/api.js'
 import { docenteFields } from '../../utils/FormConfigs/formConfigs.js'
 
 import TablePagination from '../../components/tablePagination/TablePagination.jsx'
@@ -86,22 +86,56 @@ function AnimatedExpansion({ isOpen, children }) {
 }
 
 // ─── Contenido del panel ─────────────────────────────────────────────────────
-function ExpansionPanel({ row }) {
+function ExpansionPanel({ row, isOpen }) {
+  const [materiasData, setMateriasData] = useState(null) // null = no cargado aún
+
+  // Carga las materias la primera vez que el panel se abre
+  useEffect(() => {
+    if (!isOpen || materiasData !== null) return
+    api.get(`/api/docentes/${row.id_entidad}/materias-actuales`)
+      .then((res) => setMateriasData(res.data))
+      .catch(() => setMateriasData({ ciclo: null, materias: [] }))
+  }, [isOpen, row.id_entidad, materiasData])
+
   const hasAny = EXPANSION_FIELDS.some((f) => row[f.key])
+
   return (
     <div className="doc-expansion-panel">
-      {hasAny ? (
-        <div className="doc-expansion-grid">
-          {EXPANSION_FIELDS.map(({ key, label, format }) => (
-            <div key={key} className="doc-expansion-field">
-              <span className="doc-expansion-label">{label}</span>
-              <span className="doc-expansion-value">
-                {format === 'date' ? fmtDate(row[key]) : (row[key] || '—')}
-              </span>
+      <div className="doc-expansion-grid">
+        {EXPANSION_FIELDS.map(({ key, label, format }) => (
+          <div key={key} className="doc-expansion-field">
+            <span className="doc-expansion-label">{label}</span>
+            <span className="doc-expansion-value">
+              {format === 'date' ? fmtDate(row[key]) : (row[key] || '—')}
+            </span>
+          </div>
+        ))}
+
+        {/* Materias del ciclo actual */}
+        <div className="doc-expansion-field doc-expansion-field--materias">
+          <span className="doc-expansion-label">
+            Materias actuales
+            {materiasData?.ciclo && (
+              <span className="doc-expansion-ciclo-badge">{materiasData.ciclo}</span>
+            )}
+          </span>
+          {materiasData === null ? (
+            <span className="doc-expansion-value doc-expansion-loading">
+              <CSpinner size="sm" style={{ width: '0.75rem', height: '0.75rem' }} />
+            </span>
+          ) : materiasData.materias.length > 0 ? (
+            <div className="doc-expansion-materias">
+              {materiasData.materias.map((m) => (
+                <span key={m} className="doc-materia-chip">{m}</span>
+              ))}
             </div>
-          ))}
+          ) : (
+            <span className="doc-expansion-value">Sin materias asignadas</span>
+          )}
         </div>
-      ) : (
+      </div>
+
+      {!hasAny && materiasData?.materias?.length === 0 && (
         <span className="doc-expansion-empty">Sin datos adicionales registrados.</span>
       )}
     </div>
@@ -196,7 +230,7 @@ function DocentesTable({ table, expandedRows, onToggleRow, onEdit, onDelete }) {
                   <CTableRow className="doc-expansion-row">
                     <CTableDataCell colSpan={colCount + 1} className="doc-expansion-cell">
                       <AnimatedExpansion isOpen={isExpanded}>
-                        <ExpansionPanel row={row.original} />
+                        <ExpansionPanel row={row.original} isOpen={isExpanded} />
                       </AnimatedExpansion>
                     </CTableDataCell>
                   </CTableRow>
@@ -308,7 +342,7 @@ export default function Docentes() {
                 <CIcon icon={cilSchool} className="doc-brand-icon" />
               </div>
               <div>
-                <h2 className="doc-header-h2">Gestión de Docentes</h2>
+                <h2 className="doc-header-h2">Gestión Docente</h2>
                 <p className="doc-header-sub">Administración del cuerpo docente</p>
               </div>
             </div>

@@ -31,6 +31,7 @@ from Routes.routes_ciclos import router as router_ciclos  # Para traer los ciclo
 from Routes.routes_cursos import router as router_cursos  # Para traer los cursos
 from Routes.routes_personal import router as router_personal
 from Routes.routes_usuarios import router as router_usuarios
+from Routes.routes_inscripciones import router as router_inscripciones
 
 from auth import send_email, get_password_hash, generate_token
 
@@ -154,6 +155,7 @@ app.include_router(routes_estudiantes_notas, prefix="/api", tags=["Notas"])
 
 app.include_router(router_usuarios, prefix="/api/usuarios")
 app.include_router(router_notificaciones, prefix="/api")
+app.include_router(router_inscripciones, prefix="/api")
 
 
 

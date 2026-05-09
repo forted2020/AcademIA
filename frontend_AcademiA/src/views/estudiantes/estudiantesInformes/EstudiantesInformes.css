@@ -1,45 +1,200 @@
-/* frontend_AcademiA\src\views\estudiantes\estudiantesInformes\EstudiantesInformes.css */
-
-/*
-Aplicamos el Estilizado Encapsulado y el Ensamblaje Final. 
-Esto da estética "profesional y compacta", asegurando que los estilos de PrimeReact y CoreUI convivan en armonía sin afectar al resto del sistema, mediante wrappers.
+/* frontend_AcademiA/src/views/estudiantes/estudiantesInformes/EstudiantesInformes.css
+   Prefijo .est-inf-  |  Usa variables --acad-* de style.scss
 */
 
-.informes-wrapper {
-    background-color: #f8f9fa;
-    min-height: 100vh;
+/* ═══════════════════════════════════════════════════════════
+   CARD PRINCIPAL
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: var(--acad-shadow, 0 4px 12px rgba(15,23,42,.08)) !important;
+  overflow: hidden;
+  background: var(--acad-surface, #fff);
 }
 
-/* Ajustes para compactar PrimeReact DataTable */
-.informes-wrapper .custom-datatable .p-datatable-thead > tr > th {
-    background-color: #f1f4f9;
-    color: #4f5d73;
-    font-size: 0.85rem;
-    padding: 0.75rem 1rem;
-    border-bottom: 2px solid #d8dbe0;
+/* ═══════════════════════════════════════════════════════════
+   ENCABEZADO
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
 }
 
-.informes-wrapper .custom-datatable .p-datatable-tbody > tr > td {
-    font-size: 0.85rem;
-    padding: 0.6rem 1rem;
+.est-inf-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
-/* Estilo para los Badges dentro de la tabla */
-.informes-wrapper .badge {
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 0.4em 0.8em;
+/* Brand: ícono + título + subtítulo */
+.est-inf-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
 }
 
-/* Efecto hover en las filas de la tabla */
-.informes-wrapper .p-highlight {
-    background: rgba(50, 31, 219, 0.08) !important;
-    color: #321fdb !important;
+.est-inf-header-brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Contenedor de la tabla con sombra suave */
-.informes-wrapper .table-container {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    background: white;
-    overflow: hidden;
+.est-inf-brand-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  color: var(--acad-blue, #0369a1);
+}
+
+.est-inf-header-h2 {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.est-inf-header-sub {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--acad-blue, #0369a1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0.35rem 0 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUERPO
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-card-body {
+  padding: 1.5rem !important;
+  background: #fafbfc;
+  min-height: 12rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SELECTOR PRINCIPAL DE INFORME
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-selector-wrap {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENEDOR DE FILTROS
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-filters-wrap {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.est-inf-filters-title {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--acad-blue, #0369a1);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0 0 0.75rem;
+  padding-left: 0.625rem;
+  border-left: 3px solid var(--acad-blue, #0369a1);
+}
+
+/* Mensaje de error en filtros */
+.est-inf-filters-error {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  color: #991b1b;
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENEDOR DEL INFORME GENERADO
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-report-wrap {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLACEHOLDER — sin informe seleccionado
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3.5rem 1rem;
+  color: var(--acad-text-muted, #64748b);
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.est-inf-placeholder-icon {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  opacity: 0.2;
+  margin-bottom: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABLA INTERNA (PrimeReact DataTable override)
+   ═══════════════════════════════════════════════════════════ */
+
+.est-inf-report-wrap .p-datatable-thead > tr > th {
+  background: #f8fafc !important;
+  color: var(--acad-text-muted, #64748b) !important;
+  font-family: var(--acad-font-body, 'Inter', sans-serif) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  border-bottom: 2px solid var(--acad-border-light, #e2e8f0) !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.est-inf-report-wrap .p-datatable-tbody > tr > td {
+  font-family: var(--acad-font-body, 'Inter', sans-serif) !important;
+  font-size: 0.8125rem !important;
+  color: var(--acad-text, #0f172a) !important;
+  border-color: var(--acad-border-light, #e2e8f0) !important;
+  padding: 0.65rem 1rem !important;
+}
+
+.est-inf-report-wrap .p-datatable-tbody > tr:hover > td {
+  background: var(--acad-blue-pale, #e0f2fe) !important;
+}
+
+.est-inf-report-wrap .p-highlight {
+  background: var(--acad-blue-pale, #e0f2fe) !important;
+  color: var(--acad-blue, #0369a1) !important;
 }

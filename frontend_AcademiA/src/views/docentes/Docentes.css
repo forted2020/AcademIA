@@ -637,6 +637,56 @@
   font-style: italic;
 }
 
+/* ── Campo de materias — ocupa toda la fila del grid ──────── */
+.doc-expansion-field--materias {
+  grid-column: 1 / -1;
+}
+
+/* Badge del nombre del ciclo lectivo junto al label */
+.doc-expansion-ciclo-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  padding: 0.1em 0.5em;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: var(--acad-blue-pale, #e0f2fe);
+  color: var(--acad-blue, #0369a1);
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Spinner de carga inline */
+.doc-expansion-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--acad-text-subtle, #94a3b8);
+}
+
+/* Contenedor de chips */
+.doc-expansion-materias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+/* Chip individual de materia */
+.doc-materia-chip {
+  display: inline-block;
+  padding: 0.2em 0.65em;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #fff;
+  color: var(--acad-navy, #0f172a);
+  border: 1px solid var(--acad-border, #cbd5e1);
+  border-radius: 0.3rem;
+  white-space: nowrap;
+}
+
 /* ── Estado vacío ─────────────────────────────────────────── */
 .doc-empty-cell {
   padding: 3rem 1rem !important;

@@ -66,9 +66,7 @@ function UserManagement() {
   };
 
   return (
-    <div style={{ padding: '10px' }}>
-      <h1 className="ms-1" >Usuarios</h1>
-
+    <div>
       <Usuarios
         users={users}
         handleEditUser={handleEditUser}

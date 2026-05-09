@@ -1,0 +1,118 @@
+/* frontend_AcademiA/src/views/asistencia/Asistencia.css
+   Prefijo .asis-  |  Usa variables --acad-* de style.scss
+*/
+
+/* ═══════════════════════════════════════════════════════════
+   CARD
+   ═══════════════════════════════════════════════════════════ */
+
+.asis-card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: var(--acad-shadow, 0 4px 12px rgba(15,23,42,.08)) !important;
+  overflow: hidden;
+  background: var(--acad-surface, #fff);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ENCABEZADO
+   ═══════════════════════════════════════════════════════════ */
+
+.asis-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
+}
+
+/* Brand: ícono + título + subtítulo */
+.asis-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.asis-header-brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.asis-brand-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  color: var(--acad-blue, #0369a1);
+}
+
+.asis-header-h2 {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.asis-header-sub {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--acad-blue, #0369a1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0.35rem 0 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUERPO
+   ═══════════════════════════════════════════════════════════ */
+
+.asis-card-body {
+  padding: 1.25rem 1.5rem !important;
+  background: #fafbfc;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ESTADO EN CONSTRUCCIÓN
+   ═══════════════════════════════════════════════════════════ */
+
+.asis-construction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 5rem 1.5rem;
+  text-align: center;
+}
+
+.asis-construction-icon {
+  width: 4rem !important;
+  height: 4rem !important;
+  color: var(--acad-navy, #0f172a);
+  opacity: 0.15;
+}
+
+.asis-construction-title {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+  margin: 0;
+}
+
+.asis-construction-sub {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  color: var(--acad-text-muted, #64748b);
+  margin: 0;
+}

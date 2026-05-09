@@ -1,349 +1,414 @@
 // frontend_AcademiA/src/views/estudiantes/Estudiantes.jsx
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CContainer,
-  CButton, CBadge,
+  CButton, CCard, CCardHeader, CCardBody, CCardFooter,
+  CContainer, CSpinner,
+  CTable, CTableHead, CTableBody, CTableRow, CTableHeaderCell, CTableDataCell,
 } from '@coreui/react'
+import {
+  cilPlus, cilPeople, cilSearch, cilPrint, cilCloudDownload,
+  cilChevronBottom, cilChevronRight, cilArrowTop, cilArrowBottom, cilSwapVertical,
+} from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPeople } from '@coreui/icons'
+import {
+  useReactTable, getCoreRowModel, getPaginationRowModel,
+  getSortedRowModel, getFilteredRowModel, flexRender,
+} from '@tanstack/react-table'
 
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
-import { TieredMenu } from 'primereact/tieredmenu'
-import { Button } from 'primereact/button'
+import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
+import { getTableColumns } from '../../utils/columns'
+import { formatDisplayDate, getTodayDate } from '../../utils/dateUtils/DateUtils.js'
+import apiEstudiantes from '../../api/apiEstudiantes.js'
+import { modalNewEditEstudiantesFields } from './estudiantesFormConfigs/EstudiantesFormConfigs.js'
 
+import TablePagination from '../../components/tablePagination/TablePagination.jsx'
+import { generateTablePDF } from '../../components/tableActions/PDFService'
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-import { useStudentsData } from '../../hooks/useStudentsData.js'
-import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
-import apiEstudiantes from '../../api/apiEstudiantes.js'
-import {
-  modalNewEditEstudiantesFields,
-  columnsTableEstudiantesConfig,
-} from './estudiantesFormConfigs/EstudiantesFormConfigs.js'
 
 import './Estudiantes.css'
 
-// ─── Celda con truncado y tooltip nativo ─────────────────────────────────────
-const TruncatedCell = ({ value }) => {
-  const spanRef = useRef(null)
-  const [overflow, setOverflow] = useState(false)
+// ─── Campos del panel de expansión ───────────────────────────────────────────
+const EXPANSION_FIELDS = [
+  { key: 'domicilio',    label: 'Domicilio'     },
+  { key: 'localidad',    label: 'Localidad'     },
+  { key: 'nacionalidad', label: 'Nacionalidad'  },
+  { key: 'telefono',     label: 'Celular'       },
+  { key: 'dni',          label: 'Documento'     },
+  { key: 'created_at',   label: 'Fecha de Alta', format: 'date' },
+]
+
+const fmtDate = (val) => {
+  if (!val) return '—'
+  const datePart = String(val).split('T')[0]
+  const [y, m, d] = datePart.split('-')
+  return d && m && y ? `${d}/${m}/${y}` : datePart
+}
+
+// ─── Panel animado ────────────────────────────────────────────────────────────
+function AnimatedExpansion({ isOpen, children }) {
+  const wrapRef  = useRef(null)
+  const innerRef = useRef(null)
 
   useEffect(() => {
-    const el = spanRef.current
-    if (el) setOverflow(el.scrollWidth > el.clientWidth + 1)
-  }, [value])
+    const wrap  = wrapRef.current
+    const inner = innerRef.current
+    if (!wrap || !inner) return
+
+    if (isOpen) {
+      wrap.style.height  = '0px'
+      wrap.style.opacity = '0'
+      void wrap.offsetHeight
+      wrap.style.height  = `${inner.scrollHeight}px`
+      wrap.style.opacity = '1'
+      const onEnd = () => { wrap.style.height = 'auto' }
+      wrap.addEventListener('transitionend', onEnd, { once: true })
+    } else {
+      wrap.style.height  = `${wrap.scrollHeight}px`
+      void wrap.offsetHeight
+      wrap.style.height  = '0px'
+      wrap.style.opacity = '0'
+    }
+  }, [isOpen])
 
   return (
-    <span
-      ref={spanRef}
-      className="est-cell-text"
-      title={overflow ? String(value ?? '') : undefined}
-    >
-      {value ?? '—'}
-    </span>
+    <div ref={wrapRef} className="est-expansion-animated">
+      <div ref={innerRef}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ─── Panel de expansión ───────────────────────────────────────────────────────
+function ExpansionPanel({ row }) {
+  const hasAny = EXPANSION_FIELDS.some((f) => row[f.key])
+  return (
+    <div className="est-expansion-panel">
+      {hasAny ? (
+        <div className="est-expansion-grid">
+          {EXPANSION_FIELDS.map(({ key, label, format }) => (
+            <div key={key} className="est-expansion-field">
+              <span className="est-expansion-label">{label}</span>
+              <span className="est-expansion-value">
+                {format === 'date' ? fmtDate(row[key]) : (row[key] || '—')}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <span className="est-expansion-empty">Sin datos adicionales registrados.</span>
+      )}
+    </div>
+  )
+}
+
+// ─── Tabla con expansión ──────────────────────────────────────────────────────
+function EstudiantesTable({ table, expandedRows, onToggleRow }) {
+  const colCount = table.getHeaderGroups()[0]?.headers.length ?? 1
+
+  return (
+    <div className="est-table-inline-wrap">
+      <CTable hover className="est-table-inline mb-0">
+
+        <CTableHead>
+          {table.getHeaderGroups().map((hg) => (
+            <CTableRow key={hg.id}>
+              <CTableHeaderCell className="est-th est-th-expander" />
+              {hg.headers.map((header) => (
+                <CTableHeaderCell
+                  key={header.id}
+                  className="est-th"
+                  onClick={header.column.getToggleSortingHandler?.()}
+                  style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                >
+                  <span className="est-th-inner">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getCanSort() && (
+                      <span className="est-sort-icon">
+                        {{
+                          asc:  <CIcon icon={cilArrowTop}    size="sm" />,
+                          desc: <CIcon icon={cilArrowBottom} size="sm" />,
+                        }[header.column.getIsSorted()] ?? (
+                          <CIcon icon={cilSwapVertical} size="sm" className="est-sort-neutral" />
+                        )}
+                      </span>
+                    )}
+                  </span>
+                </CTableHeaderCell>
+              ))}
+            </CTableRow>
+          ))}
+        </CTableHead>
+
+        <CTableBody>
+          {table.getRowModel().rows.length === 0 ? (
+            <CTableRow>
+              <CTableDataCell colSpan={colCount + 1} className="est-empty-cell">
+                <div className="est-empty">
+                  <CIcon icon={cilPeople} className="est-empty-icon" />
+                  <p>No se encontraron estudiantes.</p>
+                </div>
+              </CTableDataCell>
+            </CTableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => {
+              const isExpanded = !!expandedRows[row.id]
+              return (
+                <React.Fragment key={row.id}>
+                  <CTableRow
+                    className={`est-data-row${isExpanded ? ' est-row-expanded' : ''}`}
+                    onClick={() => onToggleRow(row.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <CTableDataCell className="est-td est-td-expander">
+                      <CIcon
+                        icon={isExpanded ? cilChevronBottom : cilChevronRight}
+                        className={`est-expander-icon${isExpanded ? ' is-open' : ''}`}
+                      />
+                    </CTableDataCell>
+
+                    {row.getVisibleCells().map((cell) => {
+                      if (cell.column.id === 'select') return null
+                      const isActions = cell.column.id === 'actions'
+                      return (
+                        <CTableDataCell
+                          key={cell.id}
+                          className={`est-td${isActions ? ' est-td-actions' : ''}`}
+                          onClick={isActions ? (e) => e.stopPropagation() : undefined}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </CTableDataCell>
+                      )
+                    })}
+                  </CTableRow>
+
+                  <CTableRow className="est-expansion-row">
+                    <CTableDataCell colSpan={colCount + 1} className="est-expansion-cell">
+                      <AnimatedExpansion isOpen={isExpanded}>
+                        <ExpansionPanel row={row.original} />
+                      </AnimatedExpansion>
+                    </CTableDataCell>
+                  </CTableRow>
+                </React.Fragment>
+              )
+            })
+          )}
+        </CTableBody>
+      </CTable>
+    </div>
   )
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Estudiantes() {
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [density, setDensity] = useState('normal')   // 'compact' | 'normal' | 'comfortable'
-  const [pagination, setPagination] = useState({ first: 0, rows: 10 })
-  const [selectedRowData, setSelectedRowData] = useState(null)
-  const [expandedRows, setExpandedRows] = useState(null)
-  const menuRef = useRef(null)
+  const [tableData, setTableData]       = useState([])
+  const [total, setTotal]               = useState(0)
+  const [searchTerm, setSearchTerm]     = useState('')
+  const [pagination, setPagination]     = useState({ pageIndex: 0, pageSize: 10 })
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [expandedRows, setExpandedRows] = useState({})
 
-  const { studentsData, setStudentsData, total, loading } = useStudentsData({
-    skip: pagination.first,
-    limit: pagination.rows,
+  const toggleRow = useCallback((rowId) => {
+    setExpandedRows((prev) => ({ [rowId]: !prev[rowId] }))
+  }, [])
+
+  const {
+    editModal, deleteModal,
+    openEdit, closeEdit,
+    openDelete, closeDelete,
+    handleSave, handleDelete,
+  } = useCrudModalManager({
+    createApi: apiEstudiantes.create,
+    updateApi: apiEstudiantes.update,
+    deleteApi: apiEstudiantes.remove,
+    setData: setTableData,
   })
 
-  const { editModal, deleteModal, openEdit, closeEdit, openDelete, closeDelete, handleSave, handleDelete } =
-    useCrudModalManager({
-      createApi: apiEstudiantes.create,
-      updateApi: apiEstudiantes.update,
-      deleteApi: apiEstudiantes.remove,
-      setData: setStudentsData,
-    })
+  const columns = useMemo(() => getTableColumns(
+    [
+      { accessorKey: 'apellido', header: 'Apellido'  },
+      { accessorKey: 'nombre',   header: 'Nombre'    },
+      {
+        accessorKey: 'fec_nac',
+        header: 'Fecha Nac.',
+        cell: (info) => formatDisplayDate(info.getValue()),
+      },
+      { accessorKey: 'email',    header: 'Email'     },
+      { accessorKey: 'telefono', header: 'Tel/Cel'   },
+    ],
+    openDelete,
+    openEdit,
+    { showSelection: false },
+  ), [])
 
-  // Cierra el menú popup al desmontar
-  useEffect(() => () => menuRef.current?.hide(), [])
+  useEffect(() => {
+    const skip  = pagination.pageIndex * pagination.pageSize
+    const limit = pagination.pageSize
+    apiEstudiantes.getAll({ params: { skip, limit } })
+      .then((res) => {
+        const payload = res?.data
+        const items   = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        setTableData(items)
+        setTotal(payload?.total ?? items.length)
+        setExpandedRows({})
+      })
+      .catch(console.error)
+  }, [pagination.pageIndex, pagination.pageSize])
 
-  // ── Menú contextual por fila ──────────────────────────────────────────────
-  const rowMenuItems = [
-    {
-      label: 'Editar',
-      icon: 'pi pi-pencil',
-      command: () => { openEdit(selectedRowData); menuRef.current?.hide() },
-    },
-    { separator: true },
-    {
-      label: 'Eliminar',
-      icon: 'pi pi-trash',
-      className: 'est-menu-danger',
-      command: () => { openDelete(selectedRowData); menuRef.current?.hide() },
-    },
-  ]
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getRowId: (row) => row.id_entidad,
+    state: { globalFilter: searchTerm, pagination },
+    onGlobalFilterChange: setSearchTerm,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
+    rowCount: total,
+  })
 
-  // ── Templates de columna ─────────────────────────────────────────────────
-  const dniBadgeTemplate = (row) => (
-    <span className="est-dni-badge">{row.dni ?? '—'}</span>
-  )
-
-  const actionsTemplate = (row) => (
-    <Button
-      icon="pi pi-ellipsis-v"
-      rounded
-      text
-      severity="secondary"
-      className="est-action-btn"
-      aria-label="Opciones"
-      onClick={(e) => {
-        e.stopPropagation()
-        setSelectedRowData(row)
-        menuRef.current?.toggle(e)
-      }}
-    />
-  )
-
-  // ── Template de expansión de fila ────────────────────────────────────────
-  const formatDate = (val) => {
-    if (!val) return '—'
-    const [y, m, d] = String(val).split('-')
-    return d && m && y ? `${d}/${m}/${y}` : val
-  }
-
-  const rowExpansionTemplate = (row) => {
-    const fields = [
-      { label: 'Domicilio',     value: row.domicilio    },
-      { label: 'Localidad',     value: row.localidad    },
-      { label: 'Nacionalidad',  value: row.nacionalidad },
-      { label: 'Celular',       value: row.telefono     },
-      { label: 'Fecha de Alta', value: formatDate(row.created_at) },
-    ]
-
-    const hasAny = fields.some((f) => f.value)
-
-    return (
-      <div className="est-expansion-panel">
-        {hasAny ? (
-          <div className="est-expansion-grid">
-            {fields.map(({ label, value }) => (
-              <div key={label} className="est-expansion-field">
-                <span className="est-expansion-label">{label}</span>
-                <span className="est-expansion-value">{value || '—'}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <span className="est-expansion-empty">Sin datos adicionales registrados.</span>
-        )}
-      </div>
-    )
-  }
-
-  // ── Header de la tabla ────────────────────────────────────────────────────
-  const tableHeader = (
-    <div className="est-table-header">
-      {/* Selector de densidad */}
-      <div className="est-density-group" role="group" aria-label="Densidad de tabla">
-        {[
-          { key: 'compact', label: 'Compacto' },
-          { key: 'normal',  label: 'Normal'   },
-          { key: 'comfortable', label: 'Amplio' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            className={`est-density-btn${density === key ? ' active' : ''}`}
-            onClick={() => setDensity(key)}
-            aria-pressed={density === key}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Buscador global */}
-      <div className="est-search-wrap">
-        <span className="est-search-icon pi pi-search" aria-hidden="true" />
-        <input
-          className="est-search-input"
-          type="text"
-          placeholder="Buscar estudiante..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          aria-label="Buscar estudiante"
-        />
-        {globalFilter && (
-          <button
-            className="est-search-clear"
-            onClick={() => setGlobalFilter('')}
-            aria-label="Limpiar búsqueda"
-          >
-            <span className="pi pi-times" />
-          </button>
-        )}
-      </div>
-    </div>
-  )
-
-  // ── Paginador personalizado ───────────────────────────────────────────────
-  const paginatorTemplate = {
-    layout: 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
-    CurrentPageReport: ({ first, last, totalRecords }) => (
-      <span className="est-paginator-info">
-        {first}–{last} de <strong>{totalRecords}</strong> estudiantes
-      </span>
-    ),
+  const handlePDF = async (download = false) => {
+    setIsGenerating(true)
+    const blob = await generateTablePDF({ table, title: 'Listado de Estudiantes', download })
+    if (!download && blob) {
+      const url = URL.createObjectURL(blob)
+      const w = window.open(url, '_blank')
+      if (w) w.onload = () => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 1000) }
+    }
+    setIsGenerating(false)
   }
 
   return (
-    <div className="est-page">
+    <CContainer fluid className="py-3">
 
-      {/* ── Page title ── */}
-      <div className="est-page-title">
-        <CIcon icon={cilPeople} className="est-page-icon" />
-        <div>
-          <h1 className="est-h1">Estudiantes</h1>
-          <p className="est-subtitle">Gestión de alumnos del establecimiento</p>
-        </div>
-      </div>
+      <CCard className="est-card">
 
-      <CContainer fluid className="px-0">
-        <CCard className="est-card">
+        {/* ── Encabezado ── */}
+        <CCardHeader className="est-card-header-main">
+          <div className="est-header-left-col">
 
-          {/* ── Encabezado ── */}
-          <CCardHeader className="est-card-header">
-            <div className="est-header-left">
-              <span className="est-header-title">Listado de estudiantes</span>
-              {!loading && (
-                <CBadge color="primary" className="est-total-badge">
-                  {total}
-                </CBadge>
+            <div className="est-header-brand">
+              <div className="est-header-brand-icon">
+                <CIcon icon={cilPeople} className="est-brand-icon" />
+              </div>
+              <div>
+                <h2 className="est-header-h2">Gestión de Estudiantes</h2>
+                <p className="est-header-sub">Administración del alumnado</p>
+              </div>
+            </div>
+
+            <div className="est-search-box est-search-box--header">
+              <CIcon icon={cilSearch} className="est-search-icon-inline" />
+              <input
+                className="est-search-field"
+                type="text"
+                placeholder="Buscar por nombre, email, teléfono…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar estudiante"
+              />
+              {searchTerm && (
+                <button className="est-search-x" onClick={() => setSearchTerm('')} aria-label="Limpiar">
+                  ×
+                </button>
               )}
             </div>
-            <div className="est-header-actions">
-              <CButton
-                color="primary"
-                size="sm"
-                className="est-btn-new"
-                onClick={() => openEdit()}
-              >
-                <CIcon icon={cilPlus} className="me-1" />
-                Nuevo estudiante
-              </CButton>
-            </div>
-          </CCardHeader>
 
-          {/* ── Cuerpo ── */}
-          <CCardBody className="est-card-body">
+          </div>
 
-            <TieredMenu
-              model={rowMenuItems}
-              popup
-              ref={menuRef}
-              appendTo={document.body}
-              onHide={() => setSelectedRowData(null)}
-              className="est-context-menu"
-            />
+          <div className="est-header-actions-col">
 
-            <div className={`est-table-wrap density-${density}`}>
-              <DataTable
-                value={studentsData}
-                header={tableHeader}
-                dataKey="id_entidad"
-                loading={loading}
-                stripedRows
-                removableSort
-                sortField="apellido"
-                sortOrder={1}
-                // Expansión de fila
-                expandedRows={expandedRows}
-                onRowToggle={(e) => setExpandedRows(e.data)}
-                rowExpansionTemplate={rowExpansionTemplate}
-                // Paginación server-side
-                paginator
-                lazy
-                totalRecords={total}
-                rows={pagination.rows}
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                paginatorPosition="bottom"
-                paginatorTemplate={paginatorTemplate}
-                first={pagination.first}
-                onPage={(e) => setPagination({ first: e.first, rows: e.rows })}
-                // Búsqueda global client-side sobre la página cargada
-                globalFilter={globalFilter}
-                emptyMessage={
-                  <div className="est-empty">
-                    <span className="pi pi-users est-empty-icon" />
-                    <p>No se encontraron estudiantes.</p>
-                    {globalFilter && (
-                      <p className="est-empty-hint">
-                        Intentá con otro término o{' '}
-                        <button className="est-empty-clear" onClick={() => setGlobalFilter('')}>
-                          limpiar la búsqueda
-                        </button>.
-                      </p>
-                    )}
-                  </div>
-                }
-                tableStyle={{ minWidth: '100%', tableLayout: 'fixed' }}
-                className="p-datatable-sm"
-                rowHover
-              >
-                {/* Expander de fila */}
-                <Column expander style={{ width: '3rem' }} className="est-expander-col" />
+            <span className="est-total-pill">
+              {total} {total === 1 ? 'estudiante' : 'estudiantes'}
+            </span>
 
-                {/* Columnas dinámicas desde config */}
-                {columnsTableEstudiantesConfig.map((col) => (
-                  <Column
-                    key={col.field}
-                    field={col.field}
-                    header={col.header}
-                    sortable={col.sortable}
-                    style={{ width: col.width }}
-                    body={
-                      col.field === 'dni'
-                        ? dniBadgeTemplate
-                        : col.body
-                          ? col.body
-                          : (row) => <TruncatedCell value={row[col.field]} />
-                    }
-                  />
-                ))}
+            <div className="est-header-divider" />
 
-                {/* Columna de acciones */}
-                <Column
-                  header=""
-                  body={actionsTemplate}
-                  style={{ width: '3.25rem', textAlign: 'center' }}
-                  frozen
-                  alignFrozen="right"
-                />
-              </DataTable>
-            </div>
-          </CCardBody>
-        </CCard>
+            <CButton
+              color="secondary"
+              variant="outline"
+              size="sm"
+              disabled={isGenerating}
+              onClick={() => handlePDF(false)}
+              className="est-action-btn-top"
+            >
+              {isGenerating
+                ? <CSpinner size="sm" className="me-1" />
+                : <CIcon icon={cilPrint} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+              }
+              Imprimir
+            </CButton>
 
-        {/* ── Modales ── */}
-        <ModalNewEdit
-          visible={editModal.visible}
-          onClose={closeEdit}
-          title={editModal.item ? 'Editar estudiante' : 'Nuevo estudiante'}
-          initialData={editModal.item || {}}
-          onSave={handleSave}
-          fields={modalNewEditEstudiantesFields}
-        />
+            <CButton
+              color="secondary"
+              variant="outline"
+              size="sm"
+              disabled={isGenerating}
+              onClick={() => handlePDF(true)}
+              className="est-action-btn-top"
+            >
+              <CIcon icon={cilCloudDownload} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+              Exportar
+            </CButton>
 
-        <ModalConfirmDel
-          visible={deleteModal.visible}
-          onClose={closeDelete}
-          onConfirm={handleDelete}
-          userId={deleteModal.id}
-        />
-      </CContainer>
-    </div>
+            <div className="est-header-divider" />
+
+            <CButton
+              color="primary"
+              size="sm"
+              className="est-btn-new-top"
+              onClick={() => openEdit()}
+            >
+              <CIcon icon={cilPlus} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+              Nuevo Estudiante
+            </CButton>
+
+          </div>
+        </CCardHeader>
+
+        {/* ── Cuerpo ── */}
+        <CCardBody className="p-0">
+          <EstudiantesTable
+            table={table}
+            expandedRows={expandedRows}
+            onToggleRow={toggleRow}
+            onEdit={openEdit}
+            onDelete={openDelete}
+          />
+        </CCardBody>
+
+        {/* ── Footer con paginación ── */}
+        <CCardFooter
+          className="bg-white border-top px-3 py-1"
+          style={{ position: 'sticky', bottom: 0, zIndex: 1, boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' }}
+        >
+          <TablePagination table={table} />
+        </CCardFooter>
+
+      </CCard>
+
+      {/* ── Modales ── */}
+      <ModalNewEdit
+        visible={editModal.visible}
+        onClose={closeEdit}
+        title={editModal.item ? 'Editar Estudiante' : 'Nuevo Estudiante'}
+        initialData={editModal.item || { created_at: getTodayDate() }}
+        onSave={handleSave}
+        fields={modalNewEditEstudiantesFields}
+      />
+
+      <ModalConfirmDel
+        visible={deleteModal.visible}
+        onClose={closeDelete}
+        onConfirm={handleDelete}
+        userId={deleteModal.id}
+      />
+
+    </CContainer>
   )
 }

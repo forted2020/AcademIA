@@ -88,7 +88,7 @@ const GenericInformFilters = ({ informesData, config }) => {
                                                 options={normalizedOptions}
 
                                                 // Props de estado UI
-                                                s disabled={isDisabled}
+                                                disabled={isDisabled}
                                                 placeholder={isDisabled ? `Seleccione ${filter.dependsOn}...` : "Seleccione..."}
                                             />
                                         </CCol>

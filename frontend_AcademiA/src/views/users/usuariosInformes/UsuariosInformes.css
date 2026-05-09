@@ -1,0 +1,136 @@
+/* frontend_AcademiA/src/views/users/usuariosInformes/UsuariosInformes.css
+   Prefijo .usr-inf-  |  Usa variables --acad-* de style.scss
+*/
+
+/* ═══════════════════════════════════════════════════════════
+   CARD
+   ═══════════════════════════════════════════════════════════ */
+
+.usr-inf-card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: var(--acad-shadow, 0 4px 12px rgba(15,23,42,.08)) !important;
+  overflow: hidden;
+  background: var(--acad-surface, #fff);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ENCABEZADO
+   ═══════════════════════════════════════════════════════════ */
+
+.usr-inf-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
+}
+
+/* Brand: ícono + textos */
+.usr-inf-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.usr-inf-header-brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.usr-inf-brand-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  color: var(--acad-blue, #0369a1);
+}
+
+.usr-inf-header-h2 {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.usr-inf-header-sub {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--acad-blue, #0369a1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0.35rem 0 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUERPO
+   ═══════════════════════════════════════════════════════════ */
+
+.usr-inf-card-body {
+  padding: 1.5rem !important;
+  background: #fafbfc;
+}
+
+/* Bloque del selector principal */
+.usr-inf-selector-wrap {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+}
+
+/* Área de trabajo con los filtros y el informe */
+.usr-inf-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Sección de filtros */
+.usr-inf-filters-section {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1rem 1.25rem;
+}
+
+.usr-inf-filters-title {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--acad-blue, #0369a1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.875rem;
+  padding-left: 0.625rem;
+  border-left: 3px solid var(--acad-blue, #0369a1);
+}
+
+/* Mensaje de error de filtros */
+.usr-inf-filters-error {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  margin-top: 0.5rem;
+}
+
+/* Estado vacío / placeholder cuando no hay informe seleccionado */
+.usr-inf-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  color: var(--acad-text-muted, #64748b);
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  text-align: center;
+}

@@ -1,4 +1,4 @@
-// frontend_AcademiA\src\views\estudiantes\InformeAsistencia.jsx
+﻿// frontend_AcademiA\src\views\estudiantes\InformeAsistencia.jsx
 //
 // Informe de asistencia por estudiante y año.
 // Consume el endpoint GET /api/estudiantes/inasistencias/{id_entidad}/{year}
@@ -6,16 +6,15 @@
 
 import React from 'react'
 import {
-  CContainer, CCard, CCardHeader, CCardBody, CRow, CCol,
-  CSpinner, CAlert, CBadge, CButton, CTable, CTableHead,
-  CTableRow, CTableHeaderCell, CTableBody, CTableDataCell
+  CContainer, CCard, CCardHeader, CCardBody,
+  CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilFile, cilUser, cilCheckCircle, cilXCircle } from '@coreui/icons'
-import { Dropdown } from 'primereact/dropdown'
+import { cilCalendar, cilFile, cilUser, cilCheckCircle, cilXCircle } from '@coreui/icons'
 
 import api from '../../api/api.js'
 import useAuthUser from '../../hooks/useAuthUser'
+import './InformeAsistencia.css'
 
 // ─────────────────────────────────────────────
 //  Hook: carga inasistencias
@@ -40,7 +39,7 @@ const useInasistencias = (idEstudiante, year) => {
 }
 
 // ─────────────────────────────────────────────
-//  Generación de PDF
+//  Generación de PDF (lógica intacta)
 // ─────────────────────────────────────────────
 const generarPDF = async (data, nombreEstudiante, year) => {
   const jsPDF = (await import('jspdf')).default
@@ -120,88 +119,91 @@ const generarPDF = async (data, nombreEstudiante, year) => {
 }
 
 // ─────────────────────────────────────────────
-//  Tarjeta de resumen
+//  Tarjetas de resumen (reestilizadas)
 // ─────────────────────────────────────────────
 const ResumenAsistencia = ({ data }) => {
   const injust = parseFloat((data.totalInasistencia - data.totalInasistenciaJustif).toFixed(2))
   const enRiesgo = data.totalInasistencia >= 15
 
   return (
-    <CRow className="mb-4 g-3">
-      <CCol xs={12} sm={4}>
-        <div className="p-3 bg-light rounded text-center">
-          <div className="small text-muted mb-1">Total Inasistencias</div>
-          <div className={`fs-2 fw-bold ${enRiesgo ? 'text-danger' : 'text-success'}`}>
-            {data.totalInasistencia.toFixed(1)}
-          </div>
-          {enRiesgo && (
-            <CBadge color="danger" className="mt-1">En riesgo</CBadge>
-          )}
-        </div>
-      </CCol>
-      <CCol xs={12} sm={4}>
-        <div className="p-3 bg-light rounded text-center">
-          <div className="small text-muted mb-1">Justificadas</div>
-          <div className="fs-2 fw-bold text-success">{data.totalInasistenciaJustif}</div>
-        </div>
-      </CCol>
-      <CCol xs={12} sm={4}>
-        <div className="p-3 bg-light rounded text-center">
-          <div className="small text-muted mb-1">Sin Justificar</div>
-          <div className="fs-2 fw-bold text-danger">{injust}</div>
-        </div>
-      </CCol>
-    </CRow>
+    <div className="asis-inf-resumen-grid">
+      {/* Total */}
+      <div className="asis-inf-stat-card">
+        <span className="asis-inf-stat-label">Total Inasistencias</span>
+        <span className={`asis-inf-stat-value ${enRiesgo ? 'asis-inf-stat-value--riesgo' : 'asis-inf-stat-value--total'}`}>
+          {data.totalInasistencia.toFixed(1)}
+        </span>
+        {enRiesgo && <span className="asis-inf-badge-riesgo">En riesgo</span>}
+      </div>
+
+      {/* Justificadas */}
+      <div className="asis-inf-stat-card">
+        <span className="asis-inf-stat-label">Justificadas</span>
+        <span className="asis-inf-stat-value asis-inf-stat-value--justif">
+          {data.totalInasistenciaJustif}
+        </span>
+      </div>
+
+      {/* Sin justificar */}
+      <div className="asis-inf-stat-card">
+        <span className="asis-inf-stat-label">Sin Justificar</span>
+        <span className="asis-inf-stat-value asis-inf-stat-value--sinjust">
+          {injust}
+        </span>
+      </div>
+    </div>
   )
 }
 
 // ─────────────────────────────────────────────
-//  Tabla de detalle
+//  Tabla de detalle (reestilizada)
 // ─────────────────────────────────────────────
 const TablaDetalle = ({ registros }) => {
   if (!registros || registros.length === 0) {
     return (
-      <div className="text-center py-3 text-muted">
+      <div className="asis-inf-table-empty">
         No hay registros de inasistencias para este período.
       </div>
     )
   }
 
   return (
-    <CTable hover responsive bordered className="table-sm align-middle">
-      <CTableHead className="table-primary">
-        <CTableRow>
-          <CTableHeaderCell>Fecha</CTableHeaderCell>
-          <CTableHeaderCell>Tipo</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Valor</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Justificada</CTableHeaderCell>
-          <CTableHeaderCell>Motivo</CTableHeaderCell>
-        </CTableRow>
-      </CTableHead>
-      <CTableBody>
-        {registros.map((r, i) => (
-          <CTableRow key={i}>
-            <CTableDataCell className="fw-semibold">{r.date}</CTableDataCell>
-            <CTableDataCell>{r.type}</CTableDataCell>
-            <CTableDataCell className="text-center">{r.value}</CTableDataCell>
-            <CTableDataCell className="text-center">
-              {r.justified ? (
-                <span className="d-inline-flex align-items-center gap-1 text-success fw-semibold">
-                  <CIcon icon={cilCheckCircle} size="sm" /> Sí
-                </span>
-              ) : (
-                <span className="d-inline-flex align-items-center gap-1 text-danger fw-semibold">
-                  <CIcon icon={cilXCircle} size="sm" /> No
-                </span>
-              )}
-            </CTableDataCell>
-            <CTableDataCell className="text-muted small">
-              {r.reason || '—'}
-            </CTableDataCell>
-          </CTableRow>
-        ))}
-      </CTableBody>
-    </CTable>
+    <div className="asis-inf-table-wrap">
+      <table className="asis-inf-table">
+        <thead>
+          <tr>
+            <th className="asis-inf-th">Fecha</th>
+            <th className="asis-inf-th">Tipo</th>
+            <th className="asis-inf-th asis-inf-th--center">Valor</th>
+            <th className="asis-inf-th asis-inf-th--center">Justificada</th>
+            <th className="asis-inf-th">Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {registros.map((r, i) => (
+            <tr key={i} className={`asis-inf-tr${i % 2 !== 0 ? ' asis-inf-tr--alt' : ''}`}>
+              <td className="asis-inf-td" style={{ fontWeight: 600 }}>{r.date}</td>
+              <td className="asis-inf-td">{r.type}</td>
+              <td className="asis-inf-td asis-inf-td--center">{r.value}</td>
+              <td className="asis-inf-td asis-inf-td--center">
+                {r.justified ? (
+                  <span className="asis-inf-justif-si">
+                    <CIcon icon={cilCheckCircle} style={{ width: '0.875rem', height: '0.875rem' }} />
+                    Sí
+                  </span>
+                ) : (
+                  <span className="asis-inf-justif-no">
+                    <CIcon icon={cilXCircle} style={{ width: '0.875rem', height: '0.875rem' }} />
+                    No
+                  </span>
+                )}
+              </td>
+              <td className="asis-inf-td asis-inf-td--muted">{r.reason || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -218,10 +220,7 @@ export default function InformeAsistencia() {
 
   // Año: opciones de los últimos 5 años
   const anioActual = new Date().getFullYear()
-  const aniosOpciones = Array.from({ length: 5 }, (_, i) => ({
-    label: String(anioActual - i),
-    value: anioActual - i,
-  }))
+  const aniosOpciones = Array.from({ length: 5 }, (_, i) => anioActual - i)
   const [year, setYear] = React.useState(anioActual)
 
   const { data, loading, error } = useInasistencias(estudianteId, year)
@@ -234,107 +233,121 @@ export default function InformeAsistencia() {
   }
 
   return (
-    <div style={{ padding: '10px' }}>
-      <h1 className="ms-1">Informe de Asistencia</h1>
-      <CContainer>
-        <CCard>
-          <CCardHeader className="py-2 bg-white">
-            <CRow className="justify-content-between align-items-center">
-              <CCol xs={12} sm="auto">
-                <h4 className="mb-0">Registro de Inasistencias</h4>
-                <div className="small text-body-secondary">
-                  Detalle de asistencias por estudiante y año
-                </div>
-              </CCol>
-              {data && (
-                <CCol xs={12} sm="auto">
-                  <CButton
-                    color="danger"
-                    size="sm"
-                    onClick={() => generarPDF(data, nombreEstudiante, year)}
-                  >
-                    <CIcon icon={cilFile} className="me-1" />
-                    Exportar PDF
-                  </CButton>
-                </CCol>
-              )}
-            </CRow>
-          </CCardHeader>
+    <CContainer fluid className="py-3">
+      <CCard className="asis-inf-card">
 
-          <CCardBody>
-            {/* Búsqueda por ID (solo admin/docente) */}
-            {!esAlumno && (
-              <CRow className="mb-3 align-items-end">
-                <CCol xs={12} sm={4}>
-                  <label className="form-label fw-semibold small">ID Estudiante</label>
-                  <div className="d-flex gap-2">
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      placeholder="Ingresá el ID"
-                      value={inputId}
-                      onChange={(e) => setInputId(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
-                    />
-                    <CButton color="primary" size="sm" onClick={handleBuscar}>
-                      <CIcon icon={cilUser} className="me-1" />
-                      Buscar
-                    </CButton>
-                  </div>
-                </CCol>
-              </CRow>
-            )}
+        {/* ── Encabezado ─────────────────────────────────── */}
+        <CCardHeader className="asis-inf-card-header">
+          {/* Brand */}
+          <div className="asis-inf-header-left">
+            <div className="asis-inf-header-brand">
+              <div className="asis-inf-header-brand-icon">
+                <CIcon icon={cilCalendar} className="asis-inf-brand-icon" />
+              </div>
+              <div>
+                <h2 className="asis-inf-header-h2">Informe de Asistencia</h2>
+                <p className="asis-inf-header-sub">Registro de presencia por estudiante</p>
+              </div>
+            </div>
+          </div>
 
-            {/* Selector de Año */}
-            {estudianteId && (
-              <CRow className="mb-3">
-                <CCol xs={12} sm={3}>
-                  <label className="form-label fw-semibold small">Año</label>
-                  <Dropdown
-                    value={year}
-                    options={aniosOpciones}
-                    onChange={(e) => setYear(e.value)}
-                    className="w-100"
-                    style={{ fontSize: '0.875rem' }}
+          {/* Botón exportar PDF (visible solo cuando hay datos) */}
+          {data && (
+            <div className="asis-inf-header-actions">
+              <button
+                className="asis-inf-btn-pdf"
+                onClick={() => generarPDF(data, nombreEstudiante, year)}
+              >
+                <CIcon icon={cilFile} style={{ width: '0.875rem', height: '0.875rem' }} />
+                Exportar PDF
+              </button>
+            </div>
+          )}
+        </CCardHeader>
+
+        {/* ── Cuerpo ─────────────────────────────────────── */}
+        <CCardBody className="asis-inf-card-body">
+
+          {/* Búsqueda por ID (solo admin/docente) */}
+          {!esAlumno && (
+            <div className="asis-inf-filter-row">
+              <div className="asis-inf-filter-field">
+                <label className="asis-inf-filter-label">ID Estudiante</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    className="asis-inf-input"
+                    placeholder="Ingresá el ID"
+                    value={inputId}
+                    onChange={(e) => setInputId(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
                   />
-                </CCol>
-              </CRow>
-            )}
-
-            {/* Estados */}
-            {loading && (
-              <div className="text-center py-4">
-                <CSpinner color="primary" />
-                <p className="mt-2 text-muted small">Cargando inasistencias...</p>
+                  <button className="asis-inf-btn-buscar" onClick={handleBuscar}>
+                    <CIcon icon={cilUser} style={{ width: '0.875rem', height: '0.875rem' }} />
+                    Buscar
+                  </button>
+                </div>
               </div>
-            )}
-            {error && <CAlert color="danger">{error}</CAlert>}
+            </div>
+          )}
 
-            {/* Contenido */}
-            {!loading && !error && data && (
-              <>
-                <ResumenAsistencia data={data} />
-                <h6 className="fw-semibold mb-2">
-                  Detalle de registros ({data.detailedRecords?.length ?? 0})
-                </h6>
-                <TablaDetalle registros={data.detailedRecords} />
-              </>
-            )}
+          {/* Selector de año (select nativo) */}
+          {estudianteId && (
+            <div className="asis-inf-filter-row">
+              <div className="asis-inf-filter-field">
+                <label className="asis-inf-filter-label">Año</label>
+                <select
+                  className="asis-inf-select"
+                  value={year}
+                  onChange={(e) => setYear(Number(e.target.value))}
+                >
+                  {aniosOpciones.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
-            {/* Estado inicial */}
-            {!loading && !error && !data && !esAlumno && !estudianteId && (
-              <div className="text-center py-5 text-muted">
-                Ingresá el ID de un estudiante para ver el informe de asistencia.
-              </div>
-            )}
-            {!loading && !error && !data && estudianteId && (
-              <div className="text-center py-4 text-muted">
-                No hay datos de inasistencias para el año {year}.
-              </div>
-            )}
-          </CCardBody>
-        </CCard>
-      </CContainer>
-    </div>
+          {/* Estado: cargando */}
+          {loading && (
+            <div className="asis-inf-loading">
+              <CSpinner color="primary" />
+              <span className="asis-inf-loading-text">Cargando inasistencias...</span>
+            </div>
+          )}
+
+          {/* Estado: error */}
+          {error && (
+            <div className="asis-inf-error">{error}</div>
+          )}
+
+          {/* Contenido principal */}
+          {!loading && !error && data && (
+            <>
+              <ResumenAsistencia data={data} />
+              <p className="asis-inf-table-section-title">
+                Detalle de registros ({data.detailedRecords?.length ?? 0})
+              </p>
+              <TablaDetalle registros={data.detailedRecords} />
+            </>
+          )}
+
+          {/* Estado inicial: sin estudiante seleccionado */}
+          {!loading && !error && !data && !esAlumno && !estudianteId && (
+            <div className="asis-inf-empty">
+              Ingresá el ID de un estudiante para ver el informe de asistencia.
+            </div>
+          )}
+
+          {/* Sin datos para el año seleccionado */}
+          {!loading && !error && !data && estudianteId && (
+            <div className="asis-inf-empty">
+              No hay datos de inasistencias para el año {year}.
+            </div>
+          )}
+        </CCardBody>
+      </CCard>
+    </CContainer>
   )
 }

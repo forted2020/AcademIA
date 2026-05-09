@@ -165,6 +165,7 @@ origins = [
     'http://localhost:1500',
     'http://localhost:3002',
     'https://academia-nu-seven.vercel.app',
+    'https://academia-git-develop-forteds-projects.vercel.app',
 ]
 
 # Configuración de CORS

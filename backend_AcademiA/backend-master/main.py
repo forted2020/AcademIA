@@ -91,6 +91,22 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# CORS debe registrarse antes que cualquier router para que aplique a los preflight requests
+# allow_origin_regex cubre todos los preview deployments de Vercel (hashes únicos por deploy)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        'http://localhost:3001',
+        'http://localhost:1500',
+        'http://localhost:3002',
+        'https://academia-nu-seven.vercel.app',
+    ],
+    allow_origin_regex=r'https://academ.*\.vercel\.app',
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -158,24 +174,6 @@ app.include_router(router_notificaciones, prefix="/api")
 app.include_router(router_inscripciones, prefix="/api")
 
 
-
-# Configurar CORS
-origins = [
-    'http://localhost:3001',
-    'http://localhost:1500',
-    'http://localhost:3002',
-    'https://academia-nu-seven.vercel.app',
-    'https://academia-git-develop-forteds-projects.vercel.app',
-]
-
-# Configuración de CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=['*'],    # Permitir todos los métodos (GET, POST, etc.)
-    allow_headers=['*'],    # Permitir todos los headers (Authorization, etc.)
-)
 
 
 # # Dependencia para la base de datos

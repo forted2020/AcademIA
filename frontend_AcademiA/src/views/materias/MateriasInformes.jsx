@@ -5,7 +5,7 @@ import { CContainer } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilBook } from '@coreui/icons';
 
-import '../../users/usuariosInformes/UsuariosInformes.css';
+import './MateriasInformes.css';
 
 
 export default function MateriasInformes() {

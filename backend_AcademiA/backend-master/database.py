@@ -11,10 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent
 env_path = BASE_DIR / ".env"
 
 if env_path.exists():
-    load_dotenv(dotenv_path=env_path)
+    load_dotenv(dotenv_path=env_path, override=False)
     print(f"✅ Archivo .env cargado desde: {env_path}")
-else:
-    print(f"❌ ERROR: No se encontró el archivo .env en: {env_path}")
+# En producción (Railway) no existe .env — las variables ya están en el entorno del sistema
 
 
 

@@ -1,8 +1,4 @@
 // views/cursos/ModalCurso.jsx
-// Modal de creación/edición de un curso.
-// En modo edición: checklist de todas las materias disponibles para agregar/quitar,
-// con selector de docente por fila. El guardado de materias ocurre al presionar
-// "Guardar cambios" en el footer junto con los datos del curso.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import CIcon from '@coreui/icons-react'
@@ -14,22 +10,21 @@ import api from '../../api/api'
 import { useToast } from '../../context/ToastContext'
 import './ModalCurso.css'
 
-// ── Fila de materia en el checklist ──────────────────────────
+// ── Fila de materia en el checklist ──────────────────────────────────────────
+// docentesOpts ya viene ordenado: primero los que alguna vez dictaron esta materia,
+// luego el resto, ambos grupos en orden alfabético.
 function MateriaCheckItem({ nombre, checked, idDocente, docentesOpts, onToggle, onDocenteChange }) {
   return (
     <div
       className={`mc-chk-row${checked ? ' mc-chk-row--checked' : ''}`}
       onClick={() => onToggle(!checked)}
     >
-      {/* Checkbox visual */}
       <div className={`mc-chk-box${checked ? ' mc-chk-box--on' : ''}`}>
         {checked && <CIcon icon={cilCheckAlt} style={{ width: '0.7rem', height: '0.7rem' }} />}
       </div>
 
-      {/* Nombre de la materia */}
       <span className="mc-chk-label">{nombre}</span>
 
-      {/* Selector de docente — solo visible si está seleccionada */}
       {checked && (
         <select
           className="mc-chk-docente-select"
@@ -52,36 +47,38 @@ function MateriaCheckItem({ nombre, checked, idDocente, docentesOpts, onToggle, 
   )
 }
 
-// ── Componente principal ──────────────────────────────────────
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function ModalCurso({ curso, onClose, onSaved }) {
   const esEdicion = !!curso?.id_curso
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarn } = useToast()
 
-  // ── Campos del curso ─────────────────────────────────────
-  const [nombre, setNombre]         = useState(curso?.curso ?? '')
-  const [idCiclo, setIdCiclo]       = useState(curso?.ciclo?.id_ciclo_lectivo ?? curso?.id_ciclo_lectivo ?? '')
-  const [guardando, setGuardando]   = useState(false)
-  const [errNombre, setErrNombre]   = useState('')
-  const [errCiclo, setErrCiclo]     = useState('')
+  // ── Campos del curso ──────────────────────────────────────────────────────
+  const [nombre, setNombre]       = useState(curso?.curso ?? '')
+  const [idCiclo, setIdCiclo]     = useState(curso?.ciclo?.id_ciclo_lectivo ?? curso?.id_ciclo_lectivo ?? '')
+  const [guardando, setGuardando] = useState(false)
+  const [errNombre, setErrNombre] = useState('')
+  const [errCiclo, setErrCiclo]   = useState('')
 
-  // ── Catálogos ────────────────────────────────────────────
+  // ── Catálogos ─────────────────────────────────────────────────────────────
   const [ciclos, setCiclos]             = useState([])
-  const [nombresOpts, setNombresOpts]   = useState([])   // todas las materias disponibles
+  const [nombresOpts, setNombresOpts]   = useState([])
   const [docentesOpts, setDocentesOpts] = useState([])
   const [loadingCatalogos, setLoadingCatalogos] = useState(true)
 
-  // ── Estado del checklist de materias ─────────────────────
-  // seleccion: Map<id_nombre_materia, { idDocente: number|null, id_materia: number|null }>
-  // id_materia = null si es nueva (no existe en BD aún), número si ya existía
-  const [seleccion, setSeleccion] = useState(new Map())
+  // ── Checklist de materias ─────────────────────────────────────────────────
+  // Map<id_nombre_materia, { idDocente: number|null, id_materia: number|null }>
+  // id_materia es null cuando la materia es nueva (todavía no está en BD)
+  const [seleccion, setSeleccion]         = useState(new Map())
   const [loadingMaterias, setLoadingMaterias] = useState(esEdicion)
 
-  // Buscador dentro del checklist
-  const [busqueda, setBusqueda] = useState('')
+  // Para priorizar docentes en el selector: Map<id_nombre_materia, Set<id_entidad>>
+  // Construido a partir de las materias ya existentes en el curso al abrir el modal.
+  const [docentesPorMateria, setDocentesPorMateria] = useState(new Map())
 
+  const [busqueda, setBusqueda] = useState('')
   const inputRef = useRef(null)
 
-  // ── Carga de catálogos + materias del curso en paralelo ──
+  // ── Carga inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
     const promesas = [
       api.get('/api/ciclos/'),
@@ -98,13 +95,20 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
 
         if (esEdicion && materiasRes) {
           const mapa = new Map()
+          // Map para priorizar docentes: id_nombre_materia → Set de id_entidad
+          const porMateria = new Map()
           for (const m of (materiasRes.data ?? [])) {
             mapa.set(m.id_nombre_materia, {
               idDocente: m.id_entidad ?? null,
               id_materia: m.id_materia,
             })
+            if (m.id_entidad) {
+              if (!porMateria.has(m.id_nombre_materia)) porMateria.set(m.id_nombre_materia, new Set())
+              porMateria.get(m.id_nombre_materia).add(m.id_entidad)
+            }
           }
           setSeleccion(mapa)
+          setDocentesPorMateria(porMateria)
         }
       })
       .catch(() => {})
@@ -122,12 +126,11 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  // ── Helpers del checklist ────────────────────────────────
+  // ── Helpers del checklist ─────────────────────────────────────────────────
   const toggleMateria = useCallback((idNombre, checked) => {
     setSeleccion((prev) => {
       const next = new Map(prev)
       if (checked) {
-        // Nueva entrada: sin docente por defecto, sin id_materia en BD aún
         next.set(idNombre, { idDocente: null, id_materia: null })
       } else {
         next.delete(idNombre)
@@ -145,6 +148,20 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
     })
   }, [])
 
+  // Para cada nombre de materia, devuelve la lista de docentes ordenada:
+  // primero los que alguna vez dictaron esa materia (alfabético), luego el resto.
+  const docentesOrdenadosPara = useCallback((idNombre) => {
+    const prioritarios = docentesPorMateria.get(idNombre) ?? new Set()
+    const prio = []
+    const resto = []
+    for (const d of docentesOpts) {
+      if (prioritarios.has(d.id_entidad)) prio.push(d)
+      else resto.push(d)
+    }
+    // Ambos grupos ya vienen ordenados alfabéticamente desde el backend
+    return [...prio, ...resto]
+  }, [docentesOpts, docentesPorMateria])
+
   // Lista filtrada por búsqueda
   const nombresFiltrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -152,7 +169,7 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
     return nombresOpts.filter((n) => n.nombre_materia.toLowerCase().includes(q))
   }, [nombresOpts, busqueda])
 
-  // ── Validación del formulario ────────────────────────────
+  // ── Validación ────────────────────────────────────────────────────────────
   const validar = () => {
     let ok = true
     if (!nombre.trim()) { setErrNombre('El nombre del curso es obligatorio.'); ok = false }
@@ -162,7 +179,7 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
     return ok
   }
 
-  // ── Guardado ─────────────────────────────────────────────
+  // ── Guardado ──────────────────────────────────────────────────────────────
   const handleGuardar = async () => {
     if (!validar()) return
     setGuardando(true)
@@ -177,48 +194,61 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
       }
       const idCursoFinal = res.data.id_curso ?? curso?.id_curso
 
-      // 2. Sincronizar materias (solo en edición o si se seleccionó alguna)
+      // 2. Sincronizar materias del curso
       if (esEdicion && idCursoFinal) {
-        // Materias actuales en BD antes de editar
         const materiasActualesRes = await api.get(`/api/materias/curso/${idCursoFinal}`)
         const materiasActuales = materiasActualesRes.data ?? []
         const mapaActual = new Map(materiasActuales.map((m) => [m.id_nombre_materia, m]))
 
-        const operaciones = []
+        const errores = []
 
-        // Crear las que están en seleccion pero no en BD
+        // Procesar cada operación individualmente para capturar errores parciales
         for (const [idNombre, { idDocente, id_materia }] of seleccion) {
           if (!mapaActual.has(idNombre)) {
-            // Nueva materia
-            operaciones.push(
-              api.post('/api/materias/', {
+            // Nueva materia: crearla
+            try {
+              await api.post('/api/materias/', {
                 id_nombre_materia: idNombre,
                 id_curso: idCursoFinal,
                 id_entidad: idDocente ?? null,
               })
-            )
+            } catch (e) {
+              const msg = e?.response?.data?.detail
+              errores.push(typeof msg === 'string' ? msg : `Error al agregar la materia.`)
+            }
           } else if (id_materia) {
             // Existente: actualizar docente si cambió
             const actual = mapaActual.get(idNombre)
             if ((actual.id_entidad ?? null) !== idDocente) {
-              operaciones.push(
-                api.put(`/api/materias/${id_materia}`, {
+              try {
+                await api.put(`/api/materias/${id_materia}`, {
                   id_nombre_materia: idNombre,
                   id_entidad: idDocente ?? null,
                 })
-              )
+              } catch (e) {
+                const msg = e?.response?.data?.detail
+                errores.push(typeof msg === 'string' ? msg : `Error al actualizar la materia.`)
+              }
             }
           }
         }
 
-        // Eliminar las que estaban en BD pero se quitaron del checklist
+        // Eliminar las que se quitaron del checklist
         for (const m of materiasActuales) {
           if (!seleccion.has(m.id_nombre_materia)) {
-            operaciones.push(api.delete(`/api/materias/${m.id_materia}`))
+            try {
+              await api.delete(`/api/materias/${m.id_materia}`)
+            } catch (e) {
+              const msg = e?.response?.data?.detail
+              errores.push(typeof msg === 'string' ? msg : `No se pudo quitar la materia.`)
+            }
           }
         }
 
-        if (operaciones.length > 0) await Promise.all(operaciones)
+        if (errores.length > 0) {
+          // Algunos cambios fallaron — mostrar advertencia con el primer error
+          showWarn(errores[0], errores.length > 1 ? `${errores.length} problemas al guardar materias` : 'Atención')
+        }
       }
 
       showSuccess(esEdicion ? 'Curso actualizado correctamente.' : 'Curso creado correctamente.')
@@ -264,11 +294,11 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
         {/* ── Cuerpo ── */}
         <div className="mc-body">
 
-          {/* Sección: datos del curso */}
+          {/* Datos del curso */}
           <div className="mc-seccion">
             <div className="mc-seccion-titulo">Datos del curso</div>
-
             <div className="mc-form-grid">
+
               <div className="mc-field">
                 <label className="mc-label">Nombre del curso <span className="mc-req">*</span></label>
                 <input
@@ -302,10 +332,11 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
                 )}
                 {errCiclo && <span className="mc-field-error">{errCiclo}</span>}
               </div>
+
             </div>
           </div>
 
-          {/* Sección: checklist de materias (solo edición) */}
+          {/* Checklist de materias — solo en edición */}
           {esEdicion && (
             <div className="mc-seccion mc-seccion--materias">
               <div className="mc-seccion-header">
@@ -330,7 +361,6 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
                 </div>
               ) : (
                 <>
-                  {/* Buscador */}
                   {nombresOpts.length > 6 && (
                     <div className="mc-chk-search">
                       <CIcon icon={cilSearch} className="mc-chk-search-icon" />
@@ -347,7 +377,6 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
                     </div>
                   )}
 
-                  {/* Lista */}
                   <div className="mc-chk-list">
                     {nombresFiltrados.length === 0 ? (
                       <div className="mc-materias-empty">
@@ -356,14 +385,13 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
                     ) : (
                       nombresFiltrados.map((n) => {
                         const entry = seleccion.get(n.id_nombre_materia)
-                        const checked = !!entry
                         return (
                           <MateriaCheckItem
                             key={n.id_nombre_materia}
                             nombre={n.nombre_materia}
-                            checked={checked}
+                            checked={!!entry}
                             idDocente={entry?.idDocente ?? null}
-                            docentesOpts={docentesOpts}
+                            docentesOpts={docentesOrdenadosPara(n.id_nombre_materia)}
                             onToggle={(val) => toggleMateria(n.id_nombre_materia, val)}
                             onDocenteChange={(val) => cambiarDocente(n.id_nombre_materia, val)}
                           />
@@ -372,10 +400,9 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
                     )}
                   </div>
 
-                  {/* Aviso sobre eliminación */}
                   <div className="mc-aviso">
                     <CIcon icon={cilWarning} className="mc-aviso-icon" />
-                    <span>No se puede quitar una materia con alumnos inscriptos activos. Si intentás guardar ese cambio verás un error.</span>
+                    <span>No se puede quitar una materia con alumnos inscriptos activos.</span>
                   </div>
                 </>
               )}

@@ -1,6 +1,5 @@
 // src/context/ToastContext.jsx
 import React, { createContext, useContext, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { Toast } from 'primereact/toast'
 
 const ToastContext = createContext(null)
@@ -20,11 +19,9 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarn, showInfo }}>
             {children}
-            {/* Portal al body — evita quedar atrapado por stacking contexts de modales */}
-            {createPortal(
-                <Toast ref={toastRef} position="top-right" />,
-                document.body
-            )}
+            {/* appendTo="body" hace que PrimeReact mueva el DOM al body internamente,
+                garantizando z-index correcto sin depender de createPortal */}
+            <Toast ref={toastRef} position="top-right" appendTo="body" />
         </ToastContext.Provider>
     )
 }

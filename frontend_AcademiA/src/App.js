@@ -11,7 +11,8 @@ import './scss/examples.scss'
 import { isTokenExpired } from './utils/isTokenExpired'
 import InterceptorSetup from './components/InterceptorSetup'
 
-// Estilos de PrimeReact
+// Estilos de PrimeReact — tema base cargado estáticamente para evitar flash sin estilos
+import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
@@ -49,10 +50,13 @@ const Docentes = React.lazy(() => import('./views/docentes/Docentes'))
 const DocentesInformes = React.lazy(() => import('./views/docentes/docentesInformes/DocentesInformes'))
 const DocenteCargaNotas = React.lazy(() => import('./views/docentes/DocenteCargaNotas'))
 const Personal = React.lazy(() => import('./views/personal/Personal'))
+const Asistencia = React.lazy(() => import('./views/asistencia/Asistencia'))
 const BoletinCalificaciones = React.lazy(() => import('./views/estudiantes/BoletinCalificaciones'))
 const ActaExamen = React.lazy(() => import('./views/estudiantes/ActaExamen'))
 const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
 const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
+const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
+const ConfiguracionGeneral = React.lazy(() => import('./views/configuracion/ConfiguracionGeneral/ConfiguracionGeneral'))
 
 //  Usar React.lazy permite cargar el código de las páginas sólo cuando se vsite por el usuario. Mejora el tiempo de carga inicial de la aplicación.
 
@@ -129,6 +133,7 @@ const RouterContent = () => {
           <Route path="materias" element={<ProtectedRoute> <Materias /> </ProtectedRoute>} />
           <Route path="materias/informes" element={<ProtectedRoute> <MateriasInformes /> </ProtectedRoute>} />
           <Route path="personal" element={<ProtectedRoute> <Personal /> </ProtectedRoute>} />
+          <Route path="asistencia" element={<ProtectedRoute> <Asistencia /> </ProtectedRoute>} />
 
           <Route path="usuarios" element={
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UserManagement /> </ProtectedRoute>} />
@@ -136,6 +141,12 @@ const RouterContent = () => {
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UsuariosInformes /> </ProtectedRoute>} />
 
           <Route path="configuracion/notificaciones" element={<ProtectedRoute> <ConfiguracionNotificaciones /> </ProtectedRoute>} />
+          <Route path="configuracion/formatos-impresion" element={
+            <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <FormatosImpresion /> </ProtectedRoute>
+          } />
+          <Route path="configuracion/general" element={
+            <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <ConfiguracionGeneral /> </ProtectedRoute>
+          } />
 
           {/* Ruta por defecto para cualquier otra URL no coincidente dentro del layout */}
           <Route path="*" element={<Page404 />} />

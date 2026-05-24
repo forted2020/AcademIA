@@ -119,11 +119,15 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Escape cierra
+  // Escape cierra + lock de scroll del body mientras el modal está abierto
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.body.style.overflow = ''
+    }
   }, [onClose])
 
   // ── Helpers del checklist ─────────────────────────────────────────────────
@@ -265,7 +269,7 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
   const cantSeleccionadas = seleccion.size
 
   return (
-    <div className="mc-overlay" onClick={onClose}>
+    <div className="mc-overlay">
       <div
         className={`mc-modal${esEdicion ? ' mc-modal--wide' : ''}`}
         onClick={(e) => e.stopPropagation()}

@@ -19,9 +19,9 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarn, showInfo }}>
             {children}
-            {/* appendTo="body" hace que PrimeReact mueva el DOM al body internamente,
-                garantizando z-index correcto sin depender de createPortal */}
-            <Toast ref={toastRef} position="top-right" appendTo="body" />
+            {/* appendTo con referencia directa al nodo DOM para garantizar z-index
+                correcto y que PrimeReact no quede atrapado por stacking contexts */}
+            <Toast ref={toastRef} position="top-right" appendTo={document.body} />
         </ToastContext.Provider>
     )
 }

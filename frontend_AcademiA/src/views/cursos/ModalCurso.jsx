@@ -180,6 +180,22 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
     else setErrNombre('')
     if (!idCiclo) { setErrCiclo('Seleccioná un ciclo lectivo.'); ok = false }
     else setErrCiclo('')
+
+    // Cada materia seleccionada debe tener docente asignado
+    if (esEdicion) {
+      const sinDocente = [...seleccion.entries()]
+        .filter(([, { idDocente }]) => !idDocente)
+        .map(([idNombre]) => nombresOpts.find((n) => n.id_nombre_materia === idNombre)?.nombre_materia ?? idNombre)
+
+      if (sinDocente.length > 0) {
+        const lista = sinDocente.length === 1
+          ? `"${sinDocente[0]}"`
+          : sinDocente.map((n) => `"${n}"`).join(', ')
+        showError(`Asigná un docente a ${lista} antes de guardar.`, 'Docente requerido')
+        ok = false
+      }
+    }
+
     return ok
   }
 
@@ -250,8 +266,13 @@ export default function ModalCurso({ curso, onClose, onSaved }) {
         }
 
         if (errores.length > 0) {
-          // Algunos cambios fallaron — mostrar advertencia con el primer error
-          showWarn(errores[0], errores.length > 1 ? `${errores.length} problemas al guardar materias` : 'Atención')
+          // Algunos cambios de materias fallaron — informar y no cerrar el modal
+          showWarn(
+            errores[0],
+            errores.length > 1 ? `${errores.length} problemas al guardar materias` : 'Atención',
+          )
+          onSaved(res.data)
+          return  // finally resetea guardando
         }
       }
 

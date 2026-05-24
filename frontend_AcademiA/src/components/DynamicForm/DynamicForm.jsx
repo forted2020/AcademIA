@@ -46,16 +46,17 @@ const DynamicForm = ({ fields, initialData, onSubmit, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Detecta si el usuario modificó algún campo respecto a los datos iniciales
+  const hayCambios = isEdit && Object.keys(formData).some((key) => {
+    const original = String(initialData?.[key] ?? '')
+    const actual   = String(formData[key] ?? '')
+    return original !== actual
+  })
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    console.log('🟢 DynamicForm handleSubmit ejecutado')
-    console.log('📦 formData:', formData)
-    console.log('🔧 onSubmit recibido?:', typeof onSubmit, onSubmit)
-
     if (typeof onSubmit === 'function') {
-      onSubmit(formData)
-    } else {
-      console.error('❌ onSubmit NO es una función!')
+      onSubmit(formData, { hayCambios, isEdit })
     }
   }
 

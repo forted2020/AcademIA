@@ -21,6 +21,8 @@ import auth
 
 from Routes import  routes_docentes, routes_inasistencias
 from Routes.routes_notificaciones import router as router_notificaciones
+from Routes.routes_configuracion import router as router_configuracion
+from Routes.routes_formatos import router as router_formatos
 
 from Routes.routes_materias import router as materias_router
 from Routes.routes_periodos import router as periodos_router
@@ -32,6 +34,7 @@ from Routes.routes_cursos import router as router_cursos  # Para traer los curso
 from Routes.routes_personal import router as router_personal
 from Routes.routes_usuarios import router as router_usuarios
 from Routes.routes_inscripciones import router as router_inscripciones
+from Routes.routes_previas import router as router_previas
 
 from auth import send_email, get_password_hash, generate_token
 
@@ -74,7 +77,7 @@ from models import (
 # Rate limiter — identifica clientes por IP
 limiter = Limiter(key_func=get_remote_address)
 
-from models import Base, TokenBlacklist, Notificacion, NotificacionConfig
+from models import Base, TokenBlacklist, Notificacion, NotificacionConfig, ConfiguracionSistema, FormatoConfig, ConfiguracionCambioLog
 from database import engine
 
 # Creamos la instancia de FASTAPI
@@ -133,6 +136,9 @@ def create_tables_on_startup():
             TokenBlacklist.__table__,
             Notificacion.__table__,
             NotificacionConfig.__table__,
+            ConfiguracionSistema.__table__,
+            FormatoConfig.__table__,
+            ConfiguracionCambioLog.__table__,
         ],
     )
 
@@ -172,6 +178,9 @@ app.include_router(routes_estudiantes_notas, prefix="/api", tags=["Notas"])
 app.include_router(router_usuarios, prefix="/api/usuarios")
 app.include_router(router_notificaciones, prefix="/api")
 app.include_router(router_inscripciones, prefix="/api")
+app.include_router(router_previas, prefix="/api", tags=["Materias Previas"])
+app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
+app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
 
 
 

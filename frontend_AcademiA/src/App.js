@@ -53,6 +53,7 @@ const Personal = React.lazy(() => import('./views/personal/Personal'))
 const Asistencia = React.lazy(() => import('./views/asistencia/Asistencia'))
 const BoletinCalificaciones = React.lazy(() => import('./views/estudiantes/BoletinCalificaciones'))
 const PlanillaCalificaciones = React.lazy(() => import('./views/estudiantes/PlanillaCalificaciones'))
+const MateriasPrevias = React.lazy(() => import('./views/gestion/previas/MateriasPrevias'))
 const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
 const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
 const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
@@ -127,6 +128,8 @@ const RouterContent = () => {
           <Route path="estudiante/planilla-calificaciones" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
           {/* Alias retrocompatible — Fase 4 (link antiguo /estudiante/acta-examen) */}
           <Route path="estudiante/acta-examen" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
+          {/* Fase 7.2 — gestión de materias previas */}
+          <Route path="gestion/materias-previas" element={<ProtectedRoute> <MateriasPrevias /> </ProtectedRoute>} />
           <Route path="estudiante/informe-asistencia" element={<ProtectedRoute> <InformeAsistencia /> </ProtectedRoute>} />
           <Route path="estudiante/informes" element={<ProtectedRoute> <EstudiantesInformes /> </ProtectedRoute>} />
 

@@ -208,7 +208,11 @@ Cada fila representa que **un alumno está inscripto en una materia específica 
 
 **Soft delete**: el campo `deleted_at` permite desactivar inscripciones sin borrar el registro. Las inscripciones activas tienen `deleted_at IS NULL`.
 
-**Índice**: `idx_inscripciones_entidad_ciclo` sobre `(id_entidad, id_ciclo_lectivo)` para acelerar consultas por alumno y año.
+**Materias previas (Fase 7.2)**: la columna `es_previa BOOLEAN DEFAULT FALSE` indica si la inscripción quedó pendiente de aprobación al cerrar el ciclo. Se actualiza con `POST /api/previas/cerrar-ciclo/{id}` (recorre las inscripciones del ciclo, lee la nota final con `TipoNota.es_final=True` y aplica `es_previa = nota_final < nota_aprobacion`). El endpoint es idempotente. El flag se levanta manualmente con `PUT /api/previas/{id_inscripcion}/levantar` cuando el alumno aprueba en mesa o cursando en un ciclo posterior.
+
+**Índices**:
+- `idx_inscripciones_entidad_ciclo` sobre `(id_entidad, id_ciclo_lectivo)` para acelerar consultas por alumno y año.
+- `idx_inscripciones_previa` sobre `(id_entidad, es_previa)` para acelerar listados de previas.
 
 ---
 

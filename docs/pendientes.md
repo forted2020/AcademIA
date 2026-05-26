@@ -109,7 +109,18 @@ Implementar los siguientes documentos/reportes:
 ### 7.1. Ficha de aptitud física — ⏸ Diferido
 **Estado**: bloqueado hasta recibir el modelo/formulario oficial. No se planifica implementación todavía.
 
-### 7.2. Materias previas
+### 7.2. ~~Materias previas~~ ✅ Cerrado (2026-05-25 — Fase 7.2)
+**Implementado** (sin tabla nueva, como se acordó):
+- Columna `es_previa BOOLEAN DEFAULT FALSE` agregada a `t_inscripciones` por [`run_etapa4_inscripciones_es_previa.py`](../backend_AcademiA/backend-master/migrations/run_etapa4_inscripciones_es_previa.py). Índice `idx_inscripciones_previa (id_entidad, es_previa)`.
+- Router [`routes_previas.py`](../backend_AcademiA/backend-master/Routes/routes_previas.py) con tres endpoints:
+  - `POST /api/previas/cerrar-ciclo/{id_ciclo_lectivo}`: recorre inscripciones del ciclo, lee la nota final (TipoNota.es_final=True; toma la mayor si hay varias) y aplica `es_previa = nota_final < nota_aprobacion`. Idempotente.
+  - `GET /api/previas/`: lista previas activas. Filtros opcionales `id_entidad` e `id_ciclo_lectivo`.
+  - `PUT /api/previas/{id_inscripcion}/levantar`: marca manualmente la previa como aprobada.
+- Vista [`MateriasPrevias.jsx`](../frontend_AcademiA/src/views/gestion/previas/MateriasPrevias.jsx) bajo Gestión Académica. Permite filtrar por ciclo, refrescar, ejecutar cierre y levantar manualmente.
+- La validación usa la `nota_aprobacion` configurada en `t_configuracion_sistema` (misma fuente que Fases 2 y 5).
+
+### 7.2.OLD-DESCR ⏷ Especificación original
+
 Modelar y gestionar materias que el alumno no aprobó durante un ciclo lectivo y arrastra como pendientes.
 
 **Decisión de modelo**: NO se crea tabla aparte. Se agrega un **campo en `t_inscripciones`** (o `t_materia` según el caso de uso final — definir en la fase) que marque la condición de "previa".

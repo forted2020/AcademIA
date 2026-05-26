@@ -1,0 +1,46 @@
+/* components/emptyState/EmptyState.css — prefijo .empty-state__ */
+
+.empty-state {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--acad-text-muted, #64748b);
+  font-size: 0.8125rem;
+  border: 1px dashed var(--acad-border, #cbd5e1);
+  border-radius: var(--acad-radius, 0.5rem);
+  background: var(--acad-bg-subtle, #f8fafc);
+}
+
+.empty-state__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0 auto 0.5rem;
+  background: #ecfdf5;
+  color: #16a34a;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+
+.empty-state__icon--warn {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.empty-state__icon svg,
+.empty-state__icon .c-icon {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+.empty-state__title {
+  color: var(--acad-navy, #0f172a);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0 0 0.25rem;
+}
+
+.empty-state__sub {
+  margin: 0;
+  color: var(--acad-text-muted, #64748b);
+  font-size: 0.8125rem;
+}

@@ -36,6 +36,7 @@ from Routes.routes_usuarios import router as router_usuarios
 from Routes.routes_inscripciones import router as router_inscripciones
 from Routes.routes_previas import router as router_previas
 from Routes.routes_informes import router as router_informes
+from Routes.routes_dashboard import router as router_dashboard
 
 from auth import send_email, get_password_hash, generate_token
 
@@ -183,6 +184,7 @@ app.include_router(router_previas, prefix="/api", tags=["Materias Previas"])
 app.include_router(router_informes, prefix="/api", tags=["Informes y Listados"])
 app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
 app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
+app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
 
 
 

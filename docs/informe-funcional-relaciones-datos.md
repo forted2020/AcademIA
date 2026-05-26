@@ -504,7 +504,7 @@ Los selectores respetan dependencias: un selector hijo solo se habilita cuando s
 
 | Componente | Propósito |
 |------------|-----------|
-| `ActaExamen.jsx` | Acta de examen por materia. Selectores: ciclo → curso → materia |
+| `PlanillaCalificaciones.jsx` | Planilla de Calificaciones por materia y curso (antes "Acta de Examen", renombrada en Fase 4). Selectores: ciclo → curso → materia |
 | `BoletinCalificaciones.jsx` | Boletín de un alumno. Busca alumno → ciclo → curso |
 | `InformeAsistencia.jsx` | Resumen e historial de faltas de un alumno |
 

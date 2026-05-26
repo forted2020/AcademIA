@@ -43,6 +43,7 @@ export default function EstudiantesHome() {
                 <CCardFooter>
                     Footer
                 </CCardFooter>
+                
             </CCard>
 
 

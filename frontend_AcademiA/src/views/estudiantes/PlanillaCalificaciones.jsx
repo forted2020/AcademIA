@@ -1,4 +1,6 @@
-// frontend_AcademiA/src/views/estudiantes/ActaExamen.jsx
+// frontend_AcademiA/src/views/estudiantes/PlanillaCalificaciones.jsx
+// (renombrado desde ActaExamen.jsx — Fase 4. La clave de t_formato_config
+// sigue siendo "acta_examen" por compatibilidad con la BD.)
 
 import React from 'react'
 import {
@@ -11,7 +13,7 @@ import { cilDescription, cilCloudDownload } from '@coreui/icons'
 import api from '../../api/api.js'
 import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema'
 import { useFormatoImpresion } from '../../hooks/useFormatoImpresion'
-import './ActaExamen.css'
+import './PlanillaCalificaciones.css'
 
 // ─── Hooks de datos ──────────────────────────────────────
 const useCiclos = () => {
@@ -326,7 +328,7 @@ function TablaActa({ data, notaAprobacion = 6 }) {
 }
 
 // ─── Componente principal ─────────────────────────────────
-export default function ActaExamen() {
+export default function PlanillaCalificaciones() {
   const [cicloId,        setCicloId]        = React.useState(null)
   const [cursoId,        setCursoId]        = React.useState(null)
   const [materiaId,      setMateriaId]      = React.useState(null)
@@ -349,7 +351,7 @@ export default function ActaExamen() {
     value: m.id_materia,
   }))
 
-  const tituloActa = materiaLabel ? `Acta de Examen — ${materiaLabel}` : 'Acta de Examen'
+  const tituloActa = materiaLabel ? `Planilla de Calificaciones — ${materiaLabel}` : 'Planilla de Calificaciones'
   const filtrosCompletos = cicloId && cursoId && materiaId
 
   return (
@@ -365,7 +367,7 @@ export default function ActaExamen() {
                 <CIcon icon={cilDescription} className="acta-brand-icon" />
               </div>
               <div>
-                <h2 className="acta-header-h2">Acta de Examen</h2>
+                <h2 className="acta-header-h2">Planilla de Calificaciones</h2>
                 <p className="acta-header-sub">Planilla de calificaciones por materia y curso</p>
               </div>
             </div>

@@ -52,7 +52,7 @@ const DocenteCargaNotas = React.lazy(() => import('./views/docentes/DocenteCarga
 const Personal = React.lazy(() => import('./views/personal/Personal'))
 const Asistencia = React.lazy(() => import('./views/asistencia/Asistencia'))
 const BoletinCalificaciones = React.lazy(() => import('./views/estudiantes/BoletinCalificaciones'))
-const ActaExamen = React.lazy(() => import('./views/estudiantes/ActaExamen'))
+const PlanillaCalificaciones = React.lazy(() => import('./views/estudiantes/PlanillaCalificaciones'))
 const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
 const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
 const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
@@ -124,7 +124,9 @@ const RouterContent = () => {
           <Route path="estudiante" element={<ProtectedRoute> <Estudiante /> </ProtectedRoute>} />
           <Route path="estudiante/trayectoria" element={<ProtectedRoute> <Trayectoria /> </ProtectedRoute>} />
           <Route path="estudiante/boletin" element={<ProtectedRoute> <BoletinCalificaciones /> </ProtectedRoute>} />
-          <Route path="estudiante/acta-examen" element={<ProtectedRoute> <ActaExamen /> </ProtectedRoute>} />
+          <Route path="estudiante/planilla-calificaciones" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
+          {/* Alias retrocompatible — Fase 4 (link antiguo /estudiante/acta-examen) */}
+          <Route path="estudiante/acta-examen" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
           <Route path="estudiante/informe-asistencia" element={<ProtectedRoute> <InformeAsistencia /> </ProtectedRoute>} />
           <Route path="estudiante/informes" element={<ProtectedRoute> <EstudiantesInformes /> </ProtectedRoute>} />
 

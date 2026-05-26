@@ -68,14 +68,15 @@ Cargar en `t_tipo_inasistencia` los siguientes valores:
 
 ---
 
-## 4. Renombrar "Acta de Examen" → "Planilla de Calificaciones"
+## 4. ~~Renombrar "Acta de Examen" → "Planilla de Calificaciones"~~ ✅ Cerrado (2026-05-25 — Fase 4)
 
-Lo que hoy se llama "Acta de Examen" es funcionalmente una Planilla de Calificaciones. Renombrar en:
-- Menú lateral ([`_nav.js`](../frontend_AcademiA/src/_nav.js)).
-- Ruta de acceso.
-- Título de la vista ([`ActaExamen.jsx`](../frontend_AcademiA/src/views/estudiantes/ActaExamen.jsx)).
-- Endpoint `planilla-acta` (mantener compatibilidad si hace falta).
-- `t_formato_config.codigo_formato = 'acta_examen'` → **se deja igual** (identificador interno de BD, no impacta UI).
+**Implementado**:
+- Menú lateral ([`_nav.js`](../frontend_AcademiA/src/_nav.js)): label "Planilla de Calificaciones".
+- Ruta nueva: `/estudiante/planilla-calificaciones`. Se mantiene `/estudiante/acta-examen` como alias retrocompatible.
+- Archivo renombrado: `ActaExamen.jsx` → [`PlanillaCalificaciones.jsx`](../frontend_AcademiA/src/views/estudiantes/PlanillaCalificaciones.jsx). Componente exportado con el nombre nuevo.
+- Título de la vista, encabezado y nombre del PDF actualizados.
+- Endpoint `GET /api/notas/planilla-acta`: **sin cambios** (ya usaba "planilla" en el nombre).
+- `t_formato_config.codigo_formato = 'acta_examen'`: **se deja igual** (decisión confirmada). El template muestra "Planilla de Calificaciones" como nombre visible, pero el código sigue mapeando a `acta_examen` en BD.
 
 ---
 

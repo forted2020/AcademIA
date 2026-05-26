@@ -93,6 +93,29 @@ Cada vez que un alumno falta a clase, se crea un registro en `t_inasistencia` co
 
 Las inasistencias no se acumulan en un contador: cada falta es un registro independiente. El total se calcula en el momento de la consulta, sumando los valores (`t_tipo_inasistencia.valor`) de todos los registros del alumno en el período solicitado. Esto permite reconstruir el historial completo, distinguir justificadas de no justificadas, y ver el detalle fecha a fecha.
 
+**Catálogo normativo** (sembrado por `run_tipos_inasistencia_seed.py`):
+
+| Descripción                   | Valor |
+|-------------------------------|-------|
+| Inasistencia                  | 1.00  |
+| Llegada tarde a la escuela    | 0.25  |
+| Llegada tarde al aula         | 0.25  |
+| Retiro                        | 0.50  |
+| Inasistencia por la tarde     | 0.50  |
+| Ingreso fuera de horario      | 0.50  |
+
+**Umbrales normativos** (claves de `t_configuracion_sistema`, ver sección 7):
+- `inasistencias_umbral_reincorporacion` (default 20): cantidad que dispara la generación del Acta de Reincorporación.
+- `inasistencias_umbral_libre` (default 28): cantidad que pasa al alumno a carácter Libre / Libre Concurrente.
+
+El endpoint `GET /api/estudiantes/inasistencias/{id_entidad}/{year}` devuelve en su respuesta los flags `requiereActaReincorporacion` y `caracterLibre` (booleanos) y los valores `umbralReincorporacion` / `umbralLibre` que el frontend usa para renderizar el banner de alerta. El cómputo se hace sobre el total **no justificado** (inasistencias justificadas no cuentan para los umbrales).
+
+**Modo de cómputo** (clave `modo_inscripcion` en `t_configuracion_sistema`):
+- `MATERIA` (instituto): cada inasistencia se imputa a una materia específica.
+- `CURSO` (escuela primaria/secundaria): se utiliza una materia genérica del curso para concentrar las inasistencias del día.
+
+El cambio de modo está auditado en `t_configuracion_cambio_log` y se restringe a períodos sin un ciclo lectivo activo con inasistencias ya cargadas (ver `routes_configuracion.update_modo_inscripcion`).
+
 ---
 
 ### Cuando se genera un documento (boletín, acta, informe)

@@ -42,7 +42,7 @@ Validación local antes de persistir: nota mínima < máxima, aprobación dentro
 
 ## 3. Inasistencias
 
-### 3.1. Catálogo normativo de tipos
+### 3.1. ~~Catálogo normativo de tipos~~ ✅ Cerrado (2026-05-25 — Fase 3)
 Cargar en `t_tipo_inasistencia` los siguientes valores:
 
 | Tipo                          | Valor |
@@ -54,19 +54,17 @@ Cargar en `t_tipo_inasistencia` los siguientes valores:
 | Inasistencia por la tarde     | 0.50  |
 | Ingreso fuera de horario      | 0.50  |
 
-### 3.2. Modo de cómputo configurable
-El sistema debe permitir, por configuración global, elegir cómo se computan las faltas:
-- **Tipo instituto**: faltas registradas por materia/curso individual (modo actual).
-- **Tipo primaria/secundaria**: faltas registradas por curso–ciclo lectivo. En este modo se da de alta una materia genérica y todas las inasistencias se imputan a ella.
+### 3.2. ~~Modo de cómputo configurable~~ ✅ Cerrado (preexistente — reutilizado)
+**Implementado previamente**: clave `modo_inscripcion` en `t_configuracion_sistema` con valores `MATERIA` (instituto) y `CURSO` (escuela). Endpoint `PUT /api/configuracion/modo-inscripcion` con auditoría en `t_configuracion_cambio_log`. UI en pestaña "Sistema" de [`ConfiguracionGeneral.jsx`](../frontend_AcademiA/src/views/configuracion/ConfiguracionGeneral/ConfiguracionGeneral.jsx).
 
-### 3.3. Umbrales normativos y alertas
-- **20 inasistencias** → generar Acta de Reincorporación.
-- **28 inasistencias** → cambiar carácter del alumno a "Libre" o "Libre Concurrente".
+### 3.3. ~~Umbrales normativos y alertas~~ 🟡 Parcial (Fase 3)
+**Implementado**:
+- Claves `inasistencias_umbral_reincorporacion` y `inasistencias_umbral_libre` configurables desde la pestaña Académico.
+- Cálculo automático en `GET /api/estudiantes/inasistencias/{id_entidad}/{year}`: devuelve flags `requiereActaReincorporacion` y `caracterLibre` computados sobre el total no justificado.
+- Banner de alerta visual en [`InformeAsistencia.jsx`](../frontend_AcademiA/src/views/estudiantes/InformeAsistencia.jsx) con dos niveles (advertencia / crítica).
 
-Implementar:
-- Cálculo automático del total acumulado.
-- Alertas visuales al cruzar cada umbral.
-- Generación del Acta de Reincorporación cuando corresponda.
+**Pendiente**:
+- Generación del **PDF de Acta de Reincorporación** cuando se cruza el umbral (se integrará junto a los informes faltantes de la sección 6).
 
 ---
 

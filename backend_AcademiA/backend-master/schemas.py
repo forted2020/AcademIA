@@ -489,6 +489,14 @@ class InasistenciaResponse(BaseModel):
     # Definimos que detailedRecords es una LISTA de objetos InasistenciaBase
     detailedRecords: List[InasistenciaBase]
 
+    # Umbrales normativos consultados al armar la respuesta (sembrados en Fase 1).
+    # Se incluyen en el payload para que el frontend pueda renderizar las alertas
+    # sin tener que pedir la configuración por separado.
+    umbralReincorporacion: Optional[int] = None
+    umbralLibre:           Optional[int] = None
+    requiereActaReincorporacion: bool = False
+    caracterLibre:               bool = False
+
     class Config:
         from_attributes = True
 

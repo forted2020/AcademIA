@@ -415,3 +415,48 @@
   font-family: var(--acad-font-body, 'Inter', sans-serif);
   font-size: 0.875rem;
 }
+
+/* ─────────────────────────────────────────────
+   Banner de alerta normativa (Fase 3)
+   ───────────────────────────────────────────── */
+.asis-inf-alerta {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--acad-radius-md, 0.5rem);
+  border: 1px solid transparent;
+  margin: 0 0 1rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+}
+
+.asis-inf-alerta--advertencia {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #78350f;
+}
+
+.asis-inf-alerta--critica {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}
+
+.asis-inf-alerta-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.asis-inf-alerta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.asis-inf-alerta-text strong {
+  font-weight: 700;
+}

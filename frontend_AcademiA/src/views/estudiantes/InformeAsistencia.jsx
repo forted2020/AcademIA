@@ -14,6 +14,8 @@ import { cilCalendar, cilFile, cilUser, cilCheckCircle, cilXCircle } from '@core
 
 import api from '../../api/api.js'
 import useAuthUser from '../../hooks/useAuthUser'
+import { useConfigSistema } from '../../hooks/useConfigSistema'
+import { useFormatoImpresion } from '../../hooks/useFormatoImpresion'
 import './InformeAsistencia.css'
 
 // ─────────────────────────────────────────────
@@ -39,46 +41,53 @@ const useInasistencias = (idEstudiante, year) => {
 }
 
 // ─────────────────────────────────────────────
-//  Generación de PDF (lógica intacta)
+//  Generación de PDF
 // ─────────────────────────────────────────────
-const generarPDF = async (data, nombreEstudiante, year) => {
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)]
+}
+
+const generarPDF = async (data, nombreEstudiante, year, configGlobal = {}, configFormato = {}) => {
   const jsPDF = (await import('jspdf')).default
   await import('jspdf-autotable')
 
-  const doc = new jsPDF('p', 'pt', 'a4')
+  const doc    = new jsPDF('p', 'pt', 'a4')
   const margin = 40
-  const azul = [50, 31, 219]
-  const verde = [40, 167, 69]
-  const rojo = [220, 53, 69]
+  const azul   = hexToRgb(configGlobal.color_primario   ?? '#0369a1')
+  const navy   = hexToRgb(configGlobal.color_encabezado ?? '#0f172a')
+  const verde  = [40, 167, 69]
+  const rojo   = [220, 53, 69]
+
+  const nombreInst   = configGlobal.nombre_institucion ?? 'INSTITUCIÓN EDUCATIVA ACADEMIA'
+  const titulo       = configFormato.titulo_documento  ?? 'INFORME DE ASISTENCIA'
+  const textoFirma   = configFormato.texto_firma       ?? ''
+  const textoPie     = configFormato.texto_pie || configGlobal.texto_pie_global || ''
+  const mostrarFecha = configFormato.mostrar_fecha_emision !== '0'
+  const logoDatos    = configGlobal.logo_base64  ?? null
+  const logoMime     = configGlobal.logo_mime_type ?? 'image/png'
+  const mostrarLogo  = configFormato.mostrar_logo !== '0' && !!logoDatos
+
+  let yPos = 50
+  if (mostrarLogo) {
+    try { doc.addImage(`data:${logoMime};base64,${logoDatos}`, logoMime.split('/')[1].toUpperCase(), margin, 18, 60, 28); yPos = 60 } catch (e) {}
+  }
 
   // Encabezado
-  doc.setFontSize(16)
-  doc.setTextColor(40)
-  doc.text('INSTITUCIÓN EDUCATIVA ACADEMIA', margin, 50)
-
-  doc.setFontSize(10)
-  doc.setTextColor(100)
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, margin, 65)
-
-  doc.setDrawColor(...azul)
-  doc.setLineWidth(2)
-  doc.line(margin, 75, 555, 75)
-
-  doc.setFontSize(14)
-  doc.setTextColor(...azul)
-  doc.text('INFORME DE ASISTENCIA', margin, 100)
-
-  doc.setFontSize(11)
-  doc.setTextColor(40)
-  doc.text(`Alumno: ${nombreEstudiante}`, margin, 120)
-  doc.text(`Año: ${year}`, margin, 135)
+  doc.setFontSize(14); doc.setTextColor(...navy)
+  doc.text(nombreInst, mostrarLogo ? margin + 70 : margin, yPos)
+  if (mostrarFecha) { doc.setFontSize(9); doc.setTextColor(100); doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, mostrarLogo ? margin + 70 : margin, yPos + 13) }
+  doc.setDrawColor(...azul); doc.setLineWidth(2); doc.line(margin, yPos + 22, 555, yPos + 22)
+  doc.setFontSize(13); doc.setTextColor(...azul); doc.text(titulo, margin, yPos + 42)
+  doc.setFontSize(10); doc.setTextColor(40)
+  doc.text(`Alumno: ${nombreEstudiante}`, margin, yPos + 60)
+  doc.text(`Año: ${year}`, margin, yPos + 74)
 
   // Resumen
   const injust = (data.totalInasistencia - data.totalInasistenciaJustif).toFixed(2)
-  doc.setFontSize(10)
-  doc.text(`Total inasistencias: ${data.totalInasistencia}`, margin, 160)
-  doc.text(`Justificadas: ${data.totalInasistenciaJustif}`, margin + 160, 160)
-  doc.text(`Sin justificar: ${injust}`, margin + 310, 160)
+  doc.setFontSize(9)
+  doc.text(`Total inasistencias: ${data.totalInasistencia}`, margin, yPos + 96)
+  doc.text(`Justificadas: ${data.totalInasistenciaJustif}`, margin + 160, yPos + 96)
+  doc.text(`Sin justificar: ${injust}`, margin + 310, yPos + 96)
 
   // Tabla detalle
   const cols = [
@@ -100,7 +109,7 @@ const generarPDF = async (data, nombreEstudiante, year) => {
   doc.autoTable({
     columns: cols,
     body: rows,
-    startY: 175,
+    startY: yPos + 112,
     theme: 'grid',
     styles: { fontSize: 9, cellPadding: 5 },
     headStyles: { fillColor: azul, textColor: 255 },
@@ -108,12 +117,15 @@ const generarPDF = async (data, nombreEstudiante, year) => {
     margin: { left: margin, right: margin },
     didParseCell: (hookData) => {
       if (hookData.column.dataKey === 'justified' && hookData.section === 'body') {
-        hookData.cell.styles.textColor =
-          hookData.cell.raw === 'Sí' ? verde : rojo
+        hookData.cell.styles.textColor = hookData.cell.raw === 'Sí' ? verde : rojo
         hookData.cell.styles.fontStyle = 'bold'
       }
     },
   })
+
+  const yFinal = doc.lastAutoTable?.finalY ?? (yPos + 112)
+  if (textoFirma) { doc.setFontSize(9); doc.setTextColor(40); doc.text(textoFirma, 297, yFinal + 40, { align: 'center' }); doc.line(220, yFinal + 32, 374, yFinal + 32) }
+  if (textoPie)   { doc.setFontSize(8); doc.setTextColor(100); doc.text(textoPie, 297, yFinal + 60, { align: 'center', maxWidth: 400 }) }
 
   doc.save(`Asistencia_${nombreEstudiante.replace(/\s+/g, '_')}_${year}.pdf`)
 }
@@ -123,7 +135,12 @@ const generarPDF = async (data, nombreEstudiante, year) => {
 // ─────────────────────────────────────────────
 const ResumenAsistencia = ({ data }) => {
   const injust = parseFloat((data.totalInasistencia - data.totalInasistenciaJustif).toFixed(2))
-  const enRiesgo = data.totalInasistencia >= 15
+
+  // Flags normativos provistos por el backend (Fase 3). Si el endpoint todavía no los
+  // expone (servidor viejo), caen a false y se desactiva la alerta automáticamente.
+  const requiereActa = !!data.requiereActaReincorporacion
+  const esLibre      = !!data.caracterLibre
+  const enRiesgo     = requiereActa || esLibre
 
   return (
     <div className="asis-inf-resumen-grid">
@@ -133,7 +150,8 @@ const ResumenAsistencia = ({ data }) => {
         <span className={`asis-inf-stat-value ${enRiesgo ? 'asis-inf-stat-value--riesgo' : 'asis-inf-stat-value--total'}`}>
           {data.totalInasistencia.toFixed(1)}
         </span>
-        {enRiesgo && <span className="asis-inf-badge-riesgo">En riesgo</span>}
+        {esLibre && <span className="asis-inf-badge-riesgo">Carácter Libre</span>}
+        {!esLibre && requiereActa && <span className="asis-inf-badge-riesgo">Requiere reincorporación</span>}
       </div>
 
       {/* Justificadas */}
@@ -150,6 +168,38 @@ const ResumenAsistencia = ({ data }) => {
         <span className="asis-inf-stat-value asis-inf-stat-value--sinjust">
           {injust}
         </span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+//  Banner de alerta normativa (Fase 3)
+// ─────────────────────────────────────────────
+const AlertaNormativa = ({ data }) => {
+  const requiereActa = !!data.requiereActaReincorporacion
+  const esLibre      = !!data.caracterLibre
+  if (!requiereActa && !esLibre) return null
+
+  const umbralReinc = data.umbralReincorporacion ?? 20
+  const umbralLibre = data.umbralLibre ?? 28
+  const injust = (data.totalInasistencia - data.totalInasistenciaJustif).toFixed(2)
+
+  // El caso más grave gana (Libre eclipsa Reincorporación).
+  const titulo = esLibre
+    ? `El alumno alcanzó ${injust} inasistencias computables — pasa a carácter Libre / Libre Concurrente.`
+    : `El alumno alcanzó ${injust} inasistencias computables — corresponde generar el Acta de Reincorporación.`
+
+  const detalle = esLibre
+    ? `Umbral configurado: ${umbralLibre} inasistencias para pase a Libre.`
+    : `Umbral configurado: ${umbralReinc} inasistencias para reincorporación.`
+
+  return (
+    <div className={`asis-inf-alerta asis-inf-alerta--${esLibre ? 'critica' : 'advertencia'}`}>
+      <CIcon icon={cilXCircle} className="asis-inf-alerta-icon" />
+      <div className="asis-inf-alerta-text">
+        <strong>{titulo}</strong>
+        <span>{detalle}</span>
       </div>
     </div>
   )
@@ -214,6 +264,9 @@ export default function InformeAsistencia() {
   const { idEntidad: loggedId, rol } = useAuthUser()
   const esAlumno = rol === 'ALUMNO_APP'
 
+  const { configs: configGlobal } = useConfigSistema()
+  const { configs: configFormato } = useFormatoImpresion('informe_asistencia')
+
   const [inputId, setInputId] = React.useState('')
   const [estudianteId, setEstudianteId] = React.useState(esAlumno ? loggedId : null)
   const [nombreEstudiante, setNombreEstudiante] = React.useState(esAlumno ? 'Alumno' : '')
@@ -256,7 +309,7 @@ export default function InformeAsistencia() {
             <div className="asis-inf-header-actions">
               <button
                 className="asis-inf-btn-pdf"
-                onClick={() => generarPDF(data, nombreEstudiante, year)}
+                onClick={() => generarPDF(data, nombreEstudiante, year, configGlobal, configFormato)}
               >
                 <CIcon icon={cilFile} style={{ width: '0.875rem', height: '0.875rem' }} />
                 Exportar PDF
@@ -325,6 +378,7 @@ export default function InformeAsistencia() {
           {/* Contenido principal */}
           {!loading && !error && data && (
             <>
+              <AlertaNormativa data={data} />
               <ResumenAsistencia data={data} />
               <p className="asis-inf-table-section-title">
                 Detalle de registros ({data.detailedRecords?.length ?? 0})

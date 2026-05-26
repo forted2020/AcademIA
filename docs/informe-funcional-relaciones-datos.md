@@ -472,6 +472,8 @@ La validación está centralizada en `Services/config_service.py::validar_nota_o
 5. Se renderiza tabla: Materia | Notas finales | Promedio Definitiva
 6. Opcionalmente se descarga como PDF
 
+**Distinción visual de aplazos**: tanto en pantalla como en el PDF, las notas inferiores a `nota_aprobacion` (clave de `t_configuracion_sistema`) se resaltan en rojo y negrita. Esto aplica al boletín, al acta y al promedio cuando corresponde. El badge de "Definitiva" en el acta usa tres niveles (aprobado / en proceso / reprobado) escalados sobre el umbral configurado.
+
 ---
 
 ### Proceso E: Informe de Asistencia (por alumno)

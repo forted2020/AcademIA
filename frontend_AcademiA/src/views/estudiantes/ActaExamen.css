@@ -525,3 +525,16 @@
   height: 2.5rem !important;
   opacity: 0.2;
 }
+
+/* ─────────────────────────────────────────────
+   Aplazos (Fase 5): nota por debajo de nota_aprobacion configurada
+   ───────────────────────────────────────────── */
+.acta-td--aplazo {
+  color: #b91c1c;
+  font-weight: 700;
+  background: rgba(254, 226, 226, 0.55);
+}
+
+.acta-tr--alt .acta-td--aplazo {
+  background: rgba(254, 226, 226, 0.85);
+}

@@ -81,8 +81,8 @@ Lo que hoy se llama "Acta de Examen" es funcionalmente una Planilla de Calificac
 
 ## 5. Mejoras visuales en planillas
 
-### 5.1. Distinguir aplazos
-En las planillas (y en el boletín si aplica), las notas inferiores a la nota de aprobación (configurable, default 6) deben distinguirse visualmente (color, negrita, fondo, etc.).
+### 5.1. ~~Distinguir aplazos~~ ✅ Cerrado (2026-05-25 — Fase 5)
+**Implementado**: notas inferiores a `nota_aprobacion` se renderizan en rojo, negrita y con fondo rosa pálido en [`ActaExamen.jsx`](../frontend_AcademiA/src/views/estudiantes/ActaExamen.jsx) y [`BoletinCalificaciones.jsx`](../frontend_AcademiA/src/views/estudiantes/BoletinCalificaciones.jsx). El PDF replica el resaltado vía `didParseCell` de `jspdf-autotable`. El badge de "Definitiva" también escala sus tres variantes (aprobado/proceso/reprobado) en función del umbral configurado.
 
 ---
 

@@ -9,6 +9,8 @@ import CIcon from '@coreui/icons-react'
 import { cilDescription, cilCloudDownload } from '@coreui/icons'
 
 import api from '../../api/api.js'
+import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema'
+import { useFormatoImpresion } from '../../hooks/useFormatoImpresion'
 import './ActaExamen.css'
 
 // ─── Hooks de datos ──────────────────────────────────────
@@ -68,61 +70,81 @@ const usePlanillaActa = (cicloId, cursoId, materiaId) => {
 }
 
 // ─── Generación de PDF ────────────────────────────────────
-const generarPDF = async (data, titulo) => {
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)]
+}
+
+const generarPDF = async (data, titulo, configGlobal = {}, configFormato = {}, notaAprobacion = 6) => {
   const { jsPDF } = await import('jspdf')
   const { autoTable } = await import('jspdf-autotable')
 
-  const doc = new jsPDF('l', 'pt', 'a4')
-  const margin = 40
-  const navy = [15, 23, 42]
-  const blue = [3, 105, 161]
+  const orientacion   = configFormato.orientacion ?? 'landscape'
+  const doc           = new jsPDF(orientacion === 'landscape' ? 'l' : 'p', 'pt', 'a4')
+  const margin        = 40
+  const pageW         = orientacion === 'landscape' ? 841 : 595
+  const navy          = hexToRgb(configGlobal.color_encabezado ?? '#0f172a')
+  const blue          = hexToRgb(configGlobal.color_primario   ?? '#0369a1')
+  const nombreInst    = configGlobal.nombre_institucion ?? 'INSTITUCIÓN EDUCATIVA ACADEMIA'
+  const titDoc        = configFormato.titulo_documento ?? titulo.toUpperCase()
+  const mostrarDef    = configFormato.mostrar_columna_definitiva !== '0'
+  const textoLegal    = configFormato.texto_legal ?? ''
+  const textoFirma    = configFormato.texto_firma ?? ''
+  const mostrarFecha  = configFormato.mostrar_fecha_emision !== '0'
+  const logoDatos     = configGlobal.logo_base64 ?? null
+  const logoMime      = configGlobal.logo_mime_type ?? 'image/png'
+  const mostrarLogo   = configFormato.mostrar_logo !== '0' && !!logoDatos
 
-  doc.setFontSize(16)
-  doc.setTextColor(...navy)
-  doc.text('INSTITUCIÓN EDUCATIVA ACADEMIA', margin, 50)
+  let yPos = 50
+  if (mostrarLogo) {
+    try { doc.addImage(`data:${logoMime};base64,${logoDatos}`, logoMime.split('/')[1].toUpperCase(), margin, 18, 60, 28); yPos = 60 } catch (e) {}
+  }
 
-  doc.setFontSize(10)
-  doc.setTextColor(100)
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, margin, 65)
-
-  doc.setDrawColor(...blue)
-  doc.setLineWidth(2)
-  doc.line(margin, 75, 800, 75)
-
-  doc.setFontSize(14)
-  doc.setTextColor(...blue)
-  doc.text(titulo.toUpperCase(), margin, 100)
+  doc.setFontSize(14); doc.setTextColor(...navy)
+  doc.text(nombreInst, mostrarLogo ? margin + 70 : margin, yPos)
+  if (mostrarFecha) { doc.setFontSize(9); doc.setTextColor(100); doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, mostrarLogo ? margin + 70 : margin, yPos + 13) }
+  doc.setDrawColor(...blue); doc.setLineWidth(2); doc.line(margin, yPos + 22, pageW - margin, yPos + 22)
+  doc.setFontSize(13); doc.setTextColor(...blue); doc.text(titDoc, margin, yPos + 42)
 
   const cols = [
     { header: 'Alumno', dataKey: 'alumno' },
     ...data.columnas.map((c) => ({ header: c.label, dataKey: `nota_${c.id_tipo_nota}` })),
     { header: 'Promedio', dataKey: 'promedio' },
-    { header: 'Definitiva', dataKey: 'definitiva' },
+    ...(mostrarDef ? [{ header: 'Definitiva', dataKey: 'definitiva' }] : []),
   ]
-
   const rows = data.filas.map((f) => {
     const row = { alumno: f.nombre_completo }
-    data.columnas.forEach((c) => {
-      row[`nota_${c.id_tipo_nota}`] =
-        f.calificaciones[c.id_tipo_nota] != null ? f.calificaciones[c.id_tipo_nota] : '—'
-    })
+    data.columnas.forEach((c) => { row[`nota_${c.id_tipo_nota}`] = f.calificaciones[c.id_tipo_nota] != null ? f.calificaciones[c.id_tipo_nota] : '—' })
     row.promedio   = f.promedio   != null ? f.promedio   : '—'
-    row.definitiva = f.definitiva != null ? f.definitiva : '—'
+    if (mostrarDef) row.definitiva = f.definitiva != null ? f.definitiva : '—'
     return row
   })
 
   autoTable(doc, {
-    columns: cols,
-    body: rows,
-    startY: 120,
+    columns: cols, body: rows, startY: yPos + 60,
     theme: 'grid',
     styles: { fontSize: 8, cellPadding: 4, font: 'helvetica' },
     headStyles: { fillColor: navy, textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [241, 245, 249] },
     margin: { left: margin, right: margin },
+    // Resalta los aplazos en rojo y negrita para coincidir con la planilla en pantalla.
+    didParseCell: (hook) => {
+      if (hook.section !== 'body') return
+      const key = hook.column.dataKey
+      if (key === 'alumno') return
+      const raw = hook.cell.raw
+      const num = typeof raw === 'number' ? raw : parseFloat(raw)
+      if (Number.isFinite(num) && num < notaAprobacion) {
+        hook.cell.styles.textColor = [185, 28, 28]
+        hook.cell.styles.fontStyle = 'bold'
+      }
+    },
   })
 
-  doc.save(`${titulo.replace(/\s+/g, '_')}.pdf`)
+  const yFinal = doc.lastAutoTable?.finalY ?? (yPos + 60)
+  if (textoFirma) { doc.setFontSize(9); doc.setTextColor(40); doc.text(textoFirma, pageW / 2, yFinal + 40, { align: 'center' }); doc.line(pageW / 2 - 80, yFinal + 32, pageW / 2 + 80, yFinal + 32) }
+  if (textoLegal) { doc.setFontSize(8); doc.setTextColor(100); doc.text(textoLegal, margin, yFinal + 60, { maxWidth: pageW - margin * 2 }) }
+
+  doc.save(`${titDoc.replace(/\s+/g, '_')}.pdf`)
 }
 
 // ─── Select con label ─────────────────────────────────────
@@ -150,14 +172,20 @@ function FilterSelect({ label, value, onChange, options, placeholder, disabled, 
 }
 
 // ─── Badge de nota definitiva con 3 variantes ─────────────
-function DefinitivaBadge({ value }) {
+// `notaAprobacion` proviene de t_configuracion_sistema.nota_aprobacion (Fase 1).
+// El umbral intermedio "en proceso" se ubica un 33% por debajo de la aprobación
+// para mantener la escala visual original (aprob=6 → proceso=4).
+function DefinitivaBadge({ value, notaAprobacion = 6 }) {
   if (value == null) return <span className="acta-dash">—</span>
-  const cls = value >= 6 ? ' is-aprobado' : value >= 4 ? ' is-proceso' : ' is-reprobado'
+  const umbralProceso = notaAprobacion * (4 / 6)
+  const cls = value >= notaAprobacion ? ' is-aprobado'
+            : value >= umbralProceso  ? ' is-proceso'
+            : ' is-reprobado'
   return <span className={`acta-definitiva-badge${cls}`}>{value}</span>
 }
 
 // ─── Tabla del acta ───────────────────────────────────────
-function TablaActa({ data }) {
+function TablaActa({ data, notaAprobacion = 6 }) {
   const [sortKey, setSortKey]   = React.useState(null)  // 'alumno' | 'promedio' | 'definitiva' | nota_id
   const [sortDir, setSortDir]   = React.useState('asc')
 
@@ -191,10 +219,11 @@ function TablaActa({ data }) {
   })
 
   // ── Estadísticas ─────────────────────────────────────────
+  const umbralProceso = notaAprobacion * (4 / 6)
   const conDef    = data.filas.filter((f) => f.definitiva != null)
-  const aprobados = conDef.filter((f) => f.definitiva >= 6).length
-  const proceso   = conDef.filter((f) => f.definitiva >= 4 && f.definitiva < 6).length
-  const reprobados= conDef.filter((f) => f.definitiva < 4).length
+  const aprobados = conDef.filter((f) => f.definitiva >= notaAprobacion).length
+  const proceso   = conDef.filter((f) => f.definitiva >= umbralProceso && f.definitiva < notaAprobacion).length
+  const reprobados= conDef.filter((f) => f.definitiva < umbralProceso).length
   const promGeneral = conDef.length
     ? (conDef.reduce((s, f) => s + f.definitiva, 0) / conDef.length).toFixed(1)
     : null
@@ -236,18 +265,21 @@ function TablaActa({ data }) {
             {filas.map((fila, i) => (
               <tr key={fila.id_alumno} className={`acta-tr${i % 2 === 1 ? ' acta-tr--alt' : ''}`}>
                 <td className="acta-td acta-td--alumno">{fila.nombre_completo}</td>
-                {data.columnas.map((c) => (
-                  <td key={c.id_tipo_nota} className="acta-td acta-td--center">
-                    {fila.calificaciones[c.id_tipo_nota] != null
-                      ? fila.calificaciones[c.id_tipo_nota]
-                      : <span className="acta-dash">—</span>}
-                  </td>
-                ))}
-                <td className="acta-td acta-td--center">
+                {data.columnas.map((c) => {
+                  const valor = fila.calificaciones[c.id_tipo_nota]
+                  // Marca aplazos: nota numérica menor que la configurada como aprobación.
+                  const esAplazo = valor != null && Number(valor) < notaAprobacion
+                  return (
+                    <td key={c.id_tipo_nota} className={`acta-td acta-td--center${esAplazo ? ' acta-td--aplazo' : ''}`}>
+                      {valor != null ? valor : <span className="acta-dash">—</span>}
+                    </td>
+                  )
+                })}
+                <td className={`acta-td acta-td--center${fila.promedio != null && Number(fila.promedio) < notaAprobacion ? ' acta-td--aplazo' : ''}`}>
                   {fila.promedio != null ? fila.promedio : <span className="acta-dash">—</span>}
                 </td>
                 <td className="acta-td acta-td--center">
-                  <DefinitivaBadge value={fila.definitiva} />
+                  <DefinitivaBadge value={fila.definitiva} notaAprobacion={notaAprobacion} />
                 </td>
               </tr>
             ))}
@@ -300,6 +332,10 @@ export default function ActaExamen() {
   const [materiaId,      setMateriaId]      = React.useState(null)
   const [materiaLabel,   setMateriaLabel]   = React.useState('')
   const [exporting,      setExporting]      = React.useState(false)
+
+  const { configs: configGlobal } = useConfigSistema()
+  const { configs: configFormato } = useFormatoImpresion('acta_examen')
+  const { notaAprobacion } = getRangoNotas(configGlobal)
 
   const ciclos   = useCiclos()
   const cursos   = useCursosPorCiclo(cicloId)
@@ -375,7 +411,7 @@ export default function ActaExamen() {
                   disabled={exporting || !data}
                   onClick={async () => {
                     setExporting(true)
-                    try { await generarPDF(data, tituloActa) }
+                    try { await generarPDF(data, tituloActa, configGlobal, configFormato, notaAprobacion) }
                     finally { setExporting(false) }
                   }}
                 >
@@ -408,7 +444,7 @@ export default function ActaExamen() {
             </div>
           )}
 
-          {!loading && !error && data && <TablaActa data={data} />}
+          {!loading && !error && data && <TablaActa data={data} notaAprobacion={notaAprobacion} />}
 
           {!loading && !error && !data && (
             <div className="acta-placeholder">

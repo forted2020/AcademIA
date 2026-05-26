@@ -574,3 +574,12 @@
   margin: 0;
   font-size: 0.875rem;
 }
+
+/* ─────────────────────────────────────────────
+   Aplazos (Fase 5): nota por debajo de nota_aprobacion configurada
+   ───────────────────────────────────────────── */
+.bol-td--aplazo {
+  color: #b91c1c !important;
+  font-weight: 700;
+  background: rgba(254, 226, 226, 0.55);
+}

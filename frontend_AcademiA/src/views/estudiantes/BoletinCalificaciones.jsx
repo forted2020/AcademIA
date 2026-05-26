@@ -15,6 +15,8 @@ import api from '../../api/api.js'
 import apiEstudiantes from '../../api/apiEstudiantes.js'
 import { getCiclosPorEstudiante } from '../../api/apiEstudiantes.js'
 import useAuthUser from '../../hooks/useAuthUser'
+import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema'
+import { useFormatoImpresion } from '../../hooks/useFormatoImpresion'
 
 import './BoletinCalificaciones.css'
 
@@ -90,48 +92,99 @@ function useBusquedaEstudiantes(query) {
 }
 
 // ─── Generación de PDF ────────────────────────────────────────────────────────
-async function generarPDF(data, nombreEstudiante, cicloNombre, download = true) {
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return [r, g, b]
+}
+
+async function generarPDF(data, nombreEstudiante, cicloNombre, download = true, configGlobal = {}, configFormato = {}, notaAprobacion = 6) {
   const jsPDF = (await import('jspdf')).default
   await import('jspdf-autotable')
-  const doc  = new jsPDF('p', 'pt', 'a4')
-  const m    = 40
-  const azul = [3, 105, 161]
+  const doc = new jsPDF('p', 'pt', 'a4')
+  const m   = 40
 
-  doc.setFontSize(14); doc.setTextColor(15, 23, 42)
-  doc.text('INSTITUCIÓN EDUCATIVA — AcademIA', m, 50)
-  doc.setFontSize(9); doc.setTextColor(100)
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, m, 64)
+  // Valores del formato con fallback a los hardcodeados originales
+  const nombreInst    = configGlobal.nombre_institucion ?? 'INSTITUCIÓN EDUCATIVA — AcademIA'
+  const azul          = hexToRgb(configGlobal.color_primario ?? '#0369a1')
+  const navy          = hexToRgb(configGlobal.color_encabezado ?? '#0f172a')
+  const titulo        = configFormato.titulo_documento ?? 'BOLETÍN DE CALIFICACIONES'
+  const mostrarProm   = configFormato.mostrar_promedio !== '0'
+  const textoFirma    = configFormato.texto_firma ?? ''
+  const textoPie      = configFormato.texto_pie || configGlobal.texto_pie_global || ''
+  const logoDatos     = configGlobal.logo_base64 ?? null
+  const logoMime      = configGlobal.logo_mime_type ?? 'image/png'
+  const mostrarLogo   = configFormato.mostrar_logo !== '0' && !!logoDatos
+  const mostrarFecha  = configFormato.mostrar_fecha_emision !== '0'
+
+  let yPos = 50
+
+  // Logo
+  if (mostrarLogo) {
+    try {
+      doc.addImage(`data:${logoMime};base64,${logoDatos}`, logoMime.split('/')[1].toUpperCase(), m, 20, 60, 30)
+      yPos = 60
+    } catch (e) { /* logo inválido — continúa sin él */ }
+  }
+
+  doc.setFontSize(14); doc.setTextColor(...navy)
+  doc.text(nombreInst, mostrarLogo ? m + 70 : m, yPos)
+  if (mostrarFecha) {
+    doc.setFontSize(9); doc.setTextColor(100)
+    doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, mostrarLogo ? m + 70 : m, yPos + 14)
+  }
   doc.setDrawColor(...azul); doc.setLineWidth(1.5)
-  doc.line(m, 72, 555, 72)
+  doc.line(m, yPos + 22, 555, yPos + 22)
 
   doc.setFontSize(13); doc.setTextColor(...azul)
-  doc.text('BOLETÍN DE CALIFICACIONES', m, 92)
+  doc.text(titulo, m, yPos + 42)
   doc.setFontSize(10); doc.setTextColor(40)
-  doc.text(`Alumno: ${nombreEstudiante}`, m, 110)
-  doc.text(`Ciclo Lectivo: ${cicloNombre}`, m, 124)
+  doc.text(`Alumno: ${nombreEstudiante}`, m, yPos + 60)
+  doc.text(`Ciclo Lectivo: ${cicloNombre}`, m, yPos + 74)
 
   const cols = [
     { title: 'Materia', dataKey: 'materia' },
     ...data.columnas.map((c) => ({ title: c.label, dataKey: `n_${c.id_tipo_nota}` })),
-    { title: 'Promedio', dataKey: 'promedio' },
+    ...(mostrarProm ? [{ title: 'Promedio', dataKey: 'promedio' }] : []),
   ]
   const rows = data.filas.map((f) => {
     const row = { materia: f.nombre_materia }
-    data.columnas.forEach((c) => {
-      row[`n_${c.id_tipo_nota}`] = f.calificaciones[c.id_tipo_nota] ?? '—'
-    })
-    row.promedio = f.promedio ?? '—'
+    data.columnas.forEach((c) => { row[`n_${c.id_tipo_nota}`] = f.calificaciones[c.id_tipo_nota] ?? '—' })
+    if (mostrarProm) row.promedio = f.promedio ?? '—'
     return row
   })
 
   doc.autoTable({
-    columns: cols, body: rows, startY: 144,
+    columns: cols, body: rows, startY: yPos + 94,
     theme: 'grid',
     styles: { fontSize: 9, cellPadding: 5 },
     headStyles: { fillColor: azul, textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 249, 252] },
     margin: { left: m, right: m },
+    // Resalta los aplazos en rojo y negrita (Fase 5).
+    didParseCell: (hook) => {
+      if (hook.section !== 'body') return
+      if (hook.column.dataKey === 'materia') return
+      const raw = hook.cell.raw
+      const num = typeof raw === 'number' ? raw : parseFloat(raw)
+      if (Number.isFinite(num) && num < notaAprobacion) {
+        hook.cell.styles.textColor = [185, 28, 28]
+        hook.cell.styles.fontStyle = 'bold'
+      }
+    },
   })
+
+  const yFinal = doc.lastAutoTable?.finalY ?? (yPos + 94)
+  if (textoFirma) {
+    doc.setFontSize(9); doc.setTextColor(40)
+    doc.text(textoFirma, 297, yFinal + 40, { align: 'center' })
+    doc.line(220, yFinal + 32, 374, yFinal + 32)
+  }
+  if (textoPie) {
+    doc.setFontSize(8); doc.setTextColor(100)
+    doc.text(textoPie, 297, yFinal + 60, { align: 'center', maxWidth: 400 })
+  }
 
   if (download) {
     doc.save(`Boletin_${nombreEstudiante.replace(/\s+/g, '_')}_${cicloNombre}.pdf`)
@@ -143,7 +196,7 @@ async function generarPDF(data, nombreEstudiante, cicloNombre, download = true) 
 }
 
 // ─── Tabla de calificaciones ─────────────────────────────────────────────────
-function TablaCalificaciones({ data }) {
+function TablaCalificaciones({ data, notaAprobacion = 6 }) {
   if (!data?.filas?.length) return (
     <div className="bol-empty-table">
       <CIcon icon={cilSchool} className="bol-empty-table-icon" />
@@ -176,18 +229,22 @@ function TablaCalificaciones({ data }) {
         <tbody>
           {data.filas.map((fila) => {
             const prom     = fila.promedio
-            const aprobado = prom != null && prom >= 6
+            const aprobado = prom != null && prom >= notaAprobacion
             return (
               <tr key={fila.id_materia} className="bol-tr">
                 <td className="bol-td bol-td-materia">{fila.nombre_materia}</td>
-                {data.columnas.map((c) => (
-                  <td key={c.id_tipo_nota} className="bol-td bol-td-nota">
-                    {fila.calificaciones[c.id_tipo_nota] != null
-                      ? fila.calificaciones[c.id_tipo_nota]
-                      : <span className="bol-dash">—</span>
-                    }
-                  </td>
-                ))}
+                {data.columnas.map((c) => {
+                  const valor = fila.calificaciones[c.id_tipo_nota]
+                  const esAplazo = valor != null && Number(valor) < notaAprobacion
+                  return (
+                    <td key={c.id_tipo_nota} className={`bol-td bol-td-nota${esAplazo ? ' bol-td--aplazo' : ''}`}>
+                      {valor != null
+                        ? valor
+                        : <span className="bol-dash">—</span>
+                      }
+                    </td>
+                  )
+                })}
                 <td className="bol-td bol-td-promedio">
                   {prom != null
                     ? <span className={`bol-badge ${aprobado ? 'bol-badge--ok' : 'bol-badge--fail'}`}>{prom}</span>
@@ -298,6 +355,10 @@ export default function BoletinCalificaciones() {
   const { idEntidad: loggedId, rol } = useAuthUser()
   const esAlumno = rol === 'ALUMNO_APP'
 
+  const { configs: configGlobal } = useConfigSistema()
+  const { configs: configFormato } = useFormatoImpresion('boletin')
+  const { notaAprobacion } = getRangoNotas(configGlobal)
+
   // Búsqueda de estudiante
   const [searchQuery, setSearchQuery]           = useState('')
   const [busquedaActiva, setBusquedaActiva]     = useState('')   // lo que realmente se envía al hook
@@ -370,7 +431,7 @@ export default function BoletinCalificaciones() {
   const handlePDF = async (download) => {
     if (!data) return
     setIsGenerating(true)
-    await generarPDF(data, nombreEstudiante, cicloSeleccionado?.nombre_ciclo_lectivo || '', download)
+    await generarPDF(data, nombreEstudiante, cicloSeleccionado?.nombre_ciclo_lectivo || '', download, configGlobal, configFormato, notaAprobacion)
     setIsGenerating(false)
   }
 
@@ -536,7 +597,7 @@ export default function BoletinCalificaciones() {
                   {data.filas.length} {data.filas.length === 1 ? 'materia' : 'materias'}
                 </span>
               </div>
-              <TablaCalificaciones data={data} />
+              <TablaCalificaciones data={data} notaAprobacion={notaAprobacion} />
             </>
           )}
 

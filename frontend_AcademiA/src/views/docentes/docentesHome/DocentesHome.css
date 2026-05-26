@@ -1,0 +1,229 @@
+/* views/docentes/docentesHome/DocentesHome.css — prefijo .doc-home__ */
+
+/* ── Card principal ───────────────────────────────────── */
+.doc-home__card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden;
+  background: #fff;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.doc-home__header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  padding: 1.25rem 1.5rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.doc-home__brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #ecfdf5;
+  color: #16a34a;
+  border-radius: var(--acad-radius, 0.5rem);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.doc-home__brand-icon svg,
+.doc-home__brand-icon .c-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.doc-home__title-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.doc-home__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.doc-home__subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #16a34a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.doc-home__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--acad-text-muted, #64748b);
+  flex-wrap: wrap;
+}
+
+/* ── Cuerpo ───────────────────────────────────────────── */
+.doc-home__body {
+  background: #f8fafc;
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Sección interna (panel blanco) ──────────────────── */
+.doc-home__section {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1.25rem;
+}
+
+.doc-home__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.doc-home__section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acad-text-muted, #64748b);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doc-home__section-title .c-icon {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+}
+
+/* ── Badge ────────────────────────────────────────────── */
+.doc-home__badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ── Grillas ──────────────────────────────────────────── */
+.doc-home__grid-kpi-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.doc-home__grid-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .doc-home__grid-kpi-2 { grid-template-columns: 1fr; }
+  .doc-home__grid-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .doc-home__grid-actions { grid-template-columns: 1fr; }
+}
+
+/* ── Tabla de materias ────────────────────────────────── */
+.doc-home__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.doc-home__table th {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--acad-text-muted, #64748b);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+  text-align: left;
+  background: #f8fafc;
+}
+
+.doc-home__table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+  color: var(--acad-text, #0f172a);
+  vertical-align: middle;
+}
+
+.doc-home__table tr:last-child td {
+  border-bottom: none;
+}
+
+.doc-home__table tr:hover td {
+  background: #f8fafc;
+}
+
+.doc-home__curso-pill {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.doc-home__alumnos-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+}
+
+.doc-home__go-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--acad-blue, #0369a1);
+  background: var(--acad-blue-pale, #e0f2fe);
+  border: none;
+  border-radius: var(--acad-radius-sm, 0.375rem);
+  padding: 0.25rem 0.625rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.doc-home__go-btn:hover {
+  background: #bae6fd;
+}
+
+/* ── Animación de entrada stagger ────────────────────── */
+.doc-home__rise > * {
+  animation: docRise 0.35s ease-out both;
+}
+.doc-home__rise > *:nth-child(1) { animation-delay: 0.02s; }
+.doc-home__rise > *:nth-child(2) { animation-delay: 0.07s; }
+.doc-home__rise > *:nth-child(3) { animation-delay: 0.12s; }
+
+@keyframes docRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

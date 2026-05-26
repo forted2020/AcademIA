@@ -108,37 +108,58 @@ async def update_docente(id_entidad: int, docente: DocenteUpdate, db: Session = 
 
 @router.get("/{id}/materias-actuales")
 async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
-    """Devuelve las materias que el docente dicta en el ciclo lectivo vigente (hoy entre fecha_inicio y fecha_fin)."""
+    """Materias del docente en el ciclo vigente, con curso y count de alumnos inscriptos."""
+    from sqlalchemy import func as sqlfunc
+    from models import Inscripcion
+
     hoy = date.today()
 
-    # Ciclo lectivo vigente: hoy está entre inicio y fin
     ciclo_actual = db.query(CicloLectivo).filter(
         CicloLectivo.fecha_inicio_cl <= hoy,
         CicloLectivo.fecha_fin_cl >= hoy,
     ).first()
 
-    # Si no hay ciclo con fechas definidas, tomar el de mayor id como fallback
     if not ciclo_actual:
         ciclo_actual = db.query(CicloLectivo).order_by(CicloLectivo.id_ciclo_lectivo.desc()).first()
 
     if not ciclo_actual:
         return {"ciclo": None, "materias": []}
 
-    materias = (
-        db.query(NombreMateria.nombre_materia)
-        .join(Materia, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
+    # Consulta enriquecida: materia + curso + cantidad de alumnos inscriptos
+    rows = (
+        db.query(
+            Materia.id_materia,
+            NombreMateria.nombre_materia,
+            Curso.nombre_curso,
+            sqlfunc.count(Inscripcion.id_inscripcion).label("total_alumnos"),
+        )
+        .join(NombreMateria, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
         .join(Curso, Curso.id_curso == Materia.id_curso)
+        .outerjoin(
+            Inscripcion,
+            (Inscripcion.id_materia == Materia.id_materia) &
+            (Inscripcion.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo) &
+            (Inscripcion.deleted_at.is_(None))
+        )
         .filter(
             Materia.id_entidad == id,
             Curso.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo,
         )
-        .distinct()
+        .group_by(Materia.id_materia, NombreMateria.nombre_materia, Curso.nombre_curso)
         .all()
     )
 
     return {
         "ciclo": ciclo_actual.nombre_ciclo_lectivo,
-        "materias": [m.nombre_materia for m in materias],
+        "materias": [
+            {
+                "id": r.id_materia,
+                "nombre": r.nombre_materia,
+                "curso": r.nombre_curso,
+                "alumnos": r.total_alumnos,
+            }
+            for r in rows
+        ],
     }
 
 

@@ -1,61 +1,42 @@
-import React, { useState, useEffect } from 'react'
+// frontend_AcademiA\src\views\materias\MateriasInformes.jsx
 
-import { CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer,} from '@coreui/react'
+import React from 'react';
+import { CContainer } from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilBook } from '@coreui/icons';
 
-import '../../css/PersonalStyles.css'
+import './MateriasInformes.css';
 
 
 export default function MateriasInformes() {
 
     return (
+        <CContainer fluid className="py-3">
 
-        <div style={{ padding: '10px' }}>
-            <h1 className="ms-1" >Materias</h1>
+            <div className="usr-inf-card mb-1">
 
-            <CContainer>
+                {/* ── Encabezado ── */}
+                <div className="usr-inf-card-header">
+                    <div className="usr-inf-header-brand">
+                        <div className="usr-inf-header-brand-icon">
+                            <CIcon icon={cilBook} className="usr-inf-brand-icon" />
+                        </div>
+                        <div>
+                            <h2 className="usr-inf-header-h2">Informes de Materias</h2>
+                            <p className="usr-inf-header-sub">Reportes del plan académico</p>
+                        </div>
+                    </div>
+                </div>
 
-                <CCard className="mb-1" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+                {/* ── Cuerpo ── */}
+                <div className="usr-inf-card-body">
+                    <div className="usr-inf-placeholder">
+                        Sección en construcción. Los informes de materias estarán disponibles próximamente.
+                    </div>
+                </div>
 
-                    {/* ----------  HEAD --------------- */}
-                    <CCardHeader className="py-2 bg-white ">
-                        <CRow className="justify-content-between align-items-center " > {/* Fila en la grilla.*/}
-                            <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
-                                <h4 id="titulo" className="mb-0 ">
-                                    Informes de Materias
-                                </h4>
-                                <div className="small text-body-secondary"> Reportes y listados</div>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
-                    {/* ----------  /HEAD --------------- */}
+            </div>
 
-
-                    {/* ----------  BODY --------------- */}
-                    <CCardBody className="px-4 pt-1 pb-2 border border-light">
-                        
-                        BODY
-                    
-                    </CCardBody>
-                    {/* ----------  /BODY --------------- */}
-
-
-                    {/* ----------  FOOTER --------------- */}
-                    <CCardFooter
-                        className="bg-white border-top px-3 py-1" >
-                        
-                        FOOTER
-
-                    </CCardFooter>
-
-                </CCard>
-
-
-
-            </CContainer >
-
-        </div>
-
-    )
-
-
+        </CContainer>
+    );
 }

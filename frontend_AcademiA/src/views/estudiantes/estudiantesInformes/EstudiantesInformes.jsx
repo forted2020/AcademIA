@@ -1,37 +1,29 @@
 // frontend_AcademiA\src\views\estudiantes\estudiantesInformes\EstudiantesInformes.jsx
 
-
 import React, { useState } from 'react';
-import { CCard, CCardHeader, CCardBody, CContainer, CRow, CCol } from '@coreui/react';
-import { GenericSelector } from '../../../components/genericSelector/genericSelector/GenericSelector';
+import { CContainer } from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilChartPie } from '@coreui/icons';
 
-// --- IMPORTACIONES GENÉRICAS  ---
-// Componente Genérico
+import { GenericSelector } from '../../../components/genericSelector/genericSelector/GenericSelector';
 import GenericInform from '../../../components/informes/GenericInform';
 import GenericInformFilters from '../../../components/informes/GenericInformFilters';
 import { useInformesData } from '../../../components/informes/hooks/useInformesData';
-
-// --- IMPORTACIÓN ESPECÍFICA ---
-// Configuración Jerárquica
 import { EstudiantesInformesConfig } from './EstudiantesInformesConfig';
 
-import './EstudiantesInformes.css';  // Ver si lo usa
+import '../../users/usuariosInformes/UsuariosInformes.css';
 
 
 export default function EstudiantesInformes() {
 
-    // Inicializamos en '' (vacío) para que no haya ninguno seleccionado al inicio
     const [selectedReportKey, setSelectedReportKey] = useState('');
 
-    // Usamos la Config de ALUMNOS
-    const activeConfig = EstudiantesInformesConfig.reports[selectedReportKey] || null;
-    console.log('Valor de activeConfig: ', activeConfig)
+    const ConfigRef = EstudiantesInformesConfig;
+    const activeConfig = ConfigRef.reports[selectedReportKey] || null;
 
-    // Instanciamos el hook
     const informesData = useInformesData(activeConfig);
     const { seleccion, error: errorFiltros } = informesData;
 
-    // Validaciones standard
     const filtrosCompletos = activeConfig
         ? activeConfig.filters.every(f => !f.required || seleccion[f.key])
         : false;
@@ -40,59 +32,65 @@ export default function EstudiantesInformes() {
         ? activeConfig.getEndpoint(seleccion)
         : null;
 
-
-
     return (
-        <div style={{ padding: '10px' }}>
-            <h1 className="ms-1">Gestión de Alumnos</h1>
-            <CContainer>
-                <CCard className="mb-1">
-                    <CCardHeader className="py-2 bg-white">
-                         {/* Títulos dinámicos desde la config */}
-                        <h4 className="mb-0">{EstudiantesInformesConfig.title}</h4>
-                        <div className="small text-muted">{EstudiantesInformesConfig.subtitle}</div>
-                    </CCardHeader>
+        <CContainer fluid className="py-3">
 
-                    <CCardBody className="px-4 pt-3 pb-4 border border-light">
-                        {/* Selector Principal */}
-                        <div className="mb-4 border-bottom pb-3">
-                            <GenericSelector
-                                label={EstudiantesInformesConfig.mainSelector.label}
-                                options={EstudiantesInformesConfig.mainSelector.options}
-                                value={selectedReportKey}
-                                onChange={setSelectedReportKey}
-                                infoText={activeConfig ? activeConfig.subtitle : 'Seleccione un reporte'}
+            <div className="usr-inf-card mb-1">
+
+                {/* ── Encabezado ── */}
+                <div className="usr-inf-card-header">
+                    <div className="usr-inf-header-brand">
+                        <div className="usr-inf-header-brand-icon">
+                            <CIcon icon={cilChartPie} className="usr-inf-brand-icon" />
+                        </div>
+                        <div>
+                            <h2 className="usr-inf-header-h2">Informes de Gestión Académica</h2>
+                            <p className="usr-inf-header-sub">Reportes y estadísticas de alumnos</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Cuerpo ── */}
+                <div className="usr-inf-card-body">
+
+                    <div className="usr-inf-selector-wrap">
+                        <GenericSelector
+                            label={ConfigRef.mainSelector.label}
+                            options={ConfigRef.mainSelector.options}
+                            value={selectedReportKey}
+                            onChange={setSelectedReportKey}
+                            infoText={activeConfig ? activeConfig.subtitle : 'Seleccione una opción'}
+                        />
+                    </div>
+
+                    {activeConfig ? (
+                        <div className="usr-inf-workspace animate__animated animate__fadeIn">
+                            <div className="usr-inf-filters-section">
+                                <p className="usr-inf-filters-title">Filtros de Búsqueda</p>
+                                <GenericInformFilters
+                                    informesData={informesData}
+                                    config={activeConfig}
+                                />
+                                {errorFiltros && (
+                                    <div className="usr-inf-filters-error">{errorFiltros}</div>
+                                )}
+                            </div>
+                            <GenericInform
+                                config={activeConfig}
+                                endpoint={endpointActivo}
+                                params={seleccion}
                             />
                         </div>
+                    ) : (
+                        <div className="usr-inf-placeholder">
+                            Seleccione un tipo de informe para comenzar.
+                        </div>
+                    )}
 
-                        {/* Motor de Informe */}
-                        {activeConfig ? (
-                            <div className="animate__animated animate__fadeIn">
-                                <div className="bg-light p-3 rounded mb-4 border">
-                                    <h6 className="text-primary mb-3 ps-1 border-start border-3 border-primary">
-                                        Filtros
-                                    </h6>
-                                    <GenericInformFilters 
-                                        informesData={informesData} 
-                                        config={activeConfig} 
-                                    />
-                                    {errorFiltros && <div className="text-danger">{errorFiltros}</div>}
-                                </div>
+                </div>
 
-                                <GenericInform 
-                                    config={activeConfig}
-                                    endpoint={endpointActivo}
-                                    params={seleccion}
-                                />
-                            </div>
-                        ) : (
-                            <div className="text-center py-5 text-muted">
-                                Seleccione un tipo de informe.
-                            </div>
-                        )}
-                    </CCardBody>
-                </CCard>
-            </CContainer>
-        </div>
-    )
+            </div>
+
+        </CContainer>
+    );
 }

@@ -46,8 +46,7 @@ export const InscripcionesConfig = {
                 },
                 {
                     key: 'id_tipo_insc', label: 'Tipo Inscripción', type: 'select',
-                    // Asumimos un endpoint para traer tipos (Cursado, Libre, Oyente...)
-                    endpoint: 'api/tipos-inscripcion/', 
+                    endpoint: 'api/inscripciones/tipos/',
                     optionValue: 'id_tipo_insc', optionLabel: 'nombre_tip_insc'
                 }
             ],

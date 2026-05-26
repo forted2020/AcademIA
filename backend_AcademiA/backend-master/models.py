@@ -196,6 +196,12 @@ class Inscripcion(Base):
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     deleted_at = Column(DateTime, nullable=True)
 
+    # Fase 7.2 — Materias previas.
+    # Una inscripción queda marcada como "previa" cuando el alumno no aprobó la
+    # materia al cerrar el ciclo lectivo. El flag se levanta cuando el alumno
+    # aprueba la materia (en una mesa de examen o cursando en un ciclo posterior).
+    es_previa = Column(Boolean, nullable=False, default=False)
+
     # Relaciones (para que Pydantic pueda navegar entre las tablas anidadas )
     # El nombre de la variable debe coincidir con el campo en InscripcionesResponse
     estudiantes = relationship("Entidad")
@@ -213,9 +219,9 @@ class Inscripcion(Base):
 
 class TipoInscripcion(Base):
     __tablename__ = "t_tipo_inscripcion"
-    
+
     id_tipo_insc = Column(Integer, primary_key=True)
-    nombre_tipo_inc = Column(String(30))
+    nombre_tip_insc = Column(String(30))
     
 # ----------------------------------------------------------------------------------
 # MODELOS PARA ASISTENCIAS
@@ -233,13 +239,14 @@ class TipoInasistencia(Base):
 class Inasistencia(Base):
     __tablename__ = "t_inasistencia"
     id_inasistencia = Column(Integer, primary_key=True)
-    id_entidad = Column(Integer, ForeignKey("t_entidad.id_entidad")) # Relación con estudiante
-    id_curso = Column(Integer, ForeignKey("t_curso.id_curso")) # Relación con Curso
-    id_materia = Column(Integer, ForeignKey("t_materia.id_materia")) # Relación con Materia
+    id_entidad = Column(Integer, ForeignKey("t_entidad.id_entidad"))
+    id_materia = Column(Integer, ForeignKey("t_materia.id_materia"))
+    # id_curso eliminado: es redundante, se deriva de t_materia.id_curso via JOIN
     fecha_inasistencia = Column(Date)
-    id_tipo_inasistencia = Column(Integer, ForeignKey("t_tipo_inasistencia.id_tipo_inasistencia")) # Relación con Tipo de asistencia
-    
+    id_tipo_inasistencia = Column(Integer, ForeignKey("t_tipo_inasistencia.id_tipo_inasistencia"))
+
     tipo_obj = relationship("TipoInasistencia")
+    materia_obj = relationship("Materia")  # permite acceder al curso via .materia_obj.curso
     justificada = Column(Boolean, default=False)
     motivo_inasistencia = Column(String(255))
 
@@ -323,11 +330,20 @@ class Nota(Base):
     # ------------------
     # RELACIONES ORM (Opcional, pero recomendada)
     # ------------------
+    # Ciclo lectivo al que pertenece la nota — denormalizado para simplificar queries
+    # y garantizar contexto temporal propio sin depender de materia → curso → ciclo
+    id_ciclo_lectivo = Column(
+        Integer,
+        ForeignKey("t_ciclo_lectivo.id_ciclo_lectivo"),
+        nullable=True,
+    )
+
     materia = relationship("Materia")
     estudiante = relationship("Entidad", foreign_keys=[id_entidad_estudiante])
     cargador = relationship("Entidad", foreign_keys=[id_entidad_carga])
     periodo_obj = relationship("Periodo")
     tipo_nota_obj = relationship("TipoNota")
+    ciclo_lectivo = relationship("CicloLectivo")
     
     # ------------------
     # CAMPOS DE CONTROL (Auditoría)
@@ -435,3 +451,60 @@ class NotificacionConfig(Base):
     activa = Column(Boolean, default=True, nullable=False)
 
     usuario = relationship("User", foreign_keys=[id_usuario])
+
+
+# ----------------------------------------------------------------------------------
+# MODELO CONFIGURACIÓN DEL SISTEMA (t_configuracion_sistema)
+# Almacena parámetros globales de la institución en formato clave/valor.
+# ----------------------------------------------------------------------------------
+class ConfiguracionSistema(Base):
+    __tablename__ = "t_configuracion_sistema"
+
+    id_config = Column(Integer, primary_key=True, autoincrement=True)
+    clave = Column(String(80), nullable=False, unique=True, index=True)
+    valor = Column(String(5000), nullable=True)
+    descripcion = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+
+# ----------------------------------------------------------------------------------
+# MODELO AUDITORÍA DE CAMBIOS DE CONFIGURACIÓN (t_configuracion_cambio_log)
+# Registra cada cambio en claves sensibles de configuración: quién, cuándo,
+# valor anterior y nuevo. Inmutable — nunca se actualiza ni se elimina.
+# ----------------------------------------------------------------------------------
+class ConfiguracionCambioLog(Base):
+    __tablename__ = "t_configuracion_cambio_log"
+
+    id_log = Column(Integer, primary_key=True, autoincrement=True)
+    clave = Column(String(80), nullable=False, index=True)
+    valor_anterior = Column(String(500), nullable=True)
+    valor_nuevo = Column(String(500), nullable=False)
+    id_usuario = Column(Integer, ForeignKey("t_usuarios.id_usuario"), nullable=False)
+    nombre_usuario = Column(String(100), nullable=False)  # desnormalizado para legibilidad del log
+    motivo = Column(String(500), nullable=True)
+    timestamp = Column(DateTime, default=func.current_timestamp(), nullable=False)
+
+    usuario = relationship("User", foreign_keys=[id_usuario])
+
+
+# ----------------------------------------------------------------------------------
+# MODELO CONFIGURACIÓN DE FORMATOS DE IMPRESIÓN (t_formato_config)
+# Almacena las opciones que el admin configuró para cada tipo de documento.
+# La clave debe coincidir con un campo declarado en el template JS correspondiente.
+# ----------------------------------------------------------------------------------
+class FormatoConfig(Base):
+    __tablename__ = "t_formato_config"
+
+    id_config = Column(Integer, primary_key=True, autoincrement=True)
+    # Código del tipo de documento: 'boletin', 'acta_examen', 'informe_asistencia', etc.
+    codigo_formato = Column(String(50), nullable=False, index=True)
+    clave = Column(String(80), nullable=False)
+    valor = Column(String(5000), nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    __table_args__ = (
+        # Garantiza upsert directo sin duplicados por (formato, clave)
+        Index("uq_formato_clave", "codigo_formato", "clave", unique=True),
+    )

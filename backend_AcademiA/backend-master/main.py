@@ -21,6 +21,8 @@ import auth
 
 from Routes import  routes_docentes, routes_inasistencias
 from Routes.routes_notificaciones import router as router_notificaciones
+from Routes.routes_configuracion import router as router_configuracion
+from Routes.routes_formatos import router as router_formatos
 
 from Routes.routes_materias import router as materias_router
 from Routes.routes_periodos import router as periodos_router
@@ -31,6 +33,10 @@ from Routes.routes_ciclos import router as router_ciclos  # Para traer los ciclo
 from Routes.routes_cursos import router as router_cursos  # Para traer los cursos
 from Routes.routes_personal import router as router_personal
 from Routes.routes_usuarios import router as router_usuarios
+from Routes.routes_inscripciones import router as router_inscripciones
+from Routes.routes_previas import router as router_previas
+from Routes.routes_informes import router as router_informes
+from Routes.routes_dashboard import router as router_dashboard
 
 from auth import send_email, get_password_hash, generate_token
 
@@ -73,7 +79,7 @@ from models import (
 # Rate limiter — identifica clientes por IP
 limiter = Limiter(key_func=get_remote_address)
 
-from models import Base, TokenBlacklist, Notificacion, NotificacionConfig
+from models import Base, TokenBlacklist, Notificacion, NotificacionConfig, ConfiguracionSistema, FormatoConfig, ConfiguracionCambioLog
 from database import engine
 
 # Creamos la instancia de FASTAPI
@@ -89,6 +95,22 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS debe registrarse antes que cualquier router para que aplique a los preflight requests
+# allow_origin_regex cubre todos los preview deployments de Vercel (hashes únicos por deploy)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        'http://localhost:3001',
+        'http://localhost:1500',
+        'http://localhost:3002',
+        'https://academia-nu-seven.vercel.app',
+    ],
+    allow_origin_regex=r'https://academ.*\.vercel\.app',
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 
 @app.exception_handler(RequestValidationError)
@@ -116,6 +138,9 @@ def create_tables_on_startup():
             TokenBlacklist.__table__,
             Notificacion.__table__,
             NotificacionConfig.__table__,
+            ConfiguracionSistema.__table__,
+            FormatoConfig.__table__,
+            ConfiguracionCambioLog.__table__,
         ],
     )
 
@@ -154,24 +179,14 @@ app.include_router(routes_estudiantes_notas, prefix="/api", tags=["Notas"])
 
 app.include_router(router_usuarios, prefix="/api/usuarios")
 app.include_router(router_notificaciones, prefix="/api")
+app.include_router(router_inscripciones, prefix="/api")
+app.include_router(router_previas, prefix="/api", tags=["Materias Previas"])
+app.include_router(router_informes, prefix="/api", tags=["Informes y Listados"])
+app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
+app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
+app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
 
 
-
-# Configurar CORS
-origins = [
-    'http://localhost:3001',
-    'http://localhost:1500',
-    'http://localhost:3002',
-]
-
-# Configuración de CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=['*'],    # Permitir todos los métodos (GET, POST, etc.)
-    allow_headers=['*'],    # Permitir todos los headers (Authorization, etc.)
-)
 
 
 # # Dependencia para la base de datos

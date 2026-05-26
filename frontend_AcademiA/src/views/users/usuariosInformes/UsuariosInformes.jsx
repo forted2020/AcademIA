@@ -1,8 +1,11 @@
-//  frontend_AcademiA\src\views\users\usuariosInformes\UsuarioInformes.jsx
+﻿//  frontend_AcademiA\src\views\users\usuariosInformes\UsuarioInformes.jsx
 
 import React, { useState } from 'react';
-import { CCard, CCardHeader, CCardBody, CContainer, CRow, CCol } from '@coreui/react';
+import { CContainer } from '@coreui/react';
+import { CIcon } from '@coreui/icons-react';
+import { cilChart } from '@coreui/icons';
 import { GenericSelector } from '../../../components/genericSelector/genericSelector/GenericSelector';
+import './UsuariosInformes.css';
 
 // Componentes Core (No cambiar)
 import GenericInform from '../../../components/informes/GenericInform';
@@ -33,69 +36,75 @@ export default function UsuariosInformes() { // (<<<< CAMBIAR NOMBRE COMPONENTE)
         : null;
 
     return (
-        <div style={{ padding: '10px' }}>
+        <CContainer fluid className="py-3">
 
-            {/* ----------------- MODIFICAR EN EL TEMPLATE ----------------- */}
-            <h1 className="ms-1">Usuarios</h1> {/* Título de la categoría */}
-            
-            
-            
-            <CContainer>
-                <CCard className="mb-1">
+            {/* ── Card principal ──────────────────────────────────── */}
+            <div className="usr-inf-card mb-1">
 
-                    {/* ----------------- MODIFICAR EN EL TEMPLATE ----------------- */}
-                    {/* CABECERA ESTÁTICA */}
-                    <CCardHeader className="py-2 bg-white">
-                        <CRow className="justify-content-between align-items-center">
-                            <CCol xs={12} sm="auto">
-                                <h4 className="mb-0">{ConfigRef.title}</h4>
-                                <div className="small text-muted">{ConfigRef.subtitle}</div>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
-
-                    <CCardBody className="px-4 pt-3 pb-4 border border-light">
-                        {/* Selector de Tipo de Informe */}
-                        <div className="mb-4 border-bottom pb-3">
-                            <GenericSelector
-                                label={ConfigRef.mainSelector.label}
-                                options={ConfigRef.mainSelector.options}
-                                value={selectedReportKey}
-                                onChange={setSelectedReportKey}
-                                infoText={activeConfig ? activeConfig.subtitle : 'Seleccione una opción'}
-                            />
+                {/* ── Encabezado ────────────────────────────────────── */}
+                <div className="usr-inf-card-header">
+                    <div className="usr-inf-header-brand">
+                        <div className="usr-inf-header-brand-icon">
+                            <CIcon icon={cilChart} className="usr-inf-brand-icon" />
                         </div>
+                        <div>
+                            <h2 className="usr-inf-header-h2">Informes de Usuarios</h2>
+                            <p className="usr-inf-header-sub">Reportes y estadísticas</p>
+                        </div>
+                    </div>
+                </div>
+                {/* ── /Encabezado ───────────────────────────────────── */}
 
-                        {/* Área de Trabajo */}
-                        {activeConfig ? (
-                            <div className="animate__animated animate__fadeIn">
-                                {/* Filtros */}
-                                <div className="bg-light p-3 rounded mb-4 border">
-                                    <h6 className="text-primary mb-3 ps-1 border-start border-3 border-primary">
-                                        Filtros de Búsqueda
-                                    </h6>
-                                    <GenericInformFilters
-                                        informesData={informesData}
-                                        config={activeConfig}
-                                    />
-                                    {errorFiltros && <div className="text-danger">{errorFiltros}</div>}
-                                </div>
+                {/* ── Cuerpo ────────────────────────────────────────── */}
+                <div className="usr-inf-card-body">
 
-                                {/* Resultados */}
-                                <GenericInform
+                    {/* Selector principal de tipo de informe */}
+                    <div className="usr-inf-selector-wrap">
+                        <GenericSelector
+                            label={ConfigRef.mainSelector.label}
+                            options={ConfigRef.mainSelector.options}
+                            value={selectedReportKey}
+                            onChange={setSelectedReportKey}
+                            infoText={activeConfig ? activeConfig.subtitle : 'Seleccione una opción'}
+                        />
+                    </div>
+
+                    {/* Área de trabajo: filtros + resultados */}
+                    {activeConfig ? (
+                        <div className="usr-inf-workspace animate__animated animate__fadeIn">
+
+                            {/* Sección de filtros */}
+                            <div className="usr-inf-filters-section">
+                                <p className="usr-inf-filters-title">Filtros de Búsqueda</p>
+                                <GenericInformFilters
+                                    informesData={informesData}
                                     config={activeConfig}
-                                    endpoint={endpointActivo}
-                                    params={seleccion}
                                 />
+                                {errorFiltros && (
+                                    <div className="usr-inf-filters-error">{errorFiltros}</div>
+                                )}
                             </div>
-                        ) : (
-                            <div className="text-center py-5 text-muted">
-                                Seleccione un tipo de informe para comenzar.
-                            </div>
-                        )}
-                    </CCardBody>
-                </CCard>
-            </CContainer>
-        </div>
+
+                            {/* Resultados del informe */}
+                            <GenericInform
+                                config={activeConfig}
+                                endpoint={endpointActivo}
+                                params={seleccion}
+                            />
+
+                        </div>
+                    ) : (
+                        <div className="usr-inf-placeholder">
+                            Seleccione un tipo de informe para comenzar.
+                        </div>
+                    )}
+
+                </div>
+                {/* ── /Cuerpo ───────────────────────────────────────── */}
+
+            </div>
+            {/* ── /Card principal ─────────────────────────────────── */}
+
+        </CContainer>
     )
 }

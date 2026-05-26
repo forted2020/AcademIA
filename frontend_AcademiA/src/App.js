@@ -11,7 +11,8 @@ import './scss/examples.scss'
 import { isTokenExpired } from './utils/isTokenExpired'
 import InterceptorSetup from './components/InterceptorSetup'
 
-// Estilos de PrimeReact
+// Estilos de PrimeReact — tema base cargado estáticamente para evitar flash sin estilos
+import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
@@ -49,10 +50,14 @@ const Docentes = React.lazy(() => import('./views/docentes/Docentes'))
 const DocentesInformes = React.lazy(() => import('./views/docentes/docentesInformes/DocentesInformes'))
 const DocenteCargaNotas = React.lazy(() => import('./views/docentes/DocenteCargaNotas'))
 const Personal = React.lazy(() => import('./views/personal/Personal'))
+const Asistencia = React.lazy(() => import('./views/asistencia/Asistencia'))
 const BoletinCalificaciones = React.lazy(() => import('./views/estudiantes/BoletinCalificaciones'))
-const ActaExamen = React.lazy(() => import('./views/estudiantes/ActaExamen'))
+const PlanillaCalificaciones = React.lazy(() => import('./views/estudiantes/PlanillaCalificaciones'))
+const MateriasPrevias = React.lazy(() => import('./views/gestion/previas/MateriasPrevias'))
 const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
 const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
+const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
+const ConfiguracionGeneral = React.lazy(() => import('./views/configuracion/ConfiguracionGeneral/ConfiguracionGeneral'))
 
 //  Usar React.lazy permite cargar el código de las páginas sólo cuando se vsite por el usuario. Mejora el tiempo de carga inicial de la aplicación.
 
@@ -120,7 +125,11 @@ const RouterContent = () => {
           <Route path="estudiante" element={<ProtectedRoute> <Estudiante /> </ProtectedRoute>} />
           <Route path="estudiante/trayectoria" element={<ProtectedRoute> <Trayectoria /> </ProtectedRoute>} />
           <Route path="estudiante/boletin" element={<ProtectedRoute> <BoletinCalificaciones /> </ProtectedRoute>} />
-          <Route path="estudiante/acta-examen" element={<ProtectedRoute> <ActaExamen /> </ProtectedRoute>} />
+          <Route path="estudiante/planilla-calificaciones" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
+          {/* Alias retrocompatible — Fase 4 (link antiguo /estudiante/acta-examen) */}
+          <Route path="estudiante/acta-examen" element={<ProtectedRoute> <PlanillaCalificaciones /> </ProtectedRoute>} />
+          {/* Fase 7.2 — gestión de materias previas */}
+          <Route path="gestion/materias-previas" element={<ProtectedRoute> <MateriasPrevias /> </ProtectedRoute>} />
           <Route path="estudiante/informe-asistencia" element={<ProtectedRoute> <InformeAsistencia /> </ProtectedRoute>} />
           <Route path="estudiante/informes" element={<ProtectedRoute> <EstudiantesInformes /> </ProtectedRoute>} />
 
@@ -129,6 +138,7 @@ const RouterContent = () => {
           <Route path="materias" element={<ProtectedRoute> <Materias /> </ProtectedRoute>} />
           <Route path="materias/informes" element={<ProtectedRoute> <MateriasInformes /> </ProtectedRoute>} />
           <Route path="personal" element={<ProtectedRoute> <Personal /> </ProtectedRoute>} />
+          <Route path="asistencia" element={<ProtectedRoute> <Asistencia /> </ProtectedRoute>} />
 
           <Route path="usuarios" element={
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UserManagement /> </ProtectedRoute>} />
@@ -136,6 +146,12 @@ const RouterContent = () => {
             <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <UsuariosInformes /> </ProtectedRoute>} />
 
           <Route path="configuracion/notificaciones" element={<ProtectedRoute> <ConfiguracionNotificaciones /> </ProtectedRoute>} />
+          <Route path="configuracion/formatos-impresion" element={
+            <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <FormatosImpresion /> </ProtectedRoute>
+          } />
+          <Route path="configuracion/general" element={
+            <ProtectedRoute requiredRoles={['ADMIN_SISTEMA']}> <ConfiguracionGeneral /> </ProtectedRoute>
+          } />
 
           {/* Ruta por defecto para cualquier otra URL no coincidente dentro del layout */}
           <Route path="*" element={<Page404 />} />

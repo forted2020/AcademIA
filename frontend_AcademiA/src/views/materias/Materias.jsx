@@ -1,8 +1,9 @@
-//  frontend_AcademiA\src\views\materias\Materias.jsx
+﻿//  frontend_AcademiA\src\views\materias\Materias.jsx
 import React, { useState, useEffect } from 'react'
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer } from '@coreui/react'
-import { cilPlus } from '@coreui/icons'
+import { CContainer } from '@coreui/react'
+import { cilPlus, cilDescription } from '@coreui/icons'
 import { CIcon } from '@coreui/icons-react'
+import './Materias.css'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 
 // Importar componentes reutilizables
@@ -196,104 +197,100 @@ export default function Materias() {
     })
 
     return (
-        <div style={{ padding: '10px' }}>
-            <h1 className="ms-1" >Materias</h1>
-            <CContainer>
-                <CCard className="mb-1">
-                    {/* ---------- ENCABEZADO ---------- */}
-                    <CCardHeader className="py-2 bg-white">
-                        <CRow className="justify-content-between align-items-center">
-                            <CCol xs={12} sm="auto">
-                                <h4 id="titulo" className="mb-0">
-                                    Gestión de Materias
-                                </h4>
-                                <div className="small text-body-secondary">
-                                    Administración de Materias
-                                </div>
-                            </CCol>
+        <CContainer fluid className="py-3">
 
-                            {/* Botón para agregar nuevo Docente */}
-                            <CCol xs={12} sm="auto" className="text-md-end">
-                                <CButton
-                                    color="primary"
-                                    className="shadow-sm"
-                                    size="sm"
-                                    onClick={() => {
-                                        setDocenteToEdit(null); // Aseguramos que está limpio
-                                        setEditModalVisible(true);
-                                    }}
-                                >
-                                    <CIcon icon={cilPlus} className="me-1" />
-                                    Nuevo
-                                </CButton>
-                            </CCol>
-                        </CRow>
-                    </CCardHeader>
+            {/* ── Card principal ─────────────────────────────────── */}
+            <div className="mat-card mb-1">
 
-                    {/* ---------- FILTROS AVANZADOS Y BÚSQUEDA GLOBAL ---------- */}
-                    <AdvancedFilters
-                        searchTerm={searchTerm}
-                        setSearchTerm={setSearchTerm}
-                        columnFilters={columnFilters}
-                        setColumnFilters={setColumnFilters}
-                        filterOptions={[
-                            { value: 'nombre', label: 'Nombre' },
-                            { value: 'apellido', label: 'Apellido' },
-                            { value: 'email', label: 'Email' },
-                            { value: 'domicilio', label: 'Domicilio' },
-                            { value: 'telefono', label: 'Teléfono' },
-                        ]}
-                    />
+                {/* ── Encabezado ──────────────────────────────────── */}
+                <div className="mat-card-header">
 
-                    {/* ---------- ACCIONES DE TABLA (Exportar, etc.) ---------- */}
-                    <TableActions table={table} />
+                    {/* Columna izquierda: brand */}
+                    <div className="mat-header-left">
+                        <div className="mat-header-brand">
+                            <div className="mat-header-brand-icon">
+                                <CIcon icon={cilDescription} className="mat-brand-icon" />
+                            </div>
+                            <div>
+                                <h2 className="mat-header-h2">Gestión de Materias</h2>
+                                <p className="mat-header-sub">Configuración del plan académico</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    {/* ---------- CUERPO DE LA TABLA ---------- */}
-                    <CCardBody className="px-4 pt-1 pb-2 border border-light">
-                        {/* Tabla de docentes (reutiliza el componente GenericTable) */}
-                        <GenericTable table={table} />
-                    </CCardBody>
+                    {/* Columna derecha: botón nuevo */}
+                    <div className="mat-header-actions">
+                        <button
+                            className="mat-btn-new"
+                            onClick={() => {
+                                setDocenteToEdit(null); // Aseguramos que está limpio antes de abrir
+                                setEditModalVisible(true);
+                            }}
+                        >
+                            <CIcon icon={cilPlus} style={{ width: '0.85rem', height: '0.85rem' }} />
+                            Nueva Materia
+                        </button>
+                    </div>
 
-                    {/* ---------- PIE DE PÁGINA CON PAGINACIÓN ---------- */}
-                    <CCardFooter
-                        className="bg-white border-top px-3 py-1"
-                        style={{
-                            position: 'sticky',
-                            bottom: 0,
-                            zIndex: 1,
-                            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)',
-                        }}
-                    >
-                        <TablePagination table={table} />
-                    </CCardFooter>
-                </CCard>
+                </div>
+                {/* ── /Encabezado ─────────────────────────────────── */}
 
-                {/* ---------- MODALES ---------- */}
-
-                {/* Modal de edición/creación de docente */}
-                <ModalNewEdit
-                    visible={editModalVisible}
-                    onClose={handleCloseModal}
-                    title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
-                    // Si docenteToEdit es null (nuevo), creamos un objeto con la fecha de hoy
-                    initialData={docenteToEdit ? docenteToEdit : { created_at: getTodayDate() }}
-                    onSave={handleSaveDocente}
-                    fields={docenteFields} // <-- Usa la constante de configuración
+                {/* Filtros avanzados y barra de acciones de tabla */}
+                <AdvancedFilters
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    columnFilters={columnFilters}
+                    setColumnFilters={setColumnFilters}
+                    filterOptions={[
+                        { value: 'nombre', label: 'Nombre' },
+                        { value: 'apellido', label: 'Apellido' },
+                        { value: 'email', label: 'Email' },
+                        { value: 'domicilio', label: 'Domicilio' },
+                        { value: 'telefono', label: 'Teléfono' },
+                    ]}
                 />
 
-                {/* Modal de confirmación de eliminación. Se activa al presional el tacho de basura  */}
-                <ModalConfirmDel
-                    visible={deleteModalVisible}
-                    docente={docenteToDelete}
-                    onConfirm={handleDelete}
-                    onClose={() => {
-                        setDeleteModalVisible(false)
-                        setDocenteToDelete(null)
-                    }}
+                <TableActions table={table} />
 
-                />
-            </CContainer>
-        </div >
+                {/* ── Cuerpo ──────────────────────────────────────── */}
+                <div className="mat-card-body">
+                    <GenericTable table={table} />
+                </div>
+                {/* ── /Cuerpo ─────────────────────────────────────── */}
+
+                {/* ── Footer sticky con paginación ────────────────── */}
+                <div className="mat-card-footer">
+                    <TablePagination table={table} />
+                </div>
+
+            </div>
+            {/* ── /Card principal ─────────────────────────────────── */}
+
+            {/* ── Modales ─────────────────────────────────────────── */}
+
+            {/* Modal de edición/creación de docente.
+                Si docenteToEdit es null (nuevo), crea un objeto con la fecha de hoy. */}
+            <ModalNewEdit
+                visible={editModalVisible}
+                onClose={handleCloseModal}
+                title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
+                initialData={docenteToEdit ? docenteToEdit : { created_at: getTodayDate() }}
+                onSave={handleSaveDocente}
+                fields={docenteFields}
+            />
+
+            {/* Modal de confirmación de eliminación */}
+            <ModalConfirmDel
+                visible={deleteModalVisible}
+                docente={docenteToDelete}
+                onConfirm={handleDelete}
+                onClose={() => {
+                    setDeleteModalVisible(false)
+                    setDocenteToDelete(null)
+                }}
+            />
+
+        </CContainer>
     )
 
 }

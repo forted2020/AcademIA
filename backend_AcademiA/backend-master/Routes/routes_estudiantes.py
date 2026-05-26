@@ -41,6 +41,7 @@ router = APIRouter()
 async def get_estudiantes(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=500),
+    search: str = Query(None, description="Filtro por nombre, apellido o DNI"),
     db: Session = Depends(get_db),
     current_user: UserAuthData = Depends(get_current_user),
 ):
@@ -52,8 +53,20 @@ async def get_estudiantes(
         EntidadORM.apellido != "",
         EntidadORM.deleted_at.is_(None)
     )
+
+    if search and search.strip():
+        q = search.strip()
+        # Búsqueda por DNI si es numérico, por nombre/apellido si es texto
+        if q.isdigit():
+            query = query.filter(EntidadORM.dni == int(q))
+        else:
+            like = f"%{q}%"
+            query = query.filter(
+                (EntidadORM.nombre.ilike(like)) | (EntidadORM.apellido.ilike(like))
+            )
+
     total = query.count()
-    estudiantes_db = query.offset(skip).limit(limit).all()
+    estudiantes_db = query.order_by(EntidadORM.apellido, EntidadORM.nombre).offset(skip).limit(limit).all()
 
     data = [
         EstudianteResponse(
@@ -264,6 +277,39 @@ async def get_materias_por_estudiante(estudiante_id: int,
 #  Obtiene las Materias de un ciclo lectivo en el que un estudiante se ha inscripto estudiante.
 # ========================================================================
 
+@router.get("/{id_entidad}/ciclo/{id_ciclo}/curso")
+def get_curso_de_estudiante_en_ciclo(id_entidad: int, id_ciclo: int, db: Session = Depends(get_db)):
+    """Devuelve el id_curso del estudiante en un ciclo dado. Busca en inscripciones y, si no hay, en notas."""
+    inscripcion = (
+        db.query(InscripcionORM)
+        .join(MateriaORM, MateriaORM.id_materia == InscripcionORM.id_materia)
+        .filter(
+            InscripcionORM.id_entidad == id_entidad,
+            InscripcionORM.id_ciclo_lectivo == id_ciclo,
+            InscripcionORM.deleted_at.is_(None),
+        )
+        .first()
+    )
+    if inscripcion and inscripcion.materia:
+        return {"id_curso": inscripcion.materia.id_curso}
+
+    # Fallback: obtener curso desde las notas del estudiante en ese ciclo
+    nota = (
+        db.query(NotaORM)
+        .join(MateriaORM, MateriaORM.id_materia == NotaORM.id_materia)
+        .join(CursoORM, CursoORM.id_curso == MateriaORM.id_curso)
+        .filter(
+            NotaORM.id_entidad_estudiante == id_entidad,
+            CursoORM.id_ciclo_lectivo == id_ciclo,
+        )
+        .first()
+    )
+    if nota and nota.materia:
+        return {"id_curso": nota.materia.id_curso}
+
+    return {"id_curso": None}
+
+
 @router.get("/{id_ciclo}/{id_estudiante}/materias", response_model=List[MateriaResponse])    # El prefijo /api/estudiantes/ ya se añade en main.py
 async def get_materias_ciclo_por_estudiante(id_ciclo: int, id_estudiante: int,
                                       db: Session = Depends(get_db),
@@ -314,28 +360,37 @@ async def get_materias_ciclo_por_estudiante(id_ciclo: int, id_estudiante: int,
 
 @router.get("/{id_entidad}/ciclos", response_model=List[CicloLectivoSimple])
 def get_ciclos_por_estudiante(id_entidad: int, db: Session = Depends(get_db)):
+    # Primero busca ciclos via inscripciones activas
     ciclos = (
         db.query(
             CicloLectivoORM.id_ciclo_lectivo,
-            CicloLectivoORM.nombre_ciclo_lectivo
-    )
-     # Unión Ciclo con Curso (join t_curso tc on tc.id_ciclo_lectivo = tcl.id_ciclo_lectivo)
-    .join(CursoORM, CursoORM.id_ciclo_lectivo == CicloLectivoORM.id_ciclo_lectivo) 
-     # Unión Materia con Curso (join t_materia tm on tm.id_curso = tc.id_curso)
-    .join(MateriaORM, MateriaORM.id_curso == CursoORM.id_curso) 
-     # Unión Nota con Materia (join t_nota tn on tm.id_materia = tn.id_materia)
-    .join(NotaORM, NotaORM.id_materia == MateriaORM.id_materia)
-     # Filtro por Alumno (where te.id_entidad = 36543219)
-    .filter(NotaORM.id_entidad_estudiante == id_entidad)
-      # Agrupar repetidos (GROUP BY tcl.nombre_ciclo_lectivo)   
-     .group_by(CicloLectivoORM.id_ciclo_lectivo, CicloLectivoORM.nombre_ciclo_lectivo)
-      # Comando de ejecución
-     .all() 
+            CicloLectivoORM.nombre_ciclo_lectivo,
+        )
+        .join(InscripcionORM, InscripcionORM.id_ciclo_lectivo == CicloLectivoORM.id_ciclo_lectivo)
+        .filter(
+            InscripcionORM.id_entidad == id_entidad,
+            InscripcionORM.deleted_at.is_(None),
+        )
+        .group_by(CicloLectivoORM.id_ciclo_lectivo, CicloLectivoORM.nombre_ciclo_lectivo)
+        .order_by(CicloLectivoORM.id_ciclo_lectivo.desc())
+        .all()
     )
 
+    # Fallback: si no tiene inscripciones, busca ciclos via notas cargadas
     if not ciclos:
-        # Si no hay notas, devuelveolvemos lista vacía
-        return []
+        ciclos = (
+            db.query(
+                CicloLectivoORM.id_ciclo_lectivo,
+                CicloLectivoORM.nombre_ciclo_lectivo,
+            )
+            .join(CursoORM, CursoORM.id_ciclo_lectivo == CicloLectivoORM.id_ciclo_lectivo)
+            .join(MateriaORM, MateriaORM.id_curso == CursoORM.id_curso)
+            .join(NotaORM, NotaORM.id_materia == MateriaORM.id_materia)
+            .filter(NotaORM.id_entidad_estudiante == id_entidad)
+            .group_by(CicloLectivoORM.id_ciclo_lectivo, CicloLectivoORM.nombre_ciclo_lectivo)
+            .order_by(CicloLectivoORM.id_ciclo_lectivo.desc())
+            .all()
+        )
 
     return ciclos
 

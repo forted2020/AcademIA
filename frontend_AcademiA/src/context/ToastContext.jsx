@@ -7,19 +7,21 @@ const ToastContext = createContext(null)
 export const ToastProvider = ({ children }) => {
     const toastRef = useRef(null)
 
-    const showToast = ({ severity = 'info', summary, detail, life = 3000 }) => {
+    const showToast = ({ severity = 'info', summary, detail, life = 3500 }) => {
         toastRef.current?.show({ severity, summary, detail, life })
     }
 
-    const showSuccess = (detail, summary = 'Éxito') => showToast({ severity: 'success', summary, detail })
-    const showError = (detail, summary = 'Error') => showToast({ severity: 'error', summary, detail })
-    const showWarn = (detail, summary = 'Atención') => showToast({ severity: 'warn', summary, detail })
-    const showInfo = (detail, summary = 'Info') => showToast({ severity: 'info', summary, detail })
+    const showSuccess = (detail, summary = 'Éxito')    => showToast({ severity: 'success', summary, detail })
+    const showError   = (detail, summary = 'Error')    => showToast({ severity: 'error',   summary, detail })
+    const showWarn    = (detail, summary = 'Atención') => showToast({ severity: 'warn',    summary, detail })
+    const showInfo    = (detail, summary = 'Info')     => showToast({ severity: 'info',    summary, detail })
 
     return (
         <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarn, showInfo }}>
-            <Toast ref={toastRef} position="top-right" />
             {children}
+            {/* appendTo con referencia directa al nodo DOM para garantizar z-index
+                correcto y que PrimeReact no quede atrapado por stacking contexts */}
+            <Toast ref={toastRef} position="top-right" appendTo={document.body} />
         </ToastContext.Provider>
     )
 }

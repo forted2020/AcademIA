@@ -1,0 +1,46 @@
+/* components/barChart/BarChart.css — prefijo .bar-chart__ */
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.bar-chart__row {
+  display: grid;
+  grid-template-columns: 90px 1fr 36px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-chart__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--acad-text, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-chart__track {
+  height: 10px;
+  background: var(--acad-border-light, #e2e8f0);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-chart__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transition: width 0.5s ease;
+}
+
+.bar-chart__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

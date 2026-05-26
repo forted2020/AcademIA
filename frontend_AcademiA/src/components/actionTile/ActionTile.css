@@ -1,0 +1,80 @@
+/* components/actionTile/ActionTile.css — prefijo .action-tile__ */
+
+.action-tile {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1rem 1.125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  text-align: left;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s, box-shadow 0.15s;
+  color: var(--acad-text, #0f172a);
+  text-decoration: none;
+  border: none;
+}
+
+.action-tile:hover {
+  border: 1px solid var(--acad-blue, #0369a1);
+  background: var(--acad-blue-pale, #e0f2fe);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.action-tile:active {
+  transform: translateY(1px);
+}
+
+.action-tile__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  color: var(--acad-blue, #0369a1);
+  border-radius: var(--acad-radius-sm, 0.375rem);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.action-tile__icon svg,
+.action-tile__icon .c-icon {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+.action-tile__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-tile__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+  line-height: 1.2;
+  display: block;
+}
+
+.action-tile__sub {
+  font-size: 0.75rem;
+  color: var(--acad-text-muted, #64748b);
+  margin-top: 0.125rem;
+  display: block;
+}
+
+.action-tile__arrow {
+  margin-left: auto;
+  color: var(--acad-text-subtle, #94a3b8);
+  transition: transform 0.15s, color 0.15s;
+  flex: 0 0 auto;
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.action-tile:hover .action-tile__arrow {
+  color: var(--acad-blue, #0369a1);
+  transform: translateX(2px);
+}

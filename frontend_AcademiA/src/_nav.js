@@ -1,7 +1,7 @@
 //  AcademIA\src\_nav.js
 import React from 'react'
 import { CIcon } from '@coreui/icons-react'
-import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription, cilBell } from '@coreui/icons'
+import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription, cilBell, cilSettings, cilPrint } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
 import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../src/constants/Roles';
@@ -75,6 +75,7 @@ const fullNavigation = [
             { component: CNavItem, name: 'Gestión de Personal', to: '/personal', roles: [ROL_ADMIN] },
             { component: CNavItem, name: 'Asistencia', to: '/asistencia', roles: [ROL_ADMIN] },
             { component: CNavItem, name: 'Inscripción a ciclo lectivo', to: '/inscripcion', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Materias Previas', to: '/gestion/materias-previas', roles: [ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Informes', to: '/gestion/informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
         ],
     },
@@ -90,7 +91,7 @@ const fullNavigation = [
             { component: CNavItem, name: 'Gestión de Estudiantes', to: '/estudiante', roles: [ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Trayectoria', to: '/estudiante/trayectoria', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Boletín de Calificaciones', to: '/estudiante/boletin', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Acta de Examen', to: '/estudiante/acta-examen', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Planilla de Calificaciones', to: '/estudiante/planilla-calificaciones', roles: [ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Informe de Asistencia', to: '/estudiante/informe-asistencia', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
             { component: CNavItem, name: 'Informes', to: '/estudiante/informes', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
         ],
@@ -103,6 +104,17 @@ const fullNavigation = [
         to: '/configuracion/notificaciones',
         icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE],
+    },
+    {
+        component: CNavGroup,
+        name: 'Configuración',
+        to: '/configuracion',
+        icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
+        roles: [ROL_ADMIN],
+        items: [
+            { component: CNavItem, name: 'Configuración General', to: '/configuracion/general', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Formatos de Impresión', to: '/configuracion/formatos-impresion', roles: [ROL_ADMIN] },
+        ],
     },
 
     // --- CERRAR SESIÓN ---

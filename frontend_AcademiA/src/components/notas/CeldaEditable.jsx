@@ -1,7 +1,6 @@
 //  frontend_AcademiA\src\components\notas\CeldaEditable.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CFormInput } from '@coreui/react';
 
 import { useEditableCell } from '../../context/editableCellContext/EditableCellContext';
 
@@ -132,21 +131,29 @@ const CeldaEditable = ({
     // Modo Edición
     if (editando) {
         return (
-            <CFormInput
+            <input
                 ref={inputRef}
-                type="number"
-                step="0.5"
-                min="1"
-                max="10"
-                size="sm"
-                className="text-center fw-bold border-primary shadow-sm"
-                style={{ width: '60px', margin: '0 auto' }}
+                type="text"
+                inputMode="decimal"
+                style={{
+                    width: '3rem',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    border: '1.5px solid #0369a1',
+                    borderRadius: '0.25rem',
+                    outline: 'none',
+                    padding: '0.1rem 0.25rem',
+                    fontSize: 'inherit',
+                    fontFamily: 'inherit',
+                    background: '#fff',
+                    display: 'block',
+                    margin: '0 auto',
+                }}
                 value={valor}
                 autoFocus
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => setValor(e.target.value)}
                 onBlur={() => {
-                    // Al perder foco, NO navegamos automáticamente
                     setEditando(false);
                 }}
                 onKeyDown={(e) => {
@@ -185,6 +192,7 @@ const CeldaEditable = ({
                     }
                 }}
             />
+
         );
     }
 

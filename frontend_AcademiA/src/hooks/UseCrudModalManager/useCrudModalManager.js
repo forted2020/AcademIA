@@ -9,7 +9,7 @@ export const useCrudModalManager = ({
     deleteApi,
     setData
 }) => {
-    const { showSuccess, showError } = useToast();
+    const { showSuccess, showError, showInfo } = useToast();
 
     // Estados para Edición/Creación
     const [editModal, setEditModal] = useState({ visible: false, item: null });
@@ -24,21 +24,19 @@ export const useCrudModalManager = ({
     const closeDelete = () => setDeleteModal({ visible: false, item: null });
 
     // --- Acción: Guardar (Create/Update) ---
-    const handleSave = async (formData) => {
+    // meta: { hayCambios, isEdit } — informado por DynamicForm
+    const handleSave = async (formData, meta = {}) => {
         try {
-            // Capturamos la referencia actual para evitar problemas que justo cambie antes de responder. 
             const itemToEdit = editModal.item;
-
-            const isEdit = !!editModal.item;
-
-            // Extraemos el ID una sola vez
-            const pkValue = isEdit ? itemToEdit.id_entidad : null;
+            const isEdit     = !!itemToEdit;
+            const pkValue    = isEdit ? itemToEdit.id_entidad : null;
+            const hayCambios = meta.hayCambios ?? true  // En alta siempre hay "cambios"
 
             const response = isEdit
                 ? await updateApi(pkValue, formData)
                 : await createApi(formData);
 
-            if (!response?.data) throw new Error("Error en la respuesta de la API");
+            if (!response?.data) throw new Error('Error en la respuesta de la API');
 
             setData((prev) =>
                 isEdit
@@ -46,13 +44,21 @@ export const useCrudModalManager = ({
                     : [...prev, response.data]
             );
 
-            showSuccess(isEdit ? 'Registro actualizado correctamente' : 'Registro creado con éxito');
-
-
+            // Cierra primero para que el toast no quede atrapado por el stacking context del modal
             closeEdit();
+
+            if (!isEdit) {
+                showSuccess('Registro creado con éxito')
+            } else if (hayCambios) {
+                showSuccess('Cambios guardados correctamente')
+            } else {
+                showInfo('No se realizaron modificaciones', 'Sin cambios')
+            }
+
             return true;
         } catch (error) {
-            console.error("Error al guardar:", error);
+            console.error('Error al guardar:', error);
+            showError('No se pudo guardar. Verificá los datos ingresados.');
             throw error;
         }
     };

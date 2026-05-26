@@ -8,7 +8,8 @@ from typing import List
 # --- Importaciones del proyecto ---
 from models import Inasistencia
 import schemas
-from database import localSession          
+from database import localSession
+from Services.config_service import get_config_int
 
 # Creamos la instancia del router con un prefijo claro para organizar las rutas de la API.
 router = APIRouter(prefix="/estudiantes/inasistencias")
@@ -46,8 +47,14 @@ def get_asistencias_entidad(
     # Calculamos total inasistencias e inasistencias justificadas
     total_inasistencia = sum((i.tipo_obj.valor if i.tipo_obj else 0) for i in inasistencias)
     total_inasistencia_justif = sum((i.tipo_obj.valor if i.tipo_obj else 0) for i in inasistencias if i.justificada)
-    
-    # Retornamos el objeto siguiendo la estructura de schemas.InasistenciaResponse
+
+    # Umbrales normativos configurables (sembrados en Fase 1).
+    # Se comparan contra el total computado descontando las justificadas: la normativa
+    # toma como inasistencias "que cuentan" únicamente las no justificadas.
+    umbral_reincorporacion = get_config_int(db, "inasistencias_umbral_reincorporacion", 20)
+    umbral_libre           = get_config_int(db, "inasistencias_umbral_libre",           28)
+    total_computable       = total_inasistencia - total_inasistencia_justif
+
     return {
         "totalInasistencia": total_inasistencia,
         "totalInasistenciaJustif": total_inasistencia_justif,
@@ -61,7 +68,11 @@ def get_asistencias_entidad(
                 "reason": i.motivo_inasistencia or ""
             }
             for i in inasistencias
-        ]
+        ],
+        "umbralReincorporacion": umbral_reincorporacion,
+        "umbralLibre":           umbral_libre,
+        "requiereActaReincorporacion": total_computable >= umbral_reincorporacion,
+        "caracterLibre":               total_computable >= umbral_libre,
     }
 
 

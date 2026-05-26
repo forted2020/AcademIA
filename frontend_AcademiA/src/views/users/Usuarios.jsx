@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import classNames from 'classnames'
 
 import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer, CPagination, CPaginationItem, CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, } from '@coreui/react'
 
-import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilPlus, cilSearch } from '@coreui/icons'
+import { cilTrash, cilPencil, cilArrowTop, cilArrowBottom, cilSwapVertical, cilPlus, cilSearch, cilPeople } from '@coreui/icons'
 
 import { CIcon } from '@coreui/icons-react';
 
@@ -21,6 +21,7 @@ import TableAction from '../../components/tableActions/TableActions.jsx'
 import { compactStyles, detailedStyles } from '../dashboard/pdfFormats/pdfStyles.js';
 
 import '../../css/PersonalStyles.css'
+import './Usuarios.css'
 
 import {
   createColumnHelper, flexRender, getCoreRowModel, useReactTable, getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
@@ -271,84 +272,58 @@ const Usuarios = () => {
 
   return (
 
+    <CContainer fluid className="py-3">
 
-    <CContainer>
+      {/* ── Card principal ─────────────────────────────────────── */}
+      <div className="usr-card mb-1">
 
-      <CCard className="mb-1" >       {/* Contenedor que actúa como cuerpo de la tarjeta CCard. Envuelve todo el contenido*/}
+        {/* ── Encabezado ─────────────────────────────────────────── */}
+        <div className="usr-card-header">
 
-        {/* ----------  HEAD --------------- */}
-        <CCardHeader className="py-2 bg-white ">
-          <CRow className="justify-content-between align-items-center " > {/* Fila en la grilla.*/}
+          {/* Columna izquierda: brand */}
+          <div className="usr-header-left">
+            <div className="usr-header-brand">
+              <div className="usr-header-brand-icon">
+                <CIcon icon={cilPeople} className="usr-brand-icon" />
+              </div>
+              <div>
+                <h2 className="usr-header-h2">Gestión de Usuarios</h2>
+                <p className="usr-header-sub">Administración de cuentas y accesos</p>
+              </div>
+            </div>
+          </div>
 
-            <CCol xs={12} sm="auto">    {/* Columna dentro de fila. Ocupa 5 de 12 unidades disponibles. Hereda gutter de CRow*/}
-              <h4 id="titulo" className="mb-0 ">
-                Administración de Usuarios
-              </h4>
-              <div className="small text-body-secondary"> Administradores del sistema</div>
-            </CCol>
+          {/* Columna derecha: botón nuevo */}
+          <div className="usr-header-actions">
+            <button
+              className="usr-btn-new"
+              onClick={() => handleClickEditar('')}
+            >
+              <CIcon icon={cilPlus} style={{ width: '0.85rem', height: '0.85rem' }} />
+              Nuevo Usuario
+            </button>
+          </div>
 
-            <CCol xs={12} sm="auto" className="text-md-end ">  {/* Columna para el botón Agregar Usuario */}
-              <CButton
-                color="primary"
-                className="shadow-sm"
-                size="sm"
-                // onClick={() => setVisibleXL(!visibleXL)}
-                // onClick={() => setEditModalVisible2(!editModalVisible2)}
-                onClick={() => handleClickEditar('')}
-
-
-              >
-                <CIcon icon={cilPlus} className="me-1" />
-                Nuevo Usuario
-              </CButton>
-            </CCol>
-          </CRow>
-        </CCardHeader>
-        {/* ----------  /HEAD --------------- */}
-
-
+        </div>
+        {/* ── /Encabezado ─────────────────────────────────────────── */}
 
         <TableActions table={table} />
-        {/* ----------  BODY --------------- */}
-        <CCardBody className="px-4 pt-1 pb-2 border border-light">
 
-          {/* Filtros avanzados y búsqueda global 
-          Se pasan columnFilters y setColumnFilters directamente al componente AdvancedFilters*/}
-          {/* Se desactivan por Debug 
-          <AdvancedFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            columnFilters={columnFilters}
-            setColumnFilters={setColumnFilters}
-          />
-          */}
-
-
-          {/*  ---------------  Tabla  ------------- */}
-          {/* Se utiliza el componente GenericTable importado de GenericTable.jsx, pasando la instancia de table como prop.*/}
+        {/* ── Cuerpo ─────────────────────────────────────────────── */}
+        <div className="usr-card-body">
+          {/* Filtros avanzados desactivados temporalmente */}
+          {/* Se utiliza GenericTable con la instancia de table */}
           <GenericTable table={table} />
+        </div>
+        {/* ── /Cuerpo ─────────────────────────────────────────────── */}
 
-        </CCardBody>
-
-        {/* ----------  FOOTER --------------- */}
-        <CCardFooter
-          className="bg-white border-top px-3 py-1"
-          style={{
-            position: 'sticky',          // Usamos 'sticky' para que se mantenga en el fondo del contenedor padre
-            bottom: 0,                  // Se fija en la parte inferior
-            zIndex: 1,                  // Asegura que esté sobre el contenido desplazable
-            //width: '100%',              // Garantiza que ocupe todo el ancho del contenedor
-            boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' // Sombra sutil para diferenciarlo
-          }}
-        >
-          {/* Componente que contiene paginación, conteo de registros y selector de tamaño de página.
-         Le paso pasando la instancia de table como prop. */}
-
+        {/* ── Footer sticky con paginación ───────────────────────── */}
+        <div className="usr-card-footer">
           <TablePagination table={table} />
+        </div>
 
-        </CCardFooter>
-
-      </CCard>
+      </div>
+      {/* ── /Card principal ─────────────────────────────────────── */}
 
 
 

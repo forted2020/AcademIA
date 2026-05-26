@@ -1,0 +1,294 @@
+/* views/users/usersHome/UsersHome.css — prefijo .adm-home__ */
+
+/* ── Card principal ───────────────────────────────────── */
+.adm-home__card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden;
+  background: #fff;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.adm-home__header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  padding: 1.25rem 1.5rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.adm-home__brand-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--acad-blue-pale, #e0f2fe);
+  color: var(--acad-blue, #0369a1);
+  border-radius: var(--acad-radius, 0.5rem);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.adm-home__brand-icon svg,
+.adm-home__brand-icon .c-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.adm-home__title-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.adm-home__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.adm-home__subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--acad-blue, #0369a1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.adm-home__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--acad-text-muted, #64748b);
+  flex-wrap: wrap;
+}
+
+/* ── Cuerpo ───────────────────────────────────────────── */
+.adm-home__body {
+  background: #f8fafc;
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Sección interna (panel blanco) ──────────────────── */
+.adm-home__section {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1.25rem;
+}
+
+.adm-home__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.adm-home__section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acad-text-muted, #64748b);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adm-home__section-title--blue {
+  color: var(--acad-blue, #0369a1);
+}
+
+.adm-home__section-title .c-icon {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+}
+
+/* ── Grillas ──────────────────────────────────────────── */
+.adm-home__grid-kpi-5 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.adm-home__grid-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.adm-home__grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .adm-home__grid-kpi-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .adm-home__grid-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-home__grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .adm-home__grid-kpi-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-home__grid-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .adm-home__grid-kpi-5,
+  .adm-home__grid-actions { grid-template-columns: 1fr; }
+}
+
+/* ── Badge ciclo ──────────────────────────────────────── */
+.adm-home__badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* ── Tabla de previas top 5 ──────────────────────────── */
+.adm-home__previas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.adm-home__previa-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.adm-home__previa-rank {
+  width: 22px;
+  height: 22px;
+  font-size: 0.6875rem;
+  background: #f8fafc;
+  color: var(--acad-text-muted, #64748b);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+}
+
+.adm-home__previa-info {
+  min-width: 0;
+}
+
+.adm-home__previa-nombre {
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+  font-size: 0.875rem;
+}
+
+.adm-home__previa-curso {
+  font-size: 0.75rem;
+  color: var(--acad-text-muted, #64748b);
+  margin-left: 0.375rem;
+}
+
+.adm-home__previa-track {
+  height: 8px;
+  background: var(--acad-border-light, #e2e8f0);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.adm-home__previa-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.5s ease;
+}
+
+.adm-home__previa-cantidad {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ── Actividad reciente ───────────────────────────────── */
+.adm-home__activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.adm-home__activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--acad-radius-sm, 0.375rem);
+  font-size: 0.8125rem;
+}
+
+.adm-home__activity-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  background: var(--acad-blue-pale, #e0f2fe);
+  color: var(--acad-blue, #0369a1);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+
+.adm-home__activity-icon .c-icon {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+}
+
+.adm-home__activity-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+  color: var(--acad-text, #0f172a);
+}
+
+.adm-home__activity-meta {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--acad-text-muted, #64748b);
+}
+
+/* ── Animación de entrada stagger ────────────────────── */
+.adm-home__rise > * {
+  animation: admRise 0.35s ease-out both;
+}
+.adm-home__rise > *:nth-child(1) { animation-delay: 0.02s; }
+.adm-home__rise > *:nth-child(2) { animation-delay: 0.07s; }
+.adm-home__rise > *:nth-child(3) { animation-delay: 0.12s; }
+.adm-home__rise > *:nth-child(4) { animation-delay: 0.17s; }
+.adm-home__rise > *:nth-child(5) { animation-delay: 0.22s; }
+
+@keyframes admRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

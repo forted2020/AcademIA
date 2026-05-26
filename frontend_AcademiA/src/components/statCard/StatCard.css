@@ -1,55 +1,75 @@
-/* frontend_AcademiA\src\components\statCard\StatCard.css */
+/* components/statCard/StatCard.css */
 
-/* Estilo base para las tarjetas */
+/* ── Variant: classic (CoreUI-style) ─────────────────── */
 .stat-card {
-    transition: box-shadow 0.3s ease, transform 0.2s ease;
-    cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
 }
 
-/* Hover para primary (azul) */
-.stat-card-primary:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(13, 110, 253, 0.25) !important;
-    transform: translateY(-1px);
+.stat-card-primary:hover   { box-shadow: 0 0.25rem 0.75rem rgba(13, 110, 253, 0.25) !important;  transform: translateY(-1px); }
+.stat-card-success:hover   { box-shadow: 0 0.25rem 0.75rem rgba(25, 135, 84, 0.25) !important;   transform: translateY(-1px); }
+.stat-card-danger:hover    { box-shadow: 0 0.25rem 0.75rem rgba(220, 53, 69, 0.25) !important;   transform: translateY(-1px); }
+.stat-card-warning:hover   { box-shadow: 0 0.25rem 0.75rem rgba(255, 193, 7, 0.25) !important;   transform: translateY(-1px); }
+.stat-card-info:hover      { box-shadow: 0 0.25rem 0.75rem rgba(13, 202, 240, 0.25) !important;  transform: translateY(-1px); }
+.stat-card-secondary:hover { box-shadow: 0 0.25rem 0.75rem rgba(108, 117, 125, 0.25) !important; transform: translateY(-1px); }
+.stat-card-dark:hover      { box-shadow: 0 0.25rem 0.75rem rgba(33, 37, 41, 0.25) !important;    transform: translateY(-1px); }
+.stat-card-light:hover     { box-shadow: 0 0.25rem 0.75rem rgba(108, 117, 125, 0.2) !important;  transform: translateY(-1px); }
+
+/* ── Variant: minimal ─────────────────────────────────── */
+.stat-card--minimal {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1rem 1.125rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  min-height: 96px;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
 }
 
-/* Hover para success (verde) */
-.stat-card-success:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(25, 135, 84, 0.25) !important;
-    transform: translateY(-1px);
+.stat-card--minimal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border-color: var(--acad-border, #cbd5e1);
 }
 
-/* Hover para danger (rojo) */
-.stat-card-danger:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(220, 53, 69, 0.25) !important;
-    transform: translateY(-1px);
+/* Línea de color en el borde inferior */
+.stat-card--minimal::after {
+  content: '';
+  position: absolute;
+  left: 1.125rem;
+  right: 1.125rem;
+  bottom: 0.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--stat-c, var(--acad-blue, #0369a1));
+  opacity: 0.6;
 }
 
-/* Hover para warning (amarillo) */
-.stat-card-warning:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(255, 193, 7, 0.25) !important;
-    transform: translateY(-1px);
+.stat-card__value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--acad-navy, #0f172a);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Hover para info (celeste) */
-.stat-card-info:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(13, 202, 240, 0.25) !important;
-    transform: translateY(-1px);
+.stat-card__title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--acad-text-muted, #64748b);
+  margin: 0;
 }
 
-/* Hover para secondary (gris) */
-.stat-card-secondary:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(108, 117, 125, 0.25) !important;
-    transform: translateY(-1px);
-}
-
-/* Hover para dark (negro) */
-.stat-card-dark:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(33, 37, 41, 0.25) !important;
-    transform: translateY(-1px);
-}
-
-/* Hover para light (blanco) */
-.stat-card-light:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(108, 117, 125, 0.2) !important;
-    transform: translateY(-1px);
+.stat-card__subtext {
+  font-size: 0.75rem;
+  color: var(--acad-text-subtle, #94a3b8);
+  margin: 0;
 }

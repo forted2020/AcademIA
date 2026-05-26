@@ -1,84 +1,58 @@
 //  frontend_AcademiA\src\views\notas\CargaNotas.jsx
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { CButton, CCard, CCardHeader, CCardBody, CCardFooter, CCol, CRow, CContainer, CFormInput, CFormLabel, } from '@coreui/react'
+import {
+  CCard, CCardHeader, CCardBody,
+  CCol, CRow, CFormInput, CFormLabel,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilNotes } from '@coreui/icons'
 
 import GenericTable from '../../components/usersTable/GenericTable.jsx'
-import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 
-
-//  Importamos upsertNota
-import { upsertNota, } from '../../api/api';
-
-// Importar el hook para acceder a los datos de la sesión almacenados en AuthProvider
-import { useAuth } from '../../context/AuthContext.js';
-
-
-//   Para cargar la planilla modelo
-import ModeloPlanilla from './Modelo_Planilla.jsx'
-
-//  Importar hook para obtener notas de los estudiantes
-import { usePlanillaCalificaciones } from '../../hooks/useCalificaciones.js';
-
-// Importar configuración de columnas
+import { upsertNota } from '../../api/api'
+import { useAuth } from '../../context/AuthContext.js'
+import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema.js'
+import { usePlanillaCalificaciones } from '../../hooks/useCalificaciones.js'
 import { getTableColumns } from '../../utils/columns.js'
-
-//  Importamos contexto para las celdas de la tabla
-import { EditableCellProvider } from '../../context/editableCellContext/EditableCellContext.jsx';
-
-
-//  Importamos el servicio apiMaterias que contiene las funciones getCiclosAll y getMateriasCurso
-import apiMaterias, { getCiclosAll, getMateriasCurso } from '../../api/apiMaterias.jsx'
-
-//  Importamos el servicio apiCursos
-import apiCursos, { getCursosAll, getCursosCiclo } from '../../api/apiCursos.jsx'
-
-
-//  Importamos el componente para editar una celda de la tabla Notas
+import { EditableCellProvider } from '../../context/editableCellContext/EditableCellContext.jsx'
+import apiMaterias from '../../api/apiMaterias.jsx'
+import apiCursos from '../../api/apiCursos.jsx'
 import CeldaEditable from '../../components/notas/CeldaEditable.jsx'
 
+import './CargaNotas.css'
 
-
-// Estado inicial para filtros
 const initialFilters = []
-
-// Importar componentes reutilizables
-import TablePagination from '../../components/tablePagination/TablePagination.jsx'
-import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'
-import TableActions from '../../components/tableActions/TableActions.jsx'
-import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
-import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-
-import '../../css/PersonalStyles.css'
 
 export default function CargaNotaAlumno() {
 
     const { sessionData, loadingSessionData } = useAuth();
+    const { configs: configSistema } = useConfigSistema();
+    const { notaMinima, notaMaxima } = getRangoNotas(configSistema);
+
     if (loadingSessionData) {
-        return null; // o spinner
+        return null;
     }
-
-
 
     const [unitCharge, setUnitCharge] = useState(false);
     const [formData, setFormData] = useState({
-        nota: 8.5, // Valor inicial
+        nota: 8.5,
         alumno: '',
         tipo: ''
     });
 
     // ---------- Estados para Ciclos ----------
-    const [ciclos, setCiclos] = useState([]);   //  Guardamos los datos obtenidos de la api ciclos
-    const [selectedCicloId, setSelectedCicloId] = useState(""); // Guardamos el ciclo seleccionado
+    const [ciclos, setCiclos] = useState([]);
+    const [selectedCicloId, setSelectedCicloId] = useState("");
 
     // ---------- Estados para Cursos ----------
-    const [cursos, setCursos] = useState([]);   //  Lista de Cursos para el Select
-    const [selectedCursoId, setSelectedCursoId] = useState("");   //  Lista de Cursos para el Select
+    const [cursos, setCursos] = useState([]);
+    const [selectedCursoId, setSelectedCursoId] = useState("");
 
     // ---------- Estados para Materias ----------
-    const [materias, setMaterias] = useState([]);   //  Lista de Materias para el Select
-    const [materiaId, setMateriaId] = useState("");   //  ID Materia Seleccionada
-
+    const [materias, setMaterias] = useState([]);
+    const [materiaId, setMateriaId] = useState("");
 
     const {
         data: tableData,
@@ -91,29 +65,36 @@ export default function CargaNotaAlumno() {
     console.log('loading:', loading);
     console.log('error:', error);
 
-
-    // Manejador genérico de cambios en el formulario
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            // Convertir la nota a número si es el campo 'nota'
             [name]: name === 'nota' ? parseFloat(value) : value,
         }));
     };
 
-    // ---------- Estados principales ----------
-    const [searchTerm, setSearchTerm] = useState('') // Búsqueda global
-    const [columnFilters, setColumnFilters] = useState(initialFilters) // Filtros por columna
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 }) // Paginación
-    const [sorting, setSorting] = useState([]) // Ordenamiento
+    const [searchTerm, setSearchTerm] = useState('')
+    const [columnFilters, setColumnFilters] = useState(initialFilters)
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+    const [sorting, setSorting] = useState([])
 
+    // Fecha editable del encabezado de planilla — formato dd/mm/aa
+    const hoy = new Date()
+    const fechaInicial = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${String(hoy.getFullYear()).slice(-2)}`
+    const [fechaPlanilla, setFechaPlanilla] = useState(fechaInicial)
+    const [editandoFecha, setEditandoFecha] = useState(false)
+
+    // Docente editable — se inicializa desde la sesión, pero puede corregirse manualmente
+    const nombreDocenteInicial = sessionData?.user
+        ? `${sessionData.user.apellido ?? ''}, ${sessionData.user.nombre ?? ''}`.trim().replace(/^,\s*/, '')
+        : ''
+    const [docentePlanilla] = useState(nombreDocenteInicial)
 
     // ==================== CARGAR LOS CICLOS AL MONTAR EL COMPONENTE ====================
     useEffect(() => {
         const fetchCiclos = async () => {
             try {
-                const response = await apiMaterias.getCiclosAll();  // Ejecuto la apiMaterias.getCiclos
+                const response = await apiMaterias.getCiclosAll();
                 const payload = response.data
                 setCiclos(Array.isArray(payload) ? payload : (payload?.data ?? []))
             } catch (err) {
@@ -123,147 +104,121 @@ export default function CargaNotaAlumno() {
         fetchCiclos();
     }, []);
 
-    // ==================== CARGAR LOS CURSOS CADA VEZ QUE selectedCicloId CAMBIA     ====================
+    // ==================== CARGAR LOS CURSOS CADA VEZ QUE selectedCicloId CAMBIA ====================
     useEffect(() => {
         const cargarCursos = async () => {
-
-            // Si el usuario selecciona "Seleccionar Ciclo" (valor ""), limpiamos cursos
             if (!selectedCicloId || selectedCicloId === "0") {
                 setCursos([]);
                 setSelectedCursoId('');
                 return;
             }
-
             try {
-                // Ejecuto la apiCursos.getCursosCiclo pasando como parámetro el selectedCicloId
                 const response = await apiCursos.getCursosCiclo(selectedCicloId);
-                setCursos(response.data);   // Guardo los datos en la variable Cursos
-                setSelectedCursoId(''); // Reseteamos el cursoId al cambiar de ciclo
+                setCursos(response.data);
+                setSelectedCursoId('');
             } catch (err) {
                 console.error("Error al Traer cursos del ciclo:", err);
             }
         };
         cargarCursos();
-    }, [selectedCicloId]); // <--- La "llave" que dispara el efecto
+    }, [selectedCicloId]);
 
-
-    // ==================== CARGAR LAS MATERIAS CADA VEZ QUE selectedCursoID CAMBIA     ====================
+    // ==================== CARGAR LAS MATERIAS CADA VEZ QUE selectedCursoID CAMBIA ====================
     useEffect(() => {
         const cargarMaterias = async () => {
-
-            // Si el usuario selecciona "Seleccionar Curso" (valor ""), limpiamos Materias
             if (!selectedCursoId || selectedCursoId === "0") {
                 setMaterias([]);
                 setMateriaId('');
                 return;
             }
-
             try {
-                // Ejecuto la api routes_materias.get_materias_curso pasando como parámetro el selectedCursoId
                 const response = await apiMaterias.getMateriasCurso(selectedCursoId);
-                setMaterias(response.data);   // Guardo los datos en la variable
-                setMateriaId(''); // Reseteamos materiaId al cambiar de curso
+                setMaterias(response.data);
+                setMateriaId('');
             } catch (err) {
-                console.error("Error al Traer Matrerias del curso:", err);
+                console.error("Error al Traer Materias del curso:", err);
             }
         };
         cargarMaterias();
     }, [selectedCursoId]);
 
-
     // ==================== FUNCIÓN PARA GUARDAR NOTA (UPSERT) ====================
     const handleGuardarNota = async (alumnoId, tipoNotaId, nuevoValor) => {
-        // 1. Preparamos el objeto con los datos
+        // Validación contra el rango configurado en el sistema.
+        // Se ejecuta antes de armar el payload para evitar viajes al backend con valores inválidos.
+        const valorParseado = nuevoValor === "" || nuevoValor === null || nuevoValor === undefined
+            ? null
+            : parseFloat(nuevoValor);
+
+        if (valorParseado !== null && (Number.isNaN(valorParseado) || valorParseado < notaMinima || valorParseado > notaMaxima)) {
+            alert(`La nota debe estar entre ${notaMinima} y ${notaMaxima}. Ajustá la configuración del sistema si necesitás otro rango.`);
+            throw new Error('Nota fuera de rango');
+        }
+
         const payload = {
             id_alumno: alumnoId,
-            id_materia: parseInt(materiaId), // Viene del estado del selector de arriba
-            id_ciclo_lectivo: parseInt(selectedCicloId), // Contexto del Ciclo
-            id_curso: parseInt(selectedCursoId),    // Contexto del Curso
+            id_materia: parseInt(materiaId),
+            id_ciclo_lectivo: parseInt(selectedCicloId),
+            id_curso: parseInt(selectedCursoId),
             id_tipo_nota: tipoNotaId,
-            valor: nuevoValor === "" ? null : parseFloat(nuevoValor),
+            valor: valorParseado,
             id_entidad_carga: sessionData?.user?.id_entidad,
-            id_periodo: null // Si es opcional
+            id_periodo: null
         };
 
         console.log("%c Enviar al Backend:", "color: #007bff; font-weight: bold", payload);
 
         try {
-            //  Llamada  a la API:
             const response = await upsertNota(payload);
             console.log("%c✅ ¡Guardado exitoso!", "color: #28a745; font-weight: bold", response);
-
-            // IMPORTANTE: Retornar la respuesta para que CeldaEditable sepa que terminó
             return response;
-
         } catch (error) {
             console.error("Error al guardar:", error);
-            alert("No se pudo guardar la nota. Verifique su conexión.");
-            // Acá se podría recargar los datos originales para "limpiar" el error
-            // IMPORTANTE: Re-lanzar el error para que CeldaEditable NO navegue
+            const mensajeBackend = error?.response?.data?.detail;
+            alert(mensajeBackend || "No se pudo guardar la nota. Verifique su conexión.");
             throw error;
-
         }
     };
 
-
-
-    // ==================== CONFIGURACIÓN DINÁMICA DE COLUMNAS PARA CARGA NOTAS ====================
+    // ==================== CONFIGURACIÓN DINÁMICA DE COLUMNAS ====================
     const columns = useMemo(() => {
         if (!tableData?.columnas) return [];
 
-        // Columnas Base (Nº y Nombre)
         const baseColumns = [
             { id: 'index', header: 'Nº', cell: ({ row }) => row.index + 1 },
             {
                 accessorKey: 'nombre_completo',
                 id: 'alumno',
                 header: 'Alumno/a',
-                //  cell: ({ getValue }) => getValue()?.toUpperCase(),  //  ver si queda mejor el de abajo. Sino, cambiarlo
                 cell: ({ getValue }) => <span className="text-nowrap">{getValue()?.toUpperCase()}</span>,
             },
         ];
 
-
-        // Columnas Dinámicas de Notas (vienen del endpoint)
         const dynamicNotesColumns = (tableData?.columnas || [])
-            .filter(col => col.id_tipo_nota !== 7) // Excluir Calif. Definitiva
+            .filter(col => col.id_tipo_nota !== 7)
             .map(col => {
-                // Supongamos que el backend nos envía 'editable: false' en el JSON de columnas
                 const esEditable = col.editable !== false;
-
                 return {
                     id: `nota_${col.id_tipo_nota}`,
                     header: col.label,
                     accessorKey: `calificaciones.${col.id_tipo_nota}`,
                     cell: ({ row, column, table }) => {
-
-                        // Acceder directamente al valor desde row.original
                         const val = row.original.calificaciones?.[String(col.id_tipo_nota)];
-
-                        // Si no es editable, renderizamos texto plano con un estilo gris
                         if (!esEditable) {
                             if (val === null || val === undefined || val === "") {
                                 return <span className="text-muted opacity-50">-</span>;
                             }
                             return <span className="fw-semibold text-dark">{val}</span>;
                         }
-
-                        // Si es editable, usamos nuestro nuevo componente (que crearemos a continuación)
                         return (
                             <CeldaEditable
                                 valorInicial={val}
-                                editable={esEditable} // Pasamos la prop de control
+                                editable={esEditable}
                                 rowIndex={row.index}
                                 columnId={column.id}
                                 table={table}
-                                alGuardar={(nuevoValor) => {
-                                    // Llamamos a la función global pasando los IDs correspondientes
-                                    return handleGuardarNota(
-                                        row.original.id_alumno,
-                                        col.id_tipo_nota,
-                                        nuevoValor
-                                    );
-                                }
+                                alGuardar={(nuevoValor) =>
+                                    handleGuardarNota(row.original.id_alumno, col.id_tipo_nota, nuevoValor)
                                 }
                             />
                         );
@@ -271,7 +226,6 @@ export default function CargaNotaAlumno() {
                 };
             });
 
-        // Columnas de Resultados (Promedio y Definitiva)
         const resultColumns = [
             {
                 accessorKey: 'promedio',
@@ -286,24 +240,19 @@ export default function CargaNotaAlumno() {
             { accessorKey: 'observaciones', header: 'Observaciones' },
         ];
 
-        // Unimos todas las piezas
-        const finalConfig = [...baseColumns, ...dynamicNotesColumns, ...resultColumns];
-
         return getTableColumns(
-            finalConfig,
-            () => { },
+            [...baseColumns, ...dynamicNotesColumns, ...resultColumns],
+            () => {},
             null,
             { showSelection: false, showActions: false }
         );
-    }, [tableData]); // Se recalcula si cambian los datos o las columnas
-
+    }, [tableData]);
 
     // ---------- Configuración de TanStack Table ----------
     const table = useReactTable({
-        data: tableData?.filas || [], // tableData es un objeto { columnas: [], filas: [] }
+        data: tableData?.filas || [],
         columns,
         getCoreRowModel: getCoreRowModel(),
-        // getPaginationRowModel: getPaginationRowModel(),
         onPaginationChange: setPagination,
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
@@ -318,261 +267,227 @@ export default function CargaNotaAlumno() {
         },
     })
 
-
-
-    // ==================== DATOS DERIVADOS PARA MOSTRAR E ====================
-    const cicloSeleccionado = ciclos.find(c => c.id_ciclo_lectivo === parseInt(selectedCicloId))
-    const cursoSeleccionado = cursos.find(c => c.id_curso === parseInt(selectedCursoId))
+    // ==================== DATOS DERIVADOS ====================
+    const cicloSeleccionado   = ciclos.find(c => c.id_ciclo_lectivo === parseInt(selectedCicloId))
+    const cursoSeleccionado   = cursos.find(c => c.id_curso === parseInt(selectedCursoId))
     const materiaSeleccionada = materias.find(m => m.id_materia === parseInt(materiaId))
 
-    // Extraemos los valores que vamos a mostrar
     const datosPlanilla = {
-        ciclo: cicloSeleccionado?.nombre_ciclo_lectivo || 'Sin seleccionar',
-        curso: cursoSeleccionado?.curso || 'Sin seleccionar',
-        turno: cursoSeleccionado?.turno || 'Sin seleccionar',
-        materia: materiaSeleccionada?.nombre_rel?.nombre_materia || 'Sin seleccionar',
-        // Se pueden agregar más datos según se necesite
-        // docente: materiaSeleccionada?.docente || 'Sin asignar',
-        fecha: new Date().toLocaleDateString()
+        ciclo:   cicloSeleccionado?.nombre_ciclo_lectivo || 'Sin seleccionar',
+        curso:   cursoSeleccionado?.curso || 'Sin seleccionar',
+        turno:   cursoSeleccionado?.turno || 'Sin seleccionar',
+        materia: materiaSeleccionada?.nombre?.nombre_materia || 'Sin seleccionar',
     }
 
-
-
     return (
-        <div>
+        <CCard className="cn-card">
 
-            {/* ----------  BODY --------------- */}
-            <CCard className="mb-4 no-print shadow-sm">
-                <CCardHeader className="fw-semibold bg-white">
-                    Filtros de Selección
-                </CCardHeader>
-                <CCardBody>
-                    <CRow className="g-3">
+            {/* ── Encabezado con filtros ── */}
+            <CCardHeader className="cn-card-header">
+                <div className="cn-header-left">
 
-                        <CCol md={3}>
-                            <label className="form-label text-uppercase small fw-semibold text-secondary">Ciclo Lectivo</label>
-                            {/* Select Dinámico con los datos de la DB */}
+                    <div className="cn-header-brand">
+                        <div className="cn-header-brand-icon">
+                            <CIcon icon={cilNotes} className="cn-brand-icon" />
+                        </div>
+                        <div>
+                            <h2 className="cn-header-h2">Carga de Notas</h2>
+                            <p className="cn-header-sub">Registro de calificaciones por materia y curso</p>
+                        </div>
+                    </div>
+
+                    <div className="cn-filters-row">
+
+                        <div className="cn-filter-field">
+                            <label className="cn-filter-label">
+                                <span className="cn-filter-step is-ready">1</span>
+                                Ciclo Lectivo
+                            </label>
                             <select
-                                className="form-select"
+                                className="cn-filter-select"
                                 value={selectedCicloId}
                                 onChange={(e) => setSelectedCicloId(e.target.value)}
                             >
-                                {/*  Primera opcióndel select */}
-                                <option value="">Seleccionar Ciclo</option>
-
-                                {/*  Mapeo las opciones restantes del select */}
-                                {ciclos.map((ciclos) => (
-                                    <option
-                                        key={ciclos.id_ciclo_lectivo}
-                                        value={ciclos.id_ciclo_lectivo}
-                                    >
-                                        {ciclos.nombre_ciclo_lectivo}
+                                <option value="">Seleccioná un ciclo</option>
+                                {ciclos.map((c) => (
+                                    <option key={c.id_ciclo_lectivo} value={c.id_ciclo_lectivo}>
+                                        {c.nombre_ciclo_lectivo}
                                     </option>
                                 ))}
                             </select>
-                        </CCol>
+                        </div>
 
-
-                        <CCol md={3}>
-                            <label className="form-label text-uppercase small fw-semibold text-secondary">Curso</label>
-                            {/* Select Dinámico con los datos de la DB */}
+                        <div className="cn-filter-field">
+                            <label className="cn-filter-label">
+                                <span className={`cn-filter-step${selectedCicloId ? ' is-ready' : ''}`}>2</span>
+                                Curso
+                            </label>
                             <select
-                                className="form-select"
-                                value={selectedCursoId} // El estado que guarda el curso seleccionado
-                                onChange={(e) => setSelectedCursoId(e.target.value)} // Actualiza el ID del curso al elegir
-                                disabled={cursos.length === 0} // Se deshabilita si la lista está vacía
+                                className={`cn-filter-select${!selectedCicloId ? ' is-disabled' : ''}`}
+                                value={selectedCursoId}
+                                disabled={!selectedCicloId}
+                                onChange={(e) => setSelectedCursoId(e.target.value)}
                             >
-                                {/* Opción por defecto dinámica */}
                                 <option value="">
-                                    {cursos.length > 0 ? (
-                                        "Seleccione el Curso") : "Primero elija un Ciclo"}
+                                    {selectedCicloId ? 'Seleccioná un curso' : 'Primero elegí un ciclo'}
                                 </option>
-
-                                {/* Mapeo de los cursos traídos del endpoint */}
-                                {cursos.map((item) => (
-                                    <option
-                                        key={item.id_curso}
-                                        value={item.id_curso}>
-                                        {item.curso}
-                                    </option>
+                                {cursos.map((c) => (
+                                    <option key={c.id_curso} value={c.id_curso}>{c.curso}</option>
                                 ))}
                             </select>
-                        </CCol>
+                        </div>
 
-
-                        <CCol md={3}>
-                            <label className="form-label text-uppercase small fw-semibold text-secondary">Materia</label>
+                        <div className="cn-filter-field">
+                            <label className="cn-filter-label">
+                                <span className={`cn-filter-step${selectedCursoId ? ' is-ready' : ''}`}>3</span>
+                                Materia
+                            </label>
                             <select
-                                className="form-select"
-                                value={materiaId} // El estado que guarda la materia seleccionada
+                                className={`cn-filter-select${!selectedCursoId ? ' is-disabled' : ''}`}
+                                value={materiaId}
+                                disabled={!selectedCursoId}
                                 onChange={(e) => setMateriaId(e.target.value)}
-                                disabled={materias.length === 0} // Se deshabilita si la lista está vacía
                             >
-                                {/* Opción por defecto dinámica */}
                                 <option value="">
-                                    {materias.length > 0 ? "Seleccionar Materia" : "Primero elija un Curso"}
+                                    {selectedCursoId ? 'Seleccioná una materia' : 'Primero elegí un curso'}
                                 </option>
-
-                                {/* Mapeo de las materias traídas del endpoint */}
-                                {materias.map((item) => (
-                                    <option
-                                        key={item.id_materia}
-                                        value={item.id_materia}>
-                                        {item.nombre.nombre_materia}
+                                {materias.map((m) => (
+                                    <option key={m.id_materia} value={m.id_materia}>
+                                        {m.nombre.nombre_materia}
                                     </option>
                                 ))}
                             </select>
-                        </CCol>
+                        </div>
 
-
-                        <CCol md={3} className="d-flex align-items-end ">
-                            <div className="form-check mb-0 text-nowrap">
+                        <div className="cn-filter-field cn-filter-field--check">
+                            <label className="cn-filter-label">&nbsp;</label>
+                            <label className="cn-check-label" htmlFor="checkCargaIndividual">
                                 <input
-                                    className="form-check-input"
+                                    className="cn-check-input"
                                     type="checkbox"
                                     id="checkCargaIndividual"
-                                    checked={unitCharge}  // Es mejor controlar el input con 'checked' vinculado al estado
-                                    onChange={(e) => setUnitCharge(e.target.checked)} // Forma correcta de actualizar
+                                    checked={unitCharge}
+                                    onChange={(e) => setUnitCharge(e.target.checked)}
                                 />
-                                <label
-                                    className="form-check-label text-uppercase small fw-semibold text-secondary"
-                                    htmlFor="checkCargaIndividual"
-                                >
-                                    Carga Individual
-                                </label>
-                            </div>
-                        </CCol>
-                    </CRow>
+                                Carga individual
+                            </label>
+                        </div>
+
+                    </div>
+
                     {unitCharge && (
-                        <CRow className="g-3">
-                            <CCol md={3}>
-                                <label className="form-label text-uppercase small fw-semibold text-secondary">Alumno</label>
-                                <select className="form-select">
+                        <div className="cn-filters-row cn-filters-row--individual">
+                            <div className="cn-filter-field">
+                                <label className="cn-filter-label">Alumno</label>
+                                <select className="cn-filter-select">
                                     <option>Ruiz, Juan Carlos</option>
                                 </select>
-                            </CCol>
-                            <CCol md={3}>
-                                <label className="form-label text-uppercase small fw-semibold text-secondary">Tipo</label>
-                                <select className="form-select">
+                            </div>
+                            <div className="cn-filter-field">
+                                <label className="cn-filter-label">Tipo</label>
+                                <select className="cn-filter-select">
                                     <option>1°T</option>
                                 </select>
-
-                            </CCol>
-                            <CCol md={4}>
-                                <CFormLabel htmlFor="nota">
-                                    Nota (Ej: 1.0 a 10.0) <span className="text-danger">*</span>
+                            </div>
+                            <div className="cn-filter-field">
+                                <CFormLabel htmlFor="nota" className="cn-filter-label">
+                                    Nota <span className="cn-required">*</span>
                                 </CFormLabel>
                                 <CFormInput
                                     id="nota"
                                     name="nota"
                                     type="number"
-                                    step="0.5" // Permite notas con medio punto
+                                    step="0.5"
                                     min="1.0"
                                     max="10.0"
                                     value={formData.nota}
                                     onChange={handleChange}
                                     placeholder="Ej: 8.5"
-                                    required
+                                    className="cn-filter-select"
                                 />
-                            </CCol>
-                        </CRow>
-                    )}
-                </CCardBody>
-            </CCard>
-
-            {!unitCharge && (
-                <CCard className="shadow-sm">
-                    <CCardHeader className="fw-semibold bg-white d-flex justify-content-between">
-                        <span>Vista Previa del Acta</span>
-                        <span className="text-muted small">Página 1 de 7</span>
-                    </CCardHeader>
-
-                    <CCardBody className="p-4" style={{ overflowX: 'auto' }}>
-
-                        {/* Contenedor estilo "Hoja de Papel" */}
-                        <div className="border p-3 mx-auto" style={{ minWidth: '800px', backgroundColor: '#fff' }}>
-
-                            {/* ENCABEZADO DE LA PLANILLA */}
-                            <CRow className="mb-3 align-items-center">
-                                <CCol xs={2} className="text-center">
-                                    {/* Placeholder para Logo */}
-                                    <div className="bg-light border d-flex align-items-center justify-content-center" style={{ width: '60px', height: '80px', margin: '0 auto' }}>
-                                        <small className="text-muted" style={{ fontSize: '10px' }}>LOGO</small>
-                                    </div>
-                                </CCol>
-                                <CCol xs={10}>
-                                    <h5 className="text-center fw-bold mb-3">PLANILLAS DE CALIFICACIONES - CL: {datosPlanilla.ciclo}</h5>
-
-                                    {/* Grilla de Datos del Encabezado */}
-                                    <div className="border">
-                                        <CRow className="g-0 border-bottom">
-                                            <CCol xs={6} className="p-1 border-end d-flex">
-                                                <span className="fw-bold me-2">CURSO Y DIV.:</span>
-                                                <span>{datosPlanilla.curso}</span>
-                                            </CCol>
-                                            <CCol xs={6} className="p-1 d-flex">
-                                                <span className="fw-bold me-2">Turno</span>
-                                                <span className="fst-italic">Mañana</span>
-                                            </CCol>
-                                        </CRow>
-
-                                        <CRow className="g-0 border-bottom">
-                                            <CCol xs={6} className="p-1 border-end d-flex">
-                                                <span className="fw-bold me-2">ASIGNATURA:</span>
-                                                <span>{datosPlanilla.materia} </span>
-                                            </CCol>
-
-                                            <CCol xs={6} className="p-1 d-flex">
-                                                <span className="fw-bold me-2">Fecha</span>
-                                                <span>{datosPlanilla.fecha}</span>
-                                            </CCol>
-                                        </CRow>
-
-                                        <CRow className="g-0">
-                                            <CCol xs={12} className="p-1 d-flex">
-                                                <span className="fw-bold me-2">DOCENTE:</span>
-                                                <span>Pablo S. Pannone</span>
-                                            </CCol>
-                                        </CRow>
-                                    </div>
-                                </CCol>
-                            </CRow>
-
-                            {/* TABLA DE NOTAS */}
-                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                {/* Tabla de estudiantes. Lo envolvemos en el contexto, 
-                                para manejar el foco de las celdas */}
-                                <EditableCellProvider>
-                                    <GenericTable table={table} />
-                                </EditableCellProvider>
                             </div>
                         </div>
+                    )}
 
-                    </CCardBody>
-                </CCard>
+                </div>
+            </CCardHeader>
+
+            {/* ── Cuerpo: planilla (estructura interna intacta) ── */}
+            {!unitCharge && (
+                <CCardBody className="cn-card-body">
+
+                    <div className="border p-3 mx-auto" style={{ minWidth: '800px', backgroundColor: '#fff' }}>
+
+                        {/* ENCABEZADO DE LA PLANILLA — sin modificar */}
+                        <CRow className="mb-3 align-items-center">
+                            <CCol xs={2} className="text-center">
+                                <div className="bg-light border d-flex align-items-center justify-content-center" style={{ width: '60px', height: '80px', margin: '0 auto' }}>
+                                    <small className="text-muted" style={{ fontSize: '10px' }}>LOGO</small>
+                                </div>
+                            </CCol>
+                            <CCol xs={10}>
+                                <h5 className="text-center fw-bold mb-3">PLANILLAS DE CALIFICACIONES - CL: {datosPlanilla.ciclo}</h5>
+                                <div className="border">
+                                    <CRow className="g-0 border-bottom">
+                                        <CCol xs={6} className="p-1 border-end d-flex">
+                                            <span className="fw-bold me-2">CURSO Y DIV.:</span>
+                                            <span>{datosPlanilla.curso}</span>
+                                        </CCol>
+                                        <CCol xs={6} className="p-1 d-flex">
+                                            <span className="fw-bold me-2">Turno</span>
+                                            <span className="fst-italic">{datosPlanilla.turno}</span>
+                                        </CCol>
+                                    </CRow>
+                                    <CRow className="g-0 border-bottom">
+                                        <CCol xs={6} className="p-1 border-end d-flex">
+                                            <span className="fw-bold me-2">ASIGNATURA:</span>
+                                            <span>{datosPlanilla.materia}</span>
+                                        </CCol>
+                                        <CCol xs={6} className="p-1 d-flex align-items-center">
+                                            <span className="fw-bold me-2">Fecha</span>
+                                            {editandoFecha ? (
+                                                <input
+                                                    type="text"
+                                                    value={fechaPlanilla}
+                                                    autoFocus
+                                                    onChange={(e) => setFechaPlanilla(e.target.value)}
+                                                    onBlur={() => setEditandoFecha(false)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setEditandoFecha(false) }}
+                                                    style={{ border: 'none', borderBottom: '1px solid #0369a1', outline: 'none', width: '6rem', fontSize: 'inherit', fontFamily: 'inherit', background: 'transparent' }}
+                                                />
+                                            ) : (
+                                                <span
+                                                    onClick={() => setEditandoFecha(true)}
+                                                    style={{ cursor: 'pointer' }}
+                                                    title="Clic para editar"
+                                                >
+                                                    {fechaPlanilla}
+                                                </span>
+                                            )}
+                                        </CCol>
+                                    </CRow>
+                                    <CRow className="g-0">
+                                        <CCol xs={12} className="p-1 d-flex align-items-center">
+                                            <span className="fw-bold me-2">DOCENTE:</span>
+                                            <span>{docentePlanilla || 'Sin especificar'}</span>
+                                        </CCol>
+                                    </CRow>
+                                </div>
+                            </CCol>
+                        </CRow>
+
+                        {/* TABLA DE NOTAS — sin modificar */}
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <EditableCellProvider>
+                                <GenericTable table={table} />
+                            </EditableCellProvider>
+                        </div>
+
+                    </div>
+
+                </CCardBody>
             )}
 
-            {/* ----------  /BODY --------------- */}
-
-
-            {/* ----------  FOOTER --------------- */}
-            <CCardFooter
-                className="bg-white border-top px-3 py-1" >
-
-                <div className="d-flex justify-content-between align-items-center">
-                    <span className="small text-muted">Sistema de Gestión Académica</span>
-                    <span className="small text-muted">Impreso el: {new Date().toLocaleDateString()}</span>
-                </div>
-
-            </CCardFooter>
-
-        </div>
-
-
-
-
-
+        </CCard>
     )
-
-
 }

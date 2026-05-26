@@ -1,38 +1,403 @@
- /*  frontend_AcademiA\src\components\enrollment\GenericEnrollment.css*/
-
- /* Ajuste para que el input de búsqueda del PickList se vea bien con Bootstrap */
- .p-picklist .p-picklist-filter-container .p-picklist-filter-input {
-     width: 100%;
-     padding: 0.5rem 0.75rem;
-     /* Padding similar a Bootstrap form-control */
- }
-
- /* Ajuste de los botones del centro para que no queden pegados */
- .p-picklist .p-picklist-buttons {
-     padding: 1rem;
- }
-
-/* Tamaño mñas pequeño de cada item 
-
-.p-picklist .p-picklist-item {
-  padding: 0.5rem 0.5rem;
-  line-height: 1.2;
-  font-size: 0.85rem;
-}
+/* frontend_AcademiA/src/components/enrollment/GenericEnrollment.css
+   Prefijo .enr-  |  Usa variables --acad-* de style.scss
 */
 
- /* Sombra suave en las listas al hacer hover */
- .p-picklist .p-picklist-list .p-picklist-item:hover {
-     background-color: #f8f9fa !important;
-     /* gris muy claro bootstrap */
-     cursor: pointer;
+/* ═══════════════════════════════════════════════════════════
+   WRAPPER
+   ═══════════════════════════════════════════════════════════ */
 
- }
+.enr-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+}
 
- /* Color de selección (CoreUI Primary Blue) */
- .p-picklist .p-picklist-list .p-picklist-item.p-highlight {
-     background-color: rgba(50, 31, 219, 0.1) !important;
-     /* CoreUI primary con opacidad */
-     color: #321fdb !important;
-     border-left: 4px solid #321fdb;
- }
+/* ═══════════════════════════════════════════════════════════
+   FILTROS — mismo formato que ActaExamen (.acta-filter-*)
+   ═══════════════════════════════════════════════════════════ */
+
+.acta-filters-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.acta-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.acta-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--acad-text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: default;
+}
+
+.acta-filter-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: var(--acad-border-light, #e2e8f0);
+  color: var(--acad-text-muted, #64748b);
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.acta-filter-step.is-ready {
+  background: var(--acad-blue, #0369a1);
+  color: #fff;
+}
+
+.acta-filter-select {
+  font-family: var(--acad-font-body, 'Inter', sans-serif) !important;
+  font-size: 0.875rem !important;
+  border: 1.5px solid var(--acad-border, #cbd5e1) !important;
+  border-radius: var(--acad-radius, 0.5rem) !important;
+  color: var(--acad-text, #0f172a) !important;
+  background: #f8fafc !important;
+  padding: 0.45rem 0.875rem !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s !important;
+  outline: none !important;
+  width: 100%;
+}
+
+.acta-filter-select:focus {
+  border-color: var(--acad-blue, #0369a1) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(3,105,161,0.1) !important;
+}
+
+.acta-filter-select.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PICKLIST CUSTOM
+   ═══════════════════════════════════════════════════════════ */
+
+.enr-loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.enr-picklist {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+/* ── Panel ───────────────────────────────────────────────── */
+.enr-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  background: #fff;
+  overflow: hidden;
+  min-height: 26rem;
+}
+
+.enr-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+  /* Acento superior azul */
+  box-shadow: inset 0 2px 0 0 var(--acad-blue, #0369a1);
+}
+
+.enr-panel-title {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.enr-panel-count {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--acad-blue, #0369a1);
+  background: var(--acad-blue-pale, #e0f2fe);
+  padding: 0.15em 0.55em;
+  border-radius: 999px;
+}
+
+/* ── Buscador del panel ──────────────────────────────────── */
+.enr-panel-search-wrap {
+  position: relative;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+}
+
+.enr-panel-search-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--acad-text-subtle, #94a3b8);
+  pointer-events: none;
+}
+
+.enr-panel-search {
+  width: 100%;
+  padding: 0.375rem 1.75rem 0.375rem 1.875rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8rem;
+  border: 1px solid var(--acad-border, #cbd5e1);
+  border-radius: var(--acad-radius-sm, 0.375rem);
+  background: #f8fafc;
+  color: var(--acad-text, #0f172a);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.enr-panel-search:focus {
+  border-color: var(--acad-blue, #0369a1);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(3,105,161,0.1);
+}
+
+.enr-panel-search::placeholder {
+  color: var(--acad-text-subtle, #94a3b8);
+  font-size: 0.775rem;
+}
+
+.enr-panel-search-clear {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--acad-text-subtle, #94a3b8);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+
+/* ── Lista de items ──────────────────────────────────────── */
+.enr-panel-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.enr-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  height: 100%;
+  min-height: 12rem;
+  color: var(--acad-text-subtle, #94a3b8);
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+}
+
+/* ── Item de alumno ──────────────────────────────────────── */
+.enr-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--acad-border-light, #e2e8f0);
+  cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.enr-item:last-child {
+  border-bottom: none;
+}
+
+.enr-item:hover {
+  background: var(--acad-blue-pale, #e0f2fe);
+}
+
+.enr-item.is-selected {
+  background: #dbeafe;
+  border-left: 3px solid var(--acad-blue, #0369a1);
+}
+
+.enr-item-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.enr-item-avatar-icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  color: var(--acad-text-muted, #64748b);
+}
+
+.enr-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.enr-item-name {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--acad-navy, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.enr-item-dni {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: var(--acad-text-muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Badge de estado */
+.enr-estado-badge {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2em 0.55em;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTROLES CENTRALES
+   ═══════════════════════════════════════════════════════════ */
+
+.enr-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.enr-ctrl-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.375rem;
+  border: 1.5px solid var(--acad-border, #cbd5e1);
+  background: #fff;
+  color: var(--acad-text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.enr-ctrl-btn:hover:not(:disabled) {
+  background: var(--acad-border-light, #e2e8f0);
+  border-color: var(--acad-blue, #0369a1);
+  color: var(--acad-blue, #0369a1);
+}
+
+.enr-ctrl-btn--primary {
+  background: var(--acad-blue, #0369a1);
+  border-color: var(--acad-blue, #0369a1);
+  color: #fff;
+}
+
+.enr-ctrl-btn--primary:hover:not(:disabled) {
+  background: #025d8f;
+  border-color: #025d8f;
+  color: #fff;
+}
+
+.enr-ctrl-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER — CONFIRMAR
+   ═══════════════════════════════════════════════════════════ */
+
+.enr-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--acad-border-light, #e2e8f0);
+}
+
+.enr-footer-info {
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+  font-size: 0.8125rem;
+  color: var(--acad-text-muted, #64748b);
+}
+
+.enr-footer-info strong {
+  color: var(--acad-navy, #0f172a);
+  font-weight: 700;
+}
+
+.enr-btn-confirm {
+  font-family: var(--acad-font-body, 'Inter', sans-serif) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 0.4rem !important;
+  background: var(--acad-navy, #0f172a) !important;
+  border-color: var(--acad-navy, #0f172a) !important;
+  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center;
+  transition: background 0.15s, box-shadow 0.15s !important;
+}
+
+.enr-btn-confirm:hover:not(:disabled) {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  box-shadow: 0 3px 10px rgba(15,23,42,0.3) !important;
+}
+
+.enr-btn-confirm:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}

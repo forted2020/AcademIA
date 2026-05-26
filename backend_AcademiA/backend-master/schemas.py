@@ -357,10 +357,9 @@ class NotaCreate(BaseModel):
     id_entidad_estudiante: int = Field(..., description="ID del estudiante calificado.")
     nota: float = Field(..., ge=1.0, le=10.0, description="Calificación obtenida (entre 1.0 y 10.0).")
     id_periodo: int = Field(..., description="ID del período (trimestre, semestre, etc.)")
-    
+    id_ciclo_lectivo: Optional[int] = Field(None, description="ID del ciclo lectivo. Si no se envía, se deriva de la materia.")
+
     class Config:
-        # Esto permite que los objetos puedan ser usados en un ORM.
-        # Es una práctica recomendada en Pydantic v1 (que usa FastAPI clásico)
         from_attributes = True
 
 # Esquema para respuesta (Output hacia el Front-end)
@@ -370,6 +369,7 @@ class NotaResponse(NotaCreate):
     id_entidad_carga: int = Field(..., description="ID de la entidad docente/usuario que cargó la nota.")
     id_tipo_nota: int = Field(..., description="Tipo de nota (ej: Normal, Recuperatorio).")
     fecha_carga: date = Field(..., description="Fecha en que se cargó la nota.")
+    id_ciclo_lectivo: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -399,17 +399,17 @@ class PlanillaCalificacionesResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# Esquema para Upsert de notas en cagra de notas
+# Esquema para Upsert de notas en carga de notas
 class NotaUpsert(BaseModel):
     id_alumno: int
     id_materia: int
     id_tipo_nota: int
     valor: Optional[float] = None
+    id_periodo: int  # Requerido: forma parte de la clave de upsert junto con alumno+materia+tipo_nota
     # Campos adicionales
-    id_ciclo_lectivo: Optional[int] = None
+    id_ciclo_lectivo: Optional[int] = None  # Si no se envía, se deriva de la materia
     id_curso: Optional[int] = None
-    id_periodo: Optional[int] = None
-    id_entidad_carga: Optional[int] = None  # <--- ID del usuario que carga (docente logueado)
+    id_entidad_carga: Optional[int] = None
 
 
 # Esquema para representa una materia con sus notas, mapeadas por tipo_nota
@@ -488,6 +488,14 @@ class InasistenciaResponse(BaseModel):
     totalInasistenciaJustif: float
     # Definimos que detailedRecords es una LISTA de objetos InasistenciaBase
     detailedRecords: List[InasistenciaBase]
+
+    # Umbrales normativos consultados al armar la respuesta (sembrados en Fase 1).
+    # Se incluyen en el payload para que el frontend pueda renderizar las alertas
+    # sin tener que pedir la configuración por separado.
+    umbralReincorporacion: Optional[int] = None
+    umbralLibre:           Optional[int] = None
+    requiereActaReincorporacion: bool = False
+    caracterLibre:               bool = False
 
     class Config:
         from_attributes = True
@@ -650,11 +658,11 @@ class NombreMateriaSimple(BaseModel):
 class MateriaBase(BaseModel):
     id_nombre_materia: int
     id_curso: int
-    id_entidad: int # ID del Docente
+    id_entidad: Optional[int] = None  # ID del Docente — opcional, puede ser None
 
 # Para CREAR (Solo lo que está Base)
 class MateriaCreate(MateriaBase):
-    pass 
+    pass
 
 # Para Actualizar. Heredamos de BaseModel para que sea opcional
 class MateriaUpdate(BaseModel):
@@ -683,10 +691,30 @@ class MateriaResponse(MateriaBase):
     class Config:
         from_attributes = True
         
-# Materias sólo id y nombre. 
+# Materias sólo id y nombre.
 class MateriaSimpleResponse(BaseModel):
     id_materia: int
     nombre_materia: str
+
+    class Config:
+        from_attributes = True
+
+# Catálogo de nombres de materias (t_nombre_materia)
+class NombreMateriaResponse(BaseModel):
+    id_nombre_materia: int
+    nombre_materia: str
+
+    class Config:
+        from_attributes = True
+
+# Respuesta detallada de una materia para el modal de curso (POST/PUT)
+class MateriaDetalleResponse(BaseModel):
+    id_materia: int
+    id_nombre_materia: int
+    id_curso: int
+    id_entidad: Optional[int] = None
+    nombre_materia: str
+    docente: str
 
     class Config:
         from_attributes = True
@@ -803,3 +831,72 @@ class NotifConfigResponse(BaseModel):
 class NotifConfigUpdate(BaseModel):
     # Lista de preferencias a actualizar (upsert)
     preferencias: List[NotifConfigItem]
+
+
+# =========================================================================
+# SCHEMAS DE CONFIGURACIÓN DEL SISTEMA
+# =========================================================================
+
+class ConfigSistemaResponse(BaseModel):
+    configs: Dict[str, Optional[str]]
+
+    class Config:
+        from_attributes = True
+
+
+class ConfigSistemaUpdate(BaseModel):
+    configs: Dict[str, str]
+
+
+class LogoUpload(BaseModel):
+    datos_base64: str
+    mime_type: str
+    nombre_archivo: str
+    ancho_px: Optional[int] = None
+    alto_px: Optional[int] = None
+
+
+# =========================================================================
+# SCHEMAS DE FORMATOS DE IMPRESIÓN
+# =========================================================================
+
+class FormatoConfigResponse(BaseModel):
+    codigo: str
+    configs: Dict[str, Optional[str]]
+
+    class Config:
+        from_attributes = True
+
+
+class FormatoConfigUpdate(BaseModel):
+    configs: Dict[str, str]
+
+
+# =========================================================================
+# SCHEMAS DE MODO DE INSCRIPCIÓN
+# =========================================================================
+
+class ModoInscripcionUpdate(BaseModel):
+    modo: str  # Valores válidos: 'MATERIA' o 'CURSO'
+    motivo: Optional[str] = None  # Justificación del cambio (queda en el log)
+
+    @field_validator("modo")
+    @classmethod
+    def modo_valido(cls, v: str) -> str:
+        if v not in ("MATERIA", "CURSO"):
+            raise ValueError("El modo debe ser 'MATERIA' o 'CURSO'.")
+        return v
+
+
+class ConfigCambioLogResponse(BaseModel):
+    id_log: int
+    clave: str
+    valor_anterior: Optional[str]
+    valor_nuevo: str
+    id_usuario: int
+    nombre_usuario: str
+    motivo: Optional[str]
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True

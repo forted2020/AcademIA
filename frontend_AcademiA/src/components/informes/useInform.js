@@ -10,7 +10,8 @@ export const useInforme = (
     endpoint,
     params = {},
     dataMapper = null,  //   usamos dataMapper para "inyectar" datos calculados al data
-    summaryCalculator = null    // Campos calculados
+    summaryCalculator = null,    // Campos calculados
+    transformResponse = null,    // Función para extraer la lista de respuestas anidadas (ej: {alumnos: [...]})
 ) => {
     const [data, setData] = useState({ summary: {}, list: [] });
     const [loading, setLoading] = useState(false);
@@ -38,10 +39,19 @@ export const useInforme = (
             const result = response.data;
 
             //  -------  efinimos campos calculados  -------
-            // Normalizamos la lista "cruda"
-            const listaRaw = Array.isArray(result)
-                // Usamos una condición para contemplar que la API mande una lista directa o un objeto
-                ? result : (result.list || result.data || []);
+            // Normalizamos la lista "cruda".
+            // Prioridad:
+            //   1) transformResponse explícito de la config (si lo configuraron)
+            //   2) array directo
+            //   3) claves convencionales del backend (list / data / alumnos)
+            let listaRaw
+            if (typeof transformResponse === 'function') {
+                listaRaw = transformResponse(result) || []
+            } else if (Array.isArray(result)) {
+                listaRaw = result
+            } else {
+                listaRaw = result.list || result.data || result.alumnos || []
+            }
 
             // Aplicamos el mapper si nos lo pasaron, transformando los datos
             // Esto transforma los datos (ej: agrega 'condicion_texto') ANTES de guardarlos en el estado

@@ -20,7 +20,7 @@ const routes = [
   //{ path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
-  { path: '/usuarios', name: 'Usuarios', element: Usuarios }, // Gestión de usuarios
+  { path: '/usuarios', name: '', element: Usuarios },
   { path: '/estilos', name: 'Estilos', element: Estilos }, // Página de estilos
 ]
 

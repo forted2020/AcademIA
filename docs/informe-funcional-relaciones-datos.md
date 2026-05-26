@@ -400,6 +400,24 @@ t_plan
 | `GET` | `/api/estudiantes/curso/{id_curso}` | Alumnos inscriptos en un curso |
 | `GET` | `/api/estudiantes/inasistencias/{id_entidad}/{year}` | Resumen y detalle de faltas |
 
+### Informes y Listados (Fase 6)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/informes/alumnos-por-curso/{id_curso}` | Padrón de alumnos inscriptos en un curso |
+| `GET` | `/api/informes/inscriptos-por-materia/{id_materia}` | Alumnos inscriptos en una materia |
+| `GET` | `/api/informes/docentes-materias?id_ciclo_lectivo=` | Docentes con sus materias asignadas |
+| `GET` | `/api/informes/riesgo-repitencia?id_ciclo_lectivo=` | Alumnos con previas, ordenados por cantidad |
+| `GET` | `/api/informes/constancia-regular/{id_entidad}?id_ciclo_lectivo=` | Datos para emitir constancia de alumno regular |
+
+### Materias Previas (Fase 7.2)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/previas/cerrar-ciclo/{id_ciclo_lectivo}` | Recalcula es_previa para todas las inscripciones del ciclo |
+| `GET` | `/api/previas/?id_entidad=&id_ciclo_lectivo=` | Listado de previas activas con filtros |
+| `PUT` | `/api/previas/{id_inscripcion}/levantar` | Marca manualmente una previa como aprobada |
+
 ### Configuración
 
 | Método | Ruta | Descripción |

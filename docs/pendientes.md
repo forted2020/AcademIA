@@ -87,20 +87,21 @@ Cargar en `t_tipo_inasistencia` los siguientes valores:
 
 ---
 
-## 6. Informes faltantes
+## 6. Informes faltantes 🟡 Parcial (Fase 6)
 
-Implementar los siguientes documentos/reportes:
+| Documento | Estado | Endpoint |
+|-----------|--------|----------|
+| Alumnos por curso y división | ✅ | `GET /api/informes/alumnos-por-curso/{id_curso}` |
+| Inscriptos por materia | ✅ | `GET /api/informes/inscriptos-por-materia/{id_materia}` |
+| Docentes y materias asignadas | ✅ | `GET /api/informes/docentes-materias?id_ciclo_lectivo=` |
+| Listado de previas | ✅ | `GET /api/previas/` (Fase 7.2) |
+| Riesgo de repitencia / Estudiantes que adeudan materia | ✅ | `GET /api/informes/riesgo-repitencia` |
+| Constancia de alumno regular | 🟡 Datos listos | `GET /api/informes/constancia-regular/{id_entidad}?id_ciclo_lectivo=` — falta vista + PDF |
+| Acta de inscripción a mesas examinadoras | ⏳ Depende de Fase 7.3 | — |
 
-| Documento | Descripción |
-|-----------|-------------|
-| Constancia de alumno regular | Certifica que el estudiante se inscribió efectivamente en un ciclo lectivo |
-| Acta de inscripción a mesas examinadoras | Lista de alumnos inscriptos a una mesa de examen |
-| Inscriptos por materia | Listado de alumnos inscriptos a una materia específica |
-| Listado de alumnos por curso y división | Padrón por curso |
-| Listado de docentes y materias asignadas | Vista para gestión académica |
-| Estudiantes que adeudan materia | Alumnos con materias no aprobadas |
-| Listado de previas | Materias previas pendientes por alumno |
-| Estudiantes con más materias adeudadas | Listado de riesgo de repitencia, ordenado por cantidad de materias |
+Los 5 primeros están integrados al hub [`GestionInformes`](../frontend_AcademiA/src/views/gestion/gestionInformes/GestionInformes.jsx) con filtros en cascada (ciclo → curso → materia), tarjetas resumen y tablas ordenables.
+
+**Pendiente**: vista de Constancia de Alumno Regular con generación de PDF, y acta de mesa examinadora (depende de modelar mesas en Fase 7.3).
 
 ---
 

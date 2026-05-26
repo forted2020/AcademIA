@@ -35,9 +35,10 @@ export default function GenericInform({ config, endpoint, params }) {
     // OBS: distinto a useInformesData, que se usa para los filtros
     const { data, loading, error } = useInforme(
         endpoint,
-        params, 
+        params,
         config.mapper,
-        config.summaryCalculator
+        config.summaryCalculator,
+        config.transformResponse,
     );
 
 // Si el padre no nos mandó un endpoint (porque faltan filtros), mostramos mensaje de espera.

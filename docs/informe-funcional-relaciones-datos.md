@@ -423,8 +423,11 @@ Si existe → omite. Si no existe → `INSERT`.
 1. El docente selecciona materia, período y tipo de nota
 2. Ve la lista de alumnos inscriptos en esa materia
 3. Ingresa notas → `POST /api/notas/upsert`
-4. El backend hace **upsert**: si ya existe nota para `(alumno, materia, tipo_nota)`, actualiza; si no, crea
-5. Registra quién cargó la nota (`id_entidad_carga`) y cuándo (`fecha_carga`)
+4. **Validación de rango** (backend y frontend): el valor debe estar entre `nota_minima` y `nota_maxima` configuradas en `t_configuracion_sistema`. Fuera de rango → HTTP 400 con mensaje explícito. El frontend valida antes del envío y muestra el mismo rango en el mensaje de error.
+5. El backend hace **upsert**: si ya existe nota para `(alumno, materia, tipo_nota, periodo)`, actualiza; si no, crea
+6. Registra quién cargó la nota (`id_entidad_carga`) y cuándo (`fecha_carga`)
+
+La validación está centralizada en `Services/config_service.py::validar_nota_o_lanzar`, que se aplica tanto en `POST /api/notas/` (carga individual) como en `POST /api/notas/upsert`. El frontend usa el helper `getRangoNotas` del hook `useConfigSistema` para leer los mismos valores.
 
 ---
 

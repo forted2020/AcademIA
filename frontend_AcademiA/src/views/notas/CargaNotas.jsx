@@ -13,6 +13,7 @@ import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel 
 
 import { upsertNota } from '../../api/api'
 import { useAuth } from '../../context/AuthContext.js'
+import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema.js'
 import { usePlanillaCalificaciones } from '../../hooks/useCalificaciones.js'
 import { getTableColumns } from '../../utils/columns.js'
 import { EditableCellProvider } from '../../context/editableCellContext/EditableCellContext.jsx'
@@ -27,6 +28,9 @@ const initialFilters = []
 export default function CargaNotaAlumno() {
 
     const { sessionData, loadingSessionData } = useAuth();
+    const { configs: configSistema } = useConfigSistema();
+    const { notaMinima, notaMaxima } = getRangoNotas(configSistema);
+
     if (loadingSessionData) {
         return null;
     }
@@ -140,13 +144,24 @@ export default function CargaNotaAlumno() {
 
     // ==================== FUNCIÓN PARA GUARDAR NOTA (UPSERT) ====================
     const handleGuardarNota = async (alumnoId, tipoNotaId, nuevoValor) => {
+        // Validación contra el rango configurado en el sistema.
+        // Se ejecuta antes de armar el payload para evitar viajes al backend con valores inválidos.
+        const valorParseado = nuevoValor === "" || nuevoValor === null || nuevoValor === undefined
+            ? null
+            : parseFloat(nuevoValor);
+
+        if (valorParseado !== null && (Number.isNaN(valorParseado) || valorParseado < notaMinima || valorParseado > notaMaxima)) {
+            alert(`La nota debe estar entre ${notaMinima} y ${notaMaxima}. Ajustá la configuración del sistema si necesitás otro rango.`);
+            throw new Error('Nota fuera de rango');
+        }
+
         const payload = {
             id_alumno: alumnoId,
             id_materia: parseInt(materiaId),
             id_ciclo_lectivo: parseInt(selectedCicloId),
             id_curso: parseInt(selectedCursoId),
             id_tipo_nota: tipoNotaId,
-            valor: nuevoValor === "" ? null : parseFloat(nuevoValor),
+            valor: valorParseado,
             id_entidad_carga: sessionData?.user?.id_entidad,
             id_periodo: null
         };
@@ -159,7 +174,8 @@ export default function CargaNotaAlumno() {
             return response;
         } catch (error) {
             console.error("Error al guardar:", error);
-            alert("No se pudo guardar la nota. Verifique su conexión.");
+            const mensajeBackend = error?.response?.data?.detail;
+            alert(mensajeBackend || "No se pudo guardar la nota. Verifique su conexión.");
             throw error;
         }
     };

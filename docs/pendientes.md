@@ -24,7 +24,8 @@ Hoy el ciclo se infiere por la cadena `t_nota.id_materia → t_materia.id_curso 
 
 ## 2. Validaciones y configuración global
 
-### 2.1. Validación de notas y nota de aprobación configurables
+### 2.1. ~~Validación de notas y nota de aprobación configurables~~ ✅ Cerrado (2026-05-25 — Fase 2)
+**Implementado**: validador centralizado en [`Services/config_service.py`](../backend_AcademiA/backend-master/Services/config_service.py) (`validar_nota_o_lanzar`), aplicado en `POST /api/notas/` y `POST /api/notas/upsert`. El frontend valida antes del envío usando `getRangoNotas` exportado desde [`useConfigSistema`](../frontend_AcademiA/src/hooks/useConfigSistema.js), y propaga el mensaje del backend si el rango se desincroniza.
 En todo el sistema (carga, edición, upsert, importación) las notas deben validarse contra **valores configurables** desde `t_configuracion_sistema`:
 - `nota_minima` (default `0`)
 - `nota_maxima` (default `10`)

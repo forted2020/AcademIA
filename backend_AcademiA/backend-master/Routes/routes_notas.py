@@ -3,12 +3,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-from typing import List
+from typing import List, Optional
 
 # Importaciones CLAVE:
 # Importar el servicio (ajusta la ruta de importación si es necesario, 
 # asumiendo que está en la carpeta 'Services' al mismo nivel que 'Routes')
-from Services import nota_service 
+from Services import nota_service
+from Services.config_service import validar_nota_o_lanzar
 
 # Importamos todos los modelos y esquemas, por practicidad y limpieza
 import models, schemas, database
@@ -31,6 +32,9 @@ def crear_nota(nota: schemas.NotaCreate, db: Session = Depends(get_db)):
     """
     Endpoint para registrar una nueva nota individual llamando al servicio.
     """
+    # Validación contra el rango configurado en t_configuracion_sistema
+    validar_nota_o_lanzar(db, nota.nota)
+
     try:
         # LLAMADA AL SERVICIO: El endpoint solo delega la tarea
         db_nota = nota_service.crear_nota_individual(db=db, nota_data=nota)
@@ -126,34 +130,52 @@ def obtener_acta_calificaciones(
 # =====================================================
 @router.post("/upsert")
 def upsert_nota(
-    payload: schemas.NotaUpsert, 
+    payload: schemas.NotaUpsert,
     db: Session = Depends(database.get_db)
 ):
+    # Validación contra el rango configurado en t_configuracion_sistema.
+    # Se ejecuta fuera del try/except para que HTTPException(400) llegue tal cual al cliente
+    # y no quede enmascarado por el handler 500 genérico.
+    validar_nota_o_lanzar(db, payload.valor)
+
     try:
-        # 1. Buscar si la nota ya existe
+        # Derivar id_ciclo_lectivo desde materia → curso si no viene en el payload
+        ciclo_id = payload.id_ciclo_lectivo
+        if not ciclo_id:
+            materia = (
+                db.query(models.Materia)
+                .options(joinedload(models.Materia.curso))
+                .filter(models.Materia.id_materia == payload.id_materia)
+                .first()
+            )
+            if materia and materia.curso:
+                ciclo_id = materia.curso.id_ciclo_lectivo
+
+        # Buscar si ya existe una nota para esta clave: alumno + materia + tipo_nota + periodo
+        # El periodo es parte de la clave para distinguir notas del mismo tipo en distintos trimestres
         nota_db = db.query(models.Nota).filter(
             models.Nota.id_entidad_estudiante == payload.id_alumno,
-            models.Nota.id_materia == payload.id_materia,
-            models.Nota.id_tipo_nota == payload.id_tipo_nota
+            models.Nota.id_materia            == payload.id_materia,
+            models.Nota.id_tipo_nota          == payload.id_tipo_nota,
+            models.Nota.id_periodo            == payload.id_periodo,
         ).first()
-        
+
         if nota_db:
             nota_db.nota = payload.valor
-            
-            # Actualizar campos opcionales si vienen
-            if payload.id_periodo:
-                nota_db.id_periodo = payload.id_periodo
             if payload.id_entidad_carga:
                 nota_db.id_entidad_carga = payload.id_entidad_carga
-                
+            if ciclo_id:
+                nota_db.id_ciclo_lectivo = ciclo_id
+
             db.commit()
             db.refresh(nota_db)
             return {
-                "status": "success", 
+                "status": "success",
                 "message": "Nota actualizada correctamente",
                 "data": {
                     "id_nota": nota_db.id_nota,
-                    "nota": nota_db.nota
+                    "nota": nota_db.nota,
+                    "id_ciclo_lectivo": nota_db.id_ciclo_lectivo,
                 }
             }
         else:
@@ -162,22 +184,24 @@ def upsert_nota(
                 id_materia=payload.id_materia,
                 id_tipo_nota=payload.id_tipo_nota,
                 nota=payload.valor,
-                id_periodo=payload.id_periodo,  # Puede ser None
-                id_entidad_carga=payload.id_entidad_carga or 1  # Default a 1 si es None
+                id_periodo=payload.id_periodo,
+                id_entidad_carga=payload.id_entidad_carga or 1,
+                id_ciclo_lectivo=ciclo_id,
             )
-            
+
             db.add(nueva_nota)
             db.commit()
             db.refresh(nueva_nota)
             return {
-                "status": "success", 
+                "status": "success",
                 "message": "Nota creada correctamente",
                 "data": {
                     "id_nota": nueva_nota.id_nota,
-                    "nota": nueva_nota.nota
+                    "nota": nueva_nota.nota,
+                    "id_ciclo_lectivo": nueva_nota.id_ciclo_lectivo,
                 }
             }
-            
+
     except Exception as e:
         db.rollback()
         raise HTTPException(

@@ -38,9 +38,10 @@ export default function EstudiantesHome() {
     setLoading(true)
     setError(null)
     try {
-      // 1. Obtener ciclo activo desde el resumen del sistema
-      const resumenRes = await api.get('/api/dashboard/resumen')
-      const { ciclo_activo, id_ciclo_activo } = resumenRes.data
+      // 1. Obtener ciclo activo (endpoint sin restricción de rol)
+      const cicloRes = await api.get('/api/ciclos/activo')
+      const ciclo_activo   = cicloRes.data.nombre_ciclo_lectivo
+      const id_ciclo_activo = cicloRes.data.id_ciclo_lectivo
       setCiclo(ciclo_activo)
 
       // 2. Obtener el curso del alumno en el ciclo activo

@@ -1,0 +1,198 @@
+/* views/estudiantes/estudiantesHome/EstudiantesHome.css — prefijo .alu-home__ */
+
+/* ── Card principal ───────────────────────────────────── */
+.alu-home__card {
+  border: 1px solid var(--acad-border-light, #e2e8f0) !important;
+  border-radius: var(--acad-radius-lg, 0.75rem) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  overflow: hidden;
+  background: #fff;
+  font-family: var(--acad-font-body, 'Inter', sans-serif);
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.alu-home__header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%) !important;
+  border-bottom: none !important;
+  padding: 1.5rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.alu-home__brand-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: var(--acad-radius, 0.5rem);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.alu-home__brand-icon svg,
+.alu-home__brand-icon .c-icon {
+  width: 1.375rem !important;
+  height: 1.375rem !important;
+}
+
+.alu-home__title-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alu-home__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.alu-home__subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.02em;
+}
+
+.alu-home__badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ── Cuerpo ───────────────────────────────────────────── */
+.alu-home__body {
+  background: #f8fafc;
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Sección interna (panel blanco) ──────────────────── */
+.alu-home__section {
+  background: #fff;
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  border-radius: var(--acad-radius, 0.5rem);
+  padding: 1.25rem;
+}
+
+.alu-home__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.alu-home__section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acad-text-muted, #64748b);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alu-home__section-title .c-icon {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+}
+
+/* ── Grillas ──────────────────────────────────────────── */
+.alu-home__grid-kpi-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.alu-home__grid-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 1000px) {
+  .alu-home__grid-kpi-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .alu-home__grid-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .alu-home__grid-kpi-4,
+  .alu-home__grid-actions { grid-template-columns: 1fr; }
+}
+
+/* ── Lista de materias ────────────────────────────────── */
+.alu-home__materias-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.alu-home__materia-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--acad-radius-sm, 0.375rem);
+  border: 1px solid var(--acad-border-light, #e2e8f0);
+  font-size: 0.8125rem;
+  background: #f8fafc;
+}
+
+.alu-home__materia-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--acad-blue, #0369a1);
+  flex: 0 0 auto;
+}
+
+.alu-home__materia-dot--previa {
+  background: #dc2626;
+}
+
+.alu-home__materia-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--acad-navy, #0f172a);
+}
+
+.alu-home__previa-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #dc2626;
+  letter-spacing: 0.02em;
+}
+
+/* ── Animación de entrada stagger ────────────────────── */
+.alu-home__rise > * {
+  animation: aluRise 0.35s ease-out both;
+}
+.alu-home__rise > *:nth-child(1) { animation-delay: 0.02s; }
+.alu-home__rise > *:nth-child(2) { animation-delay: 0.07s; }
+.alu-home__rise > *:nth-child(3) { animation-delay: 0.12s; }
+.alu-home__rise > *:nth-child(4) { animation-delay: 0.17s; }
+
+@keyframes aluRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

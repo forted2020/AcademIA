@@ -109,7 +109,7 @@ async def update_docente(id_entidad: int, docente: DocenteUpdate, db: Session = 
 @router.get("/{id}/materias-actuales")
 async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
     """Materias del docente en el ciclo vigente, con curso y count de alumnos inscriptos."""
-    from sqlalchemy import func as sqlfunc
+    from sqlalchemy import func as sqlfunc, and_
     from models import Inscripcion
 
     hoy = date.today()
@@ -125,29 +125,40 @@ async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
     if not ciclo_actual:
         return {"ciclo": None, "materias": []}
 
-    # Consulta enriquecida: materia + curso + cantidad de alumnos inscriptos
+    # Trae las materias del docente en el ciclo activo
     rows = (
         db.query(
             Materia.id_materia,
             NombreMateria.nombre_materia,
             Curso.nombre_curso,
-            sqlfunc.count(Inscripcion.id_inscripcion).label("total_alumnos"),
         )
         .join(NombreMateria, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
         .join(Curso, Curso.id_curso == Materia.id_curso)
-        .outerjoin(
-            Inscripcion,
-            (Inscripcion.id_materia == Materia.id_materia) &
-            (Inscripcion.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo) &
-            (Inscripcion.deleted_at.is_(None))
-        )
         .filter(
             Materia.id_entidad == id,
             Curso.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo,
         )
-        .group_by(Materia.id_materia, NombreMateria.nombre_materia, Curso.nombre_curso)
         .all()
     )
+
+    # Cuenta alumnos inscriptos por materia en una segunda consulta (más simple y segura)
+    ids_materia = [r.id_materia for r in rows]
+    conteos = {}
+    if ids_materia:
+        conteos_raw = (
+            db.query(
+                Inscripcion.id_materia,
+                sqlfunc.count(Inscripcion.id_inscripcion).label("n"),
+            )
+            .filter(
+                Inscripcion.id_materia.in_(ids_materia),
+                Inscripcion.id_ciclo_lectivo == ciclo_actual.id_ciclo_lectivo,
+                Inscripcion.deleted_at.is_(None),
+            )
+            .group_by(Inscripcion.id_materia)
+            .all()
+        )
+        conteos = {c.id_materia: c.n for c in conteos_raw}
 
     return {
         "ciclo": ciclo_actual.nombre_ciclo_lectivo,
@@ -156,7 +167,7 @@ async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
                 "id": r.id_materia,
                 "nombre": r.nombre_materia,
                 "curso": r.nombre_curso,
-                "alumnos": r.total_alumnos,
+                "alumnos": conteos.get(r.id_materia, 0),
             }
             for r in rows
         ],

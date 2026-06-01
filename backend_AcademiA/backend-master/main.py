@@ -184,7 +184,8 @@ app.include_router(router_previas, prefix="/api", tags=["Materias Previas"])
 app.include_router(router_informes, prefix="/api", tags=["Informes y Listados"])
 app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
 app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
-app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
+#  app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
+app.include_router(router_dashboard, prefix="/api/dashboard", tags=["Dashboard"])
 
 
 

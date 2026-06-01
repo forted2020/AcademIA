@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"adm-home\\\\|admin.*home\\\\|UsersHome\\\\|AdminHome\")",
+      "Bash(xargs grep -l \"inasistencia\\\\|asistencia\")"
+    ],
     "defaultMode": "bypassPermissions"
   }
 }

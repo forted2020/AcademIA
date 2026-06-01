@@ -130,7 +130,7 @@ async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
         db.query(
             Materia.id_materia,
             NombreMateria.nombre_materia,
-            Curso.nombre_curso,
+            Curso.curso,
         )
         .join(NombreMateria, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
         .join(Curso, Curso.id_curso == Materia.id_curso)
@@ -166,12 +166,68 @@ async def get_materias_actuales_docente(id: int, db: Session = Depends(get_db)):
             {
                 "id": r.id_materia,
                 "nombre": r.nombre_materia,
-                "curso": r.nombre_curso,
+                "curso": r.curso,
                 "alumnos": conteos.get(r.id_materia, 0),
             }
             for r in rows
         ],
     }
+
+
+@router.get("/{id}/ciclos")
+def get_ciclos_del_docente(id: int, db: Session = Depends(get_db)):
+    """Ciclos lectivos en los que el docente dictó al menos una materia."""
+    filas = (
+        db.query(CicloLectivo)
+        .join(Curso, Curso.id_ciclo_lectivo == CicloLectivo.id_ciclo_lectivo)
+        .join(Materia, Materia.id_curso == Curso.id_curso)
+        .filter(Materia.id_entidad == id)
+        .distinct()
+        .order_by(CicloLectivo.id_ciclo_lectivo.desc())
+        .all()
+    )
+    return [
+        {"id_ciclo_lectivo": c.id_ciclo_lectivo, "nombre_ciclo_lectivo": c.nombre_ciclo_lectivo}
+        for c in filas
+    ]
+
+
+@router.get("/{id}/ciclos/{id_ciclo}/cursos")
+def get_cursos_del_docente_en_ciclo(id: int, id_ciclo: int, db: Session = Depends(get_db)):
+    """Cursos del ciclo en los que el docente dictó al menos una materia."""
+    filas = (
+        db.query(Curso)
+        .join(Materia, Materia.id_curso == Curso.id_curso)
+        .filter(
+            Materia.id_entidad == id,
+            Curso.id_ciclo_lectivo == id_ciclo,
+        )
+        .distinct()
+        .order_by(Curso.curso)
+        .all()
+    )
+    return [{"id_curso": c.id_curso, "curso": c.curso} for c in filas]
+
+
+@router.get("/{id}/ciclos/{id_ciclo}/cursos/{id_curso}/materias")
+def get_materias_del_docente_en_curso(id: int, id_ciclo: int, id_curso: int, db: Session = Depends(get_db)):
+    """Materias que el docente dicta en un curso y ciclo específicos."""
+    filas = (
+        db.query(Materia, NombreMateria.nombre_materia)
+        .join(NombreMateria, Materia.id_nombre_materia == NombreMateria.id_nombre_materia)
+        .join(Curso, Curso.id_curso == Materia.id_curso)
+        .filter(
+            Materia.id_entidad == id,
+            Materia.id_curso == id_curso,
+            Curso.id_ciclo_lectivo == id_ciclo,
+        )
+        .order_by(NombreMateria.nombre_materia)
+        .all()
+    )
+    return [
+        {"id_materia": m.id_materia, "nombre_materia": nombre}
+        for m, nombre in filas
+    ]
 
 
 @router.delete("/{id}")

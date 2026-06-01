@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CContainer } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilSpeedometer,
@@ -68,59 +69,63 @@ export default function UsersHome() {
   // ── Skeleton mientras carga ──────────────────────────────────────
   if (loading) {
     return (
-      <div className="adm-home__card">
-        <div className="adm-home__header">
-          <div className="adm-home__brand-icon">
-            <CIcon icon={cilSpeedometer} />
+      <CContainer fluid className="py-3">
+        <div className="adm-home__card">
+          <div className="adm-home__header">
+            <div className="adm-home__brand-icon">
+              <CIcon icon={cilSpeedometer} />
+            </div>
+            <div className="adm-home__title-wrap">
+              <h1 className="adm-home__title">Panel de Gestión</h1>
+              <p className="adm-home__subtitle">Cargando datos…</p>
+            </div>
           </div>
-          <div className="adm-home__title-wrap">
-            <h1 className="adm-home__title">Panel de Gestión</h1>
-            <p className="adm-home__subtitle">Cargando datos…</p>
+          <div className="adm-home__body">
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted, #64748b)', fontSize: '0.875rem' }}>
+              Obteniendo información del sistema…
+            </div>
           </div>
         </div>
-        <div className="adm-home__body">
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted, #64748b)', fontSize: '0.875rem' }}>
-            Obteniendo información del sistema…
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
   // ── Error ────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="adm-home__card">
-        <div className="adm-home__header">
-          <div className="adm-home__brand-icon">
-            <CIcon icon={cilSpeedometer} />
+      <CContainer fluid className="py-3">
+        <div className="adm-home__card">
+          <div className="adm-home__header">
+            <div className="adm-home__brand-icon">
+              <CIcon icon={cilSpeedometer} />
+            </div>
+            <div className="adm-home__title-wrap">
+              <h1 className="adm-home__title">Panel de Gestión</h1>
+            </div>
           </div>
-          <div className="adm-home__title-wrap">
-            <h1 className="adm-home__title">Panel de Gestión</h1>
+          <div className="adm-home__body">
+            <EmptyState
+              icon={cilWarning}
+              iconVariant="warn"
+              title="Error al cargar el panel"
+              sub={error}
+            />
+            <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+              <button
+                onClick={cargarDatos}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  fontSize: '0.8125rem', color: 'var(--acad-blue, #0369a1)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                }}
+              >
+                <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
+                Reintentar
+              </button>
+            </div>
           </div>
         </div>
-        <div className="adm-home__body">
-          <EmptyState
-            icon={cilWarning}
-            iconVariant="warn"
-            title="Error al cargar el panel"
-            sub={error}
-          />
-          <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
-            <button
-              onClick={cargarDatos}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                fontSize: '0.8125rem', color: 'var(--acad-blue, #0369a1)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}
-            >
-              <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
@@ -147,6 +152,7 @@ export default function UsersHome() {
   const PREVIA_COLORS = ['#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d']
 
   return (
+    <CContainer fluid className="py-3">
     <div className="adm-home__card">
 
       {/* ── Header ─────────────────────────────────────────────── */}
@@ -344,5 +350,6 @@ export default function UsersHome() {
 
       </div>
     </div>
+    </CContainer>
   )
 }

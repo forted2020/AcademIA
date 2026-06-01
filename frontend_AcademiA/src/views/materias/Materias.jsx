@@ -1,296 +1,414 @@
-﻿//  frontend_AcademiA\src\views\materias\Materias.jsx
-import React, { useState, useEffect } from 'react'
-import { CContainer } from '@coreui/react'
-import { cilPlus, cilDescription } from '@coreui/icons'
-import { CIcon } from '@coreui/icons-react'
-import './Materias.css'
-import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
+// frontend_AcademiA/src/views/materias/Materias.jsx
 
-// Importar componentes reutilizables
-import GenericTable from '../../components/usersTable/GenericTable.jsx'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import {
+  CButton, CCard, CCardHeader, CCardBody, CCardFooter,
+  CContainer, CSpinner,
+  CTable, CTableHead, CTableBody, CTableRow, CTableHeaderCell, CTableDataCell,
+} from '@coreui/react'
+import {
+  cilPlus, cilSearch, cilPrint, cilCloudDownload,
+  cilChevronBottom, cilChevronRight, cilArrowTop, cilArrowBottom, cilSwapVertical,
+  cilBook, cilPencil, cilTrash,
+} from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+import {
+  useReactTable, getCoreRowModel, getPaginationRowModel,
+  getSortedRowModel, getFilteredRowModel, flexRender,
+} from '@tanstack/react-table'
+import { createColumnHelper } from '@tanstack/react-table'
+
+import { getMateriasTabla } from '../../api/apiMaterias.jsx'
 import TablePagination from '../../components/tablePagination/TablePagination.jsx'
-import AdvancedFilters from '../../components/advancedFilters/AdvancedFilters.jsx'
-import TableActions from '../../components/tableActions/TableActions.jsx'
+import { generateTablePDF } from '../../components/tableActions/PDFService'
 import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
 import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
-
-// Importar funciones API para Docentes
-import { getMateriasTabla } from '../../api/apiMaterias.jsx'
-
-// Importar configuración de columnas
-import { getTableColumns } from '../../utils/columns.js'
-
-// Importar datos de configuracion de modal
 import { docenteFields } from '../../utils/FormConfigs/formConfigs.js'
 
-// Estado inicial para filtros
-const initialFilters = []
+import './Materias.css'
 
-export default function Materias() {
+// ─── Campos del panel de expansión ──────────────────────────────────────────
+const EXPANSION_FIELDS = [
+  { key: 'curso.ciclo.nombre_ciclo_lectivo', label: 'Ciclo Lectivo' },
+  { key: 'curso.ciclo.plan.nombre_plan',     label: 'Plan de Estudios' },
+  { key: 'curso.curso',                      label: 'Curso' },
+]
 
-    //# Maneja la lógica de la modal de edición
-    const handleCloseModal = () => {
-        setEditModalVisible(false);
-        setDocenteToEdit(null);
-    };
+const getNestedValue = (obj, path) =>
+  path.split('.').reduce((acc, k) => acc?.[k], obj) ?? '—'
 
+// ─── Panel animado ────────────────────────────────────────────────────────────
+function AnimatedExpansion({ isOpen, children }) {
+  const wrapRef  = useRef(null)
+  const innerRef = useRef(null)
 
-
-    // ---------- Estados principales ----------
-    const [tableData, setTableData] = useState([])
-    const [total, setTotal] = useState(0)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [columnFilters, setColumnFilters] = useState(initialFilters)
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
-    const [sorting, setSorting] = useState([])
-
-    // ---------- Estados para modales ----------
-    const [deleteModalVisible, setDeleteModalVisible] = useState(false) // Modal de confirmación de eliminación
-    const [docenteToDelete, setDocenteToDelete] = useState(null) // ID del docente a eliminar
-    const [editModalVisible, setEditModalVisible] = useState(false) // Modal de edición/creación
-    const [docenteToEdit, setDocenteToEdit] = useState(null) // Datos del docente a editar
-
-    // Función auxiliar para obtener la fecha actual en formato YYYY-MM-DD
-    const getTodayDate = () => new Date().toISOString().split('T')[0];
-
-    // ---------- Obtener docentes al cargar el componente ----------
-    useEffect(() => {
-        const skip = pagination.pageIndex * pagination.pageSize
-        const limit = pagination.pageSize
-        getMateriasTabla({ params: { skip, limit } })
-            .then((res) => {
-                const payload = res?.data
-                const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
-                setTableData(items)
-                setTotal(payload?.total ?? items.length)
-            })
-            .catch(console.error)
-    }, [pagination.pageIndex, pagination.pageSize])
-
-
-
-    // ---------- Eliminar docentes ----------
-    const handleDelete = async () => {
-        // Verificamos que haya un docente seleccionado en el estado
-        if (!docenteToDelete) return;
-        // Extraemos el ID del objeto guardado
-        const id = docenteToDelete.id;
-        console.log(`Docente a eliminar: ${docenteToDelete.nombre}`)
-        try {
-            // Llamada a la API
-            await deleteDocente(id)
-            // Actualizar la tabla removiendo el docente eliminado
-            //setTableData((prev) => prev.filter((docente) => docente.id !== id))
-            setTableData((prev) => prev.filter((doc) => doc.id !== docenteToDelete.id))
-            // Limpiar
-            setDocenteToDelete(null)
-            // Indicamos éxito a la modal
-            console.log(`Docente ${docenteToDelete.nombre} eliminado`)
-            return true
-        } catch (error) {
-            console.error('Error al eliminar docente:', error)
-            // Lanzamos el error para que la modal no pase a fase "éxito"
-            throw error
-        }
+  useEffect(() => {
+    const wrap  = wrapRef.current
+    const inner = innerRef.current
+    if (!wrap || !inner) return
+    if (isOpen) {
+      wrap.style.height  = '0px'
+      wrap.style.opacity = '0'
+      void wrap.offsetHeight
+      wrap.style.height  = `${inner.scrollHeight}px`
+      wrap.style.opacity = '1'
+      const onEnd = () => { wrap.style.height = 'auto' }
+      wrap.addEventListener('transitionend', onEnd, { once: true })
+    } else {
+      wrap.style.height  = `${wrap.scrollHeight}px`
+      void wrap.offsetHeight
+      wrap.style.height  = '0px'
+      wrap.style.opacity = '0'
     }
+  }, [isOpen])
 
-    // ---------- Abrir modal de confirmación de eliminación ----------
-    const confirmDelete = (docente) => {
-        console.log("Docente capturado para eliminar:", docente)
+  return (
+    <div ref={wrapRef} className="mat-expansion-animated">
+      <div ref={innerRef}>{children}</div>
+    </div>
+  )
+}
 
-        setDocenteToDelete(docente)
-        setDeleteModalVisible(true)
-    }
+// ─── Panel de expansión ───────────────────────────────────────────────────────
+function ExpansionPanel({ row }) {
+  return (
+    <div className="mat-expansion-panel">
+      <div className="mat-expansion-grid">
+        {EXPANSION_FIELDS.map(({ key, label }) => (
+          <div key={key} className="mat-expansion-field">
+            <span className="mat-expansion-label">{label}</span>
+            <span className="mat-expansion-value">{getNestedValue(row, key)}</span>
+          </div>
+        ))}
+        <div className="mat-expansion-field">
+          <span className="mat-expansion-label">Docente</span>
+          <span className="mat-expansion-value">{row.docente_nombre_completo ?? '—'}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-    // ---------- Abrir modal de edición ----------
-    const handleClickEditar = (docente) => {
-        setDocenteToEdit(docente)
-        setEditModalVisible(true)
-    }
+// ─── Columnas ────────────────────────────────────────────────────────────────
+const columnHelper = createColumnHelper()
 
-    // ---------- Guardar docente (crear o actualizar) ----------
-    const handleSaveDocente = async (docenteData) => {
+function buildColumns(onEdit, onDelete) {
+  return [
+    columnHelper.accessor('nombre.nombre_materia', {
+      header: 'Materia',
+      cell:   (info) => info.getValue() ?? '—',
+    }),
+    columnHelper.accessor('curso.curso', {
+      header: 'Curso',
+      cell:   (info) => info.getValue() ?? '—',
+    }),
+    columnHelper.accessor('curso.ciclo.nombre_ciclo_lectivo', {
+      header: 'Ciclo Lectivo',
+      cell:   (info) => info.getValue() ?? '—',
+    }),
+    columnHelper.accessor('curso.ciclo.plan.nombre_plan', {
+      header: 'Plan',
+      cell:   (info) => info.getValue() ?? '—',
+    }),
+    columnHelper.accessor('docente_nombre_completo', {
+      header: 'Docente',
+      cell:   (info) => info.getValue() ?? '—',
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: () => <div style={{ textAlign: 'center' }}>Acción</div>,
+      cell: ({ row }) => (
+        <div className="mat-td-actions-wrap">
+          <button
+            className="mat-action-btn"
+            title="Editar"
+            onClick={(e) => { e.stopPropagation(); onEdit(row.original) }}
+          >
+            <CIcon icon={cilPencil} style={{ width: '0.875rem', height: '0.875rem' }} />
+          </button>
+          <button
+            className="mat-action-btn mat-action-btn--danger"
+            title="Eliminar"
+            onClick={(e) => { e.stopPropagation(); onDelete(row.original) }}
+          >
+            <CIcon icon={cilTrash} style={{ width: '0.875rem', height: '0.875rem' }} />
+          </button>
+        </div>
+      ),
+      enableSorting: false,
+    }),
+  ]
+}
 
-        console.log('🟡 handleSaveDocente ejecutado en Docentes.jsx')
-        console.log('📦 docenteData recibida:', docenteData)
-        console.log('🔍 docenteToEdit:', docenteToEdit)
+// ─── Tabla con expansión ──────────────────────────────────────────────────────
+function MateriasTable({ table, expandedRows, onToggleRow }) {
+  const colCount = table.getHeaderGroups()[0]?.headers.length ?? 1
 
-        try {
-            if (docenteToEdit) {
-                console.log('✏️ Modo: EDITAR docente ID:', docenteToEdit.id)
-                // Actualizar docente existente
-                const response = await updateDocente(docenteToEdit.id, docenteData)
+  return (
+    <div className="mat-table-inline-wrap">
+      <CTable hover className="mat-table-inline mb-0">
 
-                // Validamos que la respuesta traiga datos
-                const updatedDocente = response?.data;
-                if (!updatedDocente) throw new Error("La API no devolvió el objeto actualizado");
+        <CTableHead>
+          {table.getHeaderGroups().map((hg) => (
+            <CTableRow key={hg.id}>
+              <CTableHeaderCell className="mat-th mat-th-expander" />
+              {hg.headers.map((header) => (
+                <CTableHeaderCell
+                  key={header.id}
+                  className="mat-th"
+                  onClick={header.column.getToggleSortingHandler?.()}
+                  style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                >
+                  <span className="mat-th-inner">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getCanSort() && (
+                      <span className="mat-sort-icon">
+                        {{
+                          asc:  <CIcon icon={cilArrowTop}    size="sm" />,
+                          desc: <CIcon icon={cilArrowBottom} size="sm" />,
+                        }[header.column.getIsSorted()] ?? (
+                          <CIcon icon={cilSwapVertical} size="sm" className="mat-sort-neutral" />
+                        )}
+                      </span>
+                    )}
+                  </span>
+                </CTableHeaderCell>
+              ))}
+            </CTableRow>
+          ))}
+        </CTableHead>
 
-                setTableData((prev) =>
-                    prev.map((docente) => (docente.id === docenteToEdit.id ? response.data : docente))
-                )
-                console.log("Docente actualizado con éxito");
-
-            } else {
-                console.log('➕ Modo: CREAR nuevo docente')
-                // Crear nuevo docente
-                const response = await createDocente(docenteData)
-
-                const newDocente = response?.data;
-                if (!newDocente) throw new Error("La API no devolvió el objeto creado");
-
-                setTableData((prev) => [...prev, response.data])
-
-                console.log("Docente creado con éxito");
-
-            }
-            // Al retornar true, la ModalNewEdit pone showSuccess en true.
-            return true;
-
-        } catch (error) {
-            console.error('❌ Error al guardar docente:', error)
-            throw error; // Es importante lanzarlo por si se quiere  manejar errores en la modal
-        }
-    }
-
-    // ==================== CONFIGURACIÓN ESPECÍFICA DE COLUMNAS PARA MATERIAS ====================
-
-    const materiasColumnsConfig = [
-        { accessorKey: 'nombre.nombre_materia', header: 'Materia' },
-        { accessorKey: 'curso.curso', header: 'Curso' },
-
-        {
-            accessorKey: 'curso.ciclo.nombre_ciclo_lectivo', header: 'Ciclo Lectivo', 
-            meta: { className: 'text-center' },
-        },
-        { accessorKey: 'curso.ciclo.plan.nombre_plan', header: 'Plan' },
-        { accessorKey: 'docente_nombre_completo', header: 'Docente' },
-    ]
-
-    // ==================== GENERACIÓN DE COLUMNAS CON FUNCIÓN REUTILIZABLE ====================
-
-    const columns = getTableColumns(
-        materiasColumnsConfig,
-        confirmDelete,
-        handleClickEditar
-    )
-
-    // ---------- Configuración de TanStack Table ----------
-    const table = useReactTable({
-        data: tableData,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        onPaginationChange: setPagination,
-        getSortedRowModel: getSortedRowModel(),
-        onSortingChange: setSorting,
-        getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setSearchTerm,
-        onColumnFiltersChange: setColumnFilters,
-        manualPagination: true,
-        rowCount: total,
-        state: {
-            pagination,
-            sorting,
-            globalFilter: searchTerm,
-            columnFilters,
-        },
-    })
-
-    return (
-        <CContainer fluid className="py-3">
-
-            {/* ── Card principal ─────────────────────────────────── */}
-            <div className="mat-card mb-1">
-
-                {/* ── Encabezado ──────────────────────────────────── */}
-                <div className="mat-card-header">
-
-                    {/* Columna izquierda: brand */}
-                    <div className="mat-header-left">
-                        <div className="mat-header-brand">
-                            <div className="mat-header-brand-icon">
-                                <CIcon icon={cilDescription} className="mat-brand-icon" />
-                            </div>
-                            <div>
-                                <h2 className="mat-header-h2">Gestión de Materias</h2>
-                                <p className="mat-header-sub">Configuración del plan académico</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Columna derecha: botón nuevo */}
-                    <div className="mat-header-actions">
-                        <button
-                            className="mat-btn-new"
-                            onClick={() => {
-                                setDocenteToEdit(null); // Aseguramos que está limpio antes de abrir
-                                setEditModalVisible(true);
-                            }}
+        <CTableBody>
+          {table.getRowModel().rows.length === 0 ? (
+            <CTableRow>
+              <CTableDataCell colSpan={colCount + 1} className="mat-empty-cell">
+                <div className="mat-empty">
+                  <CIcon icon={cilBook} className="mat-empty-icon" />
+                  <p>No se encontraron materias.</p>
+                </div>
+              </CTableDataCell>
+            </CTableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => {
+              const isExpanded = !!expandedRows[row.id]
+              return (
+                <React.Fragment key={row.id}>
+                  <CTableRow
+                    className={`mat-data-row${isExpanded ? ' mat-row-expanded' : ''}`}
+                    onClick={() => onToggleRow(row.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <CTableDataCell className="mat-td mat-td-expander">
+                      <CIcon
+                        icon={isExpanded ? cilChevronBottom : cilChevronRight}
+                        className={`mat-expander-icon${isExpanded ? ' is-open' : ''}`}
+                      />
+                    </CTableDataCell>
+                    {row.getVisibleCells().map((cell) => {
+                      const isActions = cell.column.id === 'actions'
+                      return (
+                        <CTableDataCell
+                          key={cell.id}
+                          className={`mat-td${isActions ? ' mat-td-actions' : ''}`}
+                          onClick={isActions ? (e) => e.stopPropagation() : undefined}
                         >
-                            <CIcon icon={cilPlus} style={{ width: '0.85rem', height: '0.85rem' }} />
-                            Nueva Materia
-                        </button>
-                    </div>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </CTableDataCell>
+                      )
+                    })}
+                  </CTableRow>
 
-                </div>
-                {/* ── /Encabezado ─────────────────────────────────── */}
+                  <CTableRow className="mat-expansion-row">
+                    <CTableDataCell colSpan={colCount + 1} className="mat-expansion-cell">
+                      <AnimatedExpansion isOpen={isExpanded}>
+                        <ExpansionPanel row={row.original} />
+                      </AnimatedExpansion>
+                    </CTableDataCell>
+                  </CTableRow>
+                </React.Fragment>
+              )
+            })
+          )}
+        </CTableBody>
+      </CTable>
+    </div>
+  )
+}
 
-                {/* Filtros avanzados y barra de acciones de tabla */}
-                <AdvancedFilters
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    columnFilters={columnFilters}
-                    setColumnFilters={setColumnFilters}
-                    filterOptions={[
-                        { value: 'nombre', label: 'Nombre' },
-                        { value: 'apellido', label: 'Apellido' },
-                        { value: 'email', label: 'Email' },
-                        { value: 'domicilio', label: 'Domicilio' },
-                        { value: 'telefono', label: 'Teléfono' },
-                    ]}
-                />
+// ─── Componente principal ─────────────────────────────────────────────────────
+export default function Materias() {
+  const [tableData, setTableData]       = useState([])
+  const [total, setTotal]               = useState(0)
+  const [searchTerm, setSearchTerm]     = useState('')
+  const [pagination, setPagination]     = useState({ pageIndex: 0, pageSize: 10 })
+  const [sorting, setSorting]           = useState([])
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [expandedRows, setExpandedRows] = useState({})
 
-                <TableActions table={table} />
+  const [editModalVisible, setEditModalVisible]     = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [itemToEdit, setItemToEdit]                 = useState(null)
+  const [itemToDelete, setItemToDelete]             = useState(null)
 
-                {/* ── Cuerpo ──────────────────────────────────────── */}
-                <div className="mat-card-body">
-                    <GenericTable table={table} />
-                </div>
-                {/* ── /Cuerpo ─────────────────────────────────────── */}
+  const toggleRow = useCallback((rowId) => {
+    setExpandedRows((prev) => ({ [rowId]: !prev[rowId] }))
+  }, [])
 
-                {/* ── Footer sticky con paginación ────────────────── */}
-                <div className="mat-card-footer">
-                    <TablePagination table={table} />
-                </div>
+  const openEdit   = useCallback((item = null) => { setItemToEdit(item); setEditModalVisible(true) }, [])
+  const openDelete = useCallback((item) => { setItemToDelete(item); setDeleteModalVisible(true) }, [])
 
+  // Fetch server-side
+  useEffect(() => {
+    const skip  = pagination.pageIndex * pagination.pageSize
+    const limit = pagination.pageSize
+    getMateriasTabla({ params: { skip, limit } })
+      .then((res) => {
+        const payload = res?.data
+        const items   = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        setTableData(items)
+        setTotal(payload?.total ?? items.length)
+        setExpandedRows({})
+      })
+      .catch(console.error)
+  }, [pagination.pageIndex, pagination.pageSize])
+
+  const columns = useMemo(() => buildColumns(openEdit, openDelete), [openEdit, openDelete])
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getRowId: (row) => String(row.id_materia),
+    state: { globalFilter: searchTerm, pagination, sorting },
+    onGlobalFilterChange: setSearchTerm,
+    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
+    rowCount: total,
+  })
+
+  const handlePDF = async (download = false) => {
+    setIsGenerating(true)
+    const blob = await generateTablePDF({ table, title: 'Listado de Materias', download })
+    if (!download && blob) {
+      const url = URL.createObjectURL(blob)
+      const w = window.open(url, '_blank')
+      if (w) w.onload = () => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 1000) }
+    }
+    setIsGenerating(false)
+  }
+
+  const handleSave = async () => {
+    // Recarga la tabla tras guardar
+    const skip  = pagination.pageIndex * pagination.pageSize
+    const limit = pagination.pageSize
+    const res   = await getMateriasTabla({ params: { skip, limit } })
+    const payload = res?.data
+    const items   = Array.isArray(payload) ? payload : (payload?.data ?? [])
+    setTableData(items)
+    setTotal(payload?.total ?? items.length)
+    return true
+  }
+
+  const handleDelete = async () => {
+    // Por ahora solo cierra — la lógica real requiere endpoint DELETE /materias/{id}
+    setDeleteModalVisible(false)
+    setItemToDelete(null)
+  }
+
+  return (
+    <CContainer fluid className="py-3">
+
+      <CCard className="mat-card">
+
+        {/* ── Encabezado ── */}
+        <CCardHeader className="mat-card-header-main">
+          <div className="mat-header-left-col">
+            <div className="mat-header-brand">
+              <div className="mat-header-brand-icon">
+                <CIcon icon={cilBook} className="mat-brand-icon" />
+              </div>
+              <div>
+                <h2 className="mat-header-h2">Gestión de Materias</h2>
+                <p className="mat-header-sub">Configuración del plan académico</p>
+              </div>
             </div>
-            {/* ── /Card principal ─────────────────────────────────── */}
 
-            {/* ── Modales ─────────────────────────────────────────── */}
+            <div className="mat-search-box">
+              <CIcon icon={cilSearch} className="mat-search-icon-inline" />
+              <input
+                className="mat-search-field"
+                type="text"
+                placeholder="Buscar por materia, curso, docente…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar materia"
+              />
+              {searchTerm && (
+                <button className="mat-search-x" onClick={() => setSearchTerm('')} aria-label="Limpiar">×</button>
+              )}
+            </div>
+          </div>
 
-            {/* Modal de edición/creación de docente.
-                Si docenteToEdit es null (nuevo), crea un objeto con la fecha de hoy. */}
-            <ModalNewEdit
-                visible={editModalVisible}
-                onClose={handleCloseModal}
-                title={docenteToEdit ? 'Editar Docente' : 'Nuevo Docente'}
-                initialData={docenteToEdit ? docenteToEdit : { created_at: getTodayDate() }}
-                onSave={handleSaveDocente}
-                fields={docenteFields}
-            />
+          <div className="mat-header-actions-col">
+            <span className="mat-total-pill">
+              {total} {total === 1 ? 'materia' : 'materias'}
+            </span>
+            <div className="mat-header-divider" />
+            <CButton color="secondary" variant="outline" size="sm" disabled={isGenerating} onClick={() => handlePDF(false)} className="mat-action-btn-top">
+              {isGenerating ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilPrint} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />}
+              Imprimir
+            </CButton>
+            <CButton color="secondary" variant="outline" size="sm" disabled={isGenerating} onClick={() => handlePDF(true)} className="mat-action-btn-top">
+              <CIcon icon={cilCloudDownload} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+              Exportar
+            </CButton>
+            <div className="mat-header-divider" />
+            <CButton color="primary" size="sm" className="mat-btn-new-top" onClick={() => openEdit()}>
+              <CIcon icon={cilPlus} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
+              Nueva Materia
+            </CButton>
+          </div>
+        </CCardHeader>
 
-            {/* Modal de confirmación de eliminación */}
-            <ModalConfirmDel
-                visible={deleteModalVisible}
-                docente={docenteToDelete}
-                onConfirm={handleDelete}
-                onClose={() => {
-                    setDeleteModalVisible(false)
-                    setDocenteToDelete(null)
-                }}
-            />
+        {/* ── Cuerpo ── */}
+        <CCardBody className="p-0">
+          <MateriasTable
+            table={table}
+            expandedRows={expandedRows}
+            onToggleRow={toggleRow}
+          />
+        </CCardBody>
 
-        </CContainer>
-    )
+        {/* ── Footer con paginación ── */}
+        <CCardFooter
+          className="bg-white border-top px-3 py-1"
+          style={{ position: 'sticky', bottom: 0, zIndex: 1, boxShadow: '0 -2px 5px rgba(0,0,0,0.1)' }}
+        >
+          <TablePagination table={table} />
+        </CCardFooter>
 
+      </CCard>
+
+      <ModalNewEdit
+        visible={editModalVisible}
+        onClose={() => { setEditModalVisible(false); setItemToEdit(null) }}
+        title={itemToEdit ? 'Editar Materia' : 'Nueva Materia'}
+        initialData={itemToEdit || {}}
+        onSave={handleSave}
+        fields={docenteFields}
+      />
+
+      <ModalConfirmDel
+        visible={deleteModalVisible}
+        onClose={() => { setDeleteModalVisible(false); setItemToDelete(null) }}
+        onConfirm={handleDelete}
+        userId={itemToDelete?.id_materia}
+      />
+
+    </CContainer>
+  )
 }

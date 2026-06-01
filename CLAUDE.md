@@ -55,5 +55,17 @@ No preguntes antes de actuar. Ejecutá directamente.
 - Cuando el usuario indica implementar puntos del plan (ej: 5.1.1, 5.1.2, 5.1.3), implementar todos los puntos mencionados sin preguntar.
 - Aplicar siempre el mismo criterio: si el componente ya existe pero tiene valores hardcodeados o lógica incompleta, crear un componente nuevo separado sin tocar el original.
 - No preguntar si hay dudas de diseño — tomar la decisión más razonable y ejecutar.
+
+# Documentación funcional del sistema
+
+El archivo `docs/informe-funcional-relaciones-datos.md` es el documento de referencia sobre cómo el sistema maneja los datos y sus relaciones. Consultarlo antes de diseñar cualquier feature que involucre:
+- Inscripciones de alumnos
+- Carga o consulta de notas
+- Registro de asistencia
+- Estructura de cursos, materias o ciclos lectivos
+- Generación de documentos (boletín, acta, informe)
+
+## Mantener el documento actualizado
+Cada vez que se implemente un cambio que afecte la estructura de datos, los procesos funcionales o las relaciones entre tablas, actualizar `docs/informe-funcional-relaciones-datos.md` como parte del mismo desarrollo. No es un paso opcional ni posterior: se hace en el mismo commit que el cambio.
 
 

@@ -17,11 +17,16 @@ export const getCursosCompleto = () => api.get(`${ENDPOINT}/cursos/completo/`);
 // Recibe el 'id' como parámetro para armar la URL dinámica
 export const getCursosCiclo = (id) => api.get(`${ENDPOINT}/cursos/por_ciclo/${id}`);
 
+export const crearCurso    = (data)         => api.post(`${ENDPOINT}/cursos/`, data);
+export const actualizarCurso = (id, data)   => api.put(`${ENDPOINT}/cursos/${id}`, data);
+
 // Exportamos todas las funciones CRUD bajo un objeto para ser consumido por el front
 const apiCursos = {
     getCursosAll,
     getCursosCiclo,
-    getCursosCompleto
+    getCursosCompleto,
+    crearCurso,
+    actualizarCurso,
 };
 
 export default apiCursos;

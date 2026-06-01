@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Dashboard Docente · AcademIA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useMemo } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "kpiStyle": "minimal",
+  "layout": "B",
+  "dataState": "full"
+}/*EDITMODE-END*/;
+
+// ─────────── Mock fiel al endpoint /api/docentes/{id}/materias-actuales ───────────
+const DOCENTE = {
+  nombre: "Profesor Bertotti",
+  ciclo: "2025",
+};
+
+const MATERIAS = [
+  { id: 1, nombre: "Matemática III",     curso: "5° A", alumnos: 28, planillaPct: 100, pendientes: 0 },
+  { id: 2, nombre: "Matemática II",      curso: "4° A", alumnos: 31, planillaPct: 86,  pendientes: 4 },
+  { id: 3, nombre: "Matemática II",      curso: "4° B", alumnos: 27, planillaPct: 74,  pendientes: 7 },
+  { id: 4, nombre: "Matemática I",       curso: "3° A", alumnos: 30, planillaPct: 60,  pendientes: 12 },
+  { id: 5, nombre: "Análisis Matemático",curso: "6° A", alumnos: 22, planillaPct: 45,  pendientes: 12 },
+];
+
+const RECIENTES = [
+  { icon: "edit",     text: "Cargaste 12 notas en Matemática II (4° A)",        when: "hace 2 h" },
+  { icon: "check",    text: "Cerraste el 2° trimestre en Matemática III",       when: "ayer" },
+  { icon: "calendar", text: "Mesa de examen 'Matemática II' confirmada 12/06",  when: "hace 3 días" },
+];
+
+function planillaVariant(p) {
+  if (p >= 90) return "success";
+  if (p >= 70) return "warning";
+  return "danger";
+}
+
+function KpiRow({ variant, data, onPick }) {
+  const items = [
+    { key: "mat", title: "Materias este ciclo", value: data.totalMaterias, color: "primary", icon: "book",     subtext: "Ciclo " + DOCENTE.ciclo,        delta: "+0" },
+    { key: "alu", title: "Alumnos a cargo",     value: data.totalAlumnos,  color: "info",    icon: "users",    subtext: data.cursos + " cursos",         delta: "+3" },
+    { key: "pen", title: "Notas pendientes",    value: data.pendientes,    color: data.pendientes > 20 ? "danger" : data.pendientes > 0 ? "warning" : "success", icon: "edit", subtext: data.pendientes > 0 ? "Por cargar en planilla" : "Todo cargado", delta: data.pendientes > 0 ? "↓" : "OK" },
+    { key: "pla", title: "Avance planilla",     value: data.avgPlanilla + "%", color: planillaVariant(data.avgPlanilla), icon: "clipboard", subtext: "Promedio de tus materias", delta: data.avgPlanilla >= 90 ? "OK" : "↑" },
+  ];
+  return (
+    <div className="acd-grid acd-grid--kpi-4">
+      {items.map((it) => (
+        <StatCard key={it.key} variant={variant} {...it} onClick={() => onPick(it.key)} />
+      ))}
+    </div>
+  );
+}
+
+function MateriasTable({ items, onOpen }) {
+  return (
+    <Section
+      title="Mis materias · avance de planilla"
+      icon="books"
+      action={<button className="acd-section__action">Ver todas →</button>}
+    >
+      <div style={{ overflowX: "auto" }}>
+        <table className="acd-table">
+          <thead>
+            <tr>
+              <th>Materia</th>
+              <th style={{ width: 80 }}>Curso</th>
+              <th style={{ width: 90, textAlign: "right" }}>Alumnos</th>
+              <th style={{ minWidth: 200 }}>Planilla cargada</th>
+              <th style={{ width: 110, textAlign: "right" }}>Pendientes</th>
+              <th style={{ width: 110, textAlign: "right" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((m) => {
+              const variant = planillaVariant(m.planillaPct);
+              return (
+                <tr key={m.id}>
+                  <td style={{ fontWeight: 600, color: "var(--acad-navy)" }}>{m.nombre}</td>
+                  <td>{m.curso}</td>
+                  <td className="acd-num">{m.alumnos}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                      <div style={{ flex: 1, minWidth: 100 }}>
+                        <Progress value={m.planillaPct} variant={variant} />
+                      </div>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: "0.75rem", color: "var(--acad-navy)", width: 36, textAlign: "right" }}>
+                        {m.planillaPct}%
+                      </span>
+                    </div>
+                  </td>
+                  <td className="acd-num">
+                    {m.pendientes > 0
+                      ? <span className={"acd-badge " + (m.pendientes > 10 ? "acd-badge--red" : "acd-badge--amber")}>{m.pendientes}</span>
+                      : <span className="acd-badge acd-badge--green">0</span>}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <button className="acd-btn acd-btn--ghost" onClick={() => onOpen(m)}>
+                      Cargar <Icon name="arrow" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+  );
+}
+
+function AlumnosPorMateria({ items, onPick }) {
+  const data = items.map((m) => ({
+    label: m.nombre + " · " + m.curso,
+    value: m.alumnos,
+    color: "var(--acad-blue)",
+  }));
+  return (
+    <Section title="Alumnos por materia" icon="users">
+      <BarChart data={data} />
+    </Section>
+  );
+}
+
+function PendientesCarga({ items, onAction }) {
+  const conPendientes = items.filter((m) => m.pendientes > 0).slice(0, 4);
+  if (!conPendientes.length) {
+    return (
+      <Section title="Notas pendientes" icon="edit">
+        <EmptyState title="Todo cargado" sub="No tenés notas pendientes en ninguna materia." icon="check2" />
+      </Section>
+    );
+  }
+  return (
+    <Section title="Notas pendientes de cargar" icon="edit" action={<button className="acd-section__action">Ir a planilla →</button>}>
+      <ul className="acd-list">
+        {conPendientes.map((m) => (
+          <li key={m.id} className="acd-list__item">
+            <span style={{
+              width: "1.75rem", height: "1.75rem",
+              background: "#fee2e2", color: "#991b1b",
+              borderRadius: "var(--acad-radius-sm)",
+              display: "grid", placeItems: "center",
+              fontWeight: 700, fontSize: "0.75rem",
+              flex: "0 0 auto",
+            }}>{m.pendientes}</span>
+            <span style={{ minWidth: 0, flex: 1 }}>
+              <span style={{ fontWeight: 500, color: "var(--acad-navy)" }}>{m.nombre}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)", marginLeft: "0.5rem" }}>{m.curso}</span>
+            </span>
+            <button className="acd-btn acd-btn--ghost" onClick={() => onAction("Abriendo planilla — " + m.nombre)}>
+              Cargar
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function ActividadReciente({ items }) {
+  return (
+    <Section title="Actividad reciente" icon="clock">
+      <ul className="acd-list">
+        {items.map((r, i) => (
+          <li key={i} className="acd-list__item">
+            <span style={{
+              width: "1.75rem", height: "1.75rem",
+              background: "var(--acad-blue-pale)", color: "var(--acad-blue)",
+              borderRadius: 999, display: "grid", placeItems: "center",
+              flex: "0 0 auto",
+            }}>
+              <Icon name={r.icon} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: "0.8125rem" }}>{r.text}</span>
+            <span className="acd-list__meta">{r.when}</span>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function AccesosRapidos({ onAction }) {
+  return (
+    <Section title="Accesos rápidos" icon="dashboard">
+      <div className="acd-grid acd-grid--kpi-3" style={{ gap: "0.75rem" }}>
+        <ActionTile icon="clipboard" label="Planilla de calificaciones" sub="Cargar notas por materia"      onClick={() => onAction("Planilla")} />
+        <ActionTile icon="list"      label="Informes y listados"        sub="Asistencia, boletines, mesas"  onClick={() => onAction("Informes")} />
+        <ActionTile icon="calendar"  label="Mesas de examen"            sub="Próximas evaluaciones"         onClick={() => onAction("Mesas")} />
+      </div>
+    </Section>
+  );
+}
+
+// ─────────── Layouts A / B / C ───────────
+function LayoutA({ t, data, onPick, onAction, onOpen }) {
+  // Plan: KPIs — tabla materias — accesos
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+      <MateriasTable items={MATERIAS} onOpen={onOpen} />
+      <div className="acd-grid acd-grid--main-side">
+        <PendientesCarga items={MATERIAS} onAction={onAction} />
+        <ActividadReciente items={RECIENTES} />
+      </div>
+      <AccesosRapidos onAction={onAction} />
+    </div>
+  );
+}
+
+function LayoutB({ t, data, onPick, onAction, onOpen }) {
+  // Sidebar de accesos + foco en tabla
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+      <div className="acd-grid acd-grid--main-side">
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <MateriasTable items={MATERIAS} onOpen={onOpen} />
+          <AlumnosPorMateria items={MATERIAS} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <PendientesCarga items={MATERIAS} onAction={onAction} />
+          <ActividadReciente items={RECIENTES} />
+          <AccesosRapidos onAction={onAction} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LayoutC({ t, data, onPick, onAction, onOpen }) {
+  // Énfasis en gráfico + accesos al frente
+  return (
+    <div className="acd-card__body acd-rise">
+      <div className="acd-grid acd-grid--main-side">
+        <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+        <div style={{ alignSelf: "stretch" }}>
+          <AccesosRapidos onAction={onAction} />
+        </div>
+      </div>
+      <AlumnosPorMateria items={MATERIAS} />
+      <MateriasTable items={MATERIAS} onOpen={onOpen} />
+      <div className="acd-grid acd-grid--2">
+        <PendientesCarga items={MATERIAS} onAction={onAction} />
+        <ActividadReciente items={RECIENTES} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────── App ───────────
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [showToast, toast] = useToast();
+
+  const isEmpty = t.dataState === "empty";
+  const items = isEmpty ? [] : MATERIAS;
+
+  const data = useMemo(() => {
+    if (!items.length) {
+      return { totalMaterias: 0, totalAlumnos: 0, cursos: 0, pendientes: 0, avgPlanilla: 0 };
+    }
+    const totalAlumnos = items.reduce((s, m) => s + m.alumnos, 0);
+    const pendientes   = items.reduce((s, m) => s + m.pendientes, 0);
+    const avgPlanilla  = Math.round(items.reduce((s, m) => s + m.planillaPct, 0) / items.length);
+    const cursos = new Set(items.map((m) => m.curso)).size;
+    return { totalMaterias: items.length, totalAlumnos, cursos, pendientes, avgPlanilla };
+  }, [items]);
+
+  const onPickKpi = (k) => {
+    const map = {
+      mat: "Materias del ciclo — abriendo lista",
+      alu: "Alumnos — abriendo nómina",
+      pen: data.pendientes > 0 ? "Notas pendientes — abriendo planilla" : "¡Sin pendientes!",
+      pla: "Planilla — abriendo carga",
+    };
+    showToast(map[k]);
+  };
+  const onAction = (label) => showToast(label);
+  const onOpen = (m) => showToast("Planilla · " + m.nombre + " (" + m.curso + ")");
+
+  const Layout = t.layout === "B" ? LayoutB : t.layout === "C" ? LayoutC : LayoutA;
+
+  return (
+    <div className="acd-page">
+      <RoleBar current="docente" />
+
+      <div className="acd-card">
+        <PageHeader
+          icon="book"
+          subtitle="DASHBOARD DOCENTE"
+          title={"Hola, " + DOCENTE.nombre.split(" ")[1]}
+          meta={<>
+            <span className="acd-badge acd-badge--blue">Ciclo activo {DOCENTE.ciclo}</span>
+            <span style={{ fontSize: "0.8125rem", color: "var(--acad-text-muted)" }}>Departamento de Matemática</span>
+          </>}
+        />
+        {isEmpty ? (
+          <div className="acd-card__body">
+            <EmptyState
+              title="Sin materias asignadas en el ciclo activo"
+              sub="Cuando se te asignen materias, vas a verlas acá. Mientras tanto, podés revisar informes pasados."
+              icon="inbox"
+            />
+            <AccesosRapidos onAction={onAction} />
+          </div>
+        ) : (
+          <Layout t={t} data={data} onPick={onPickKpi} onAction={onAction} onOpen={onOpen} />
+        )}
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Layout" />
+        <TweakRadio label="Variante" value={t.layout}
+          options={LAYOUT_OPTIONS}
+          onChange={(v) => setTweak("layout", v)} />
+
+        <TweakSection label="KPI cards" />
+        <TweakRadio label="Estilo" value={t.kpiStyle}
+          options={KPI_OPTIONS}
+          onChange={(v) => setTweak("kpiStyle", v)} />
+
+        <TweakSection label="Datos" />
+        <TweakSelect label="Estado" value={t.dataState}
+          options={[
+            { value: "full",  label: "Con materias y datos cargados" },
+            { value: "empty", label: "Sin materias en este ciclo" },
+          ]}
+          onChange={(v) => setTweak("dataState", v)} />
+      </TweaksPanel>
+
+      {toast}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

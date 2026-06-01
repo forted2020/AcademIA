@@ -13,41 +13,79 @@ import { cilDescription, cilCloudDownload } from '@coreui/icons'
 import api from '../../api/api.js'
 import { useConfigSistema, getRangoNotas } from '../../hooks/useConfigSistema'
 import { useFormatoImpresion } from '../../hooks/useFormatoImpresion'
+import useAuthUser from '../../hooks/useAuthUser'
 import './PlanillaCalificaciones.css'
 
+// Devuelve el rol del sistema del usuario logueado
+function getRolSistema() {
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || '{}')
+    return u.rol_sistema ?? null
+  } catch { return null }
+}
+
 // ─── Hooks de datos ──────────────────────────────────────
-const useCiclos = () => {
+
+// Ciclos: si es DOCENTE_APP devuelve solo los ciclos en que dictó materias;
+// si es ADMIN_SISTEMA devuelve todos los ciclos.
+const useCiclos = (docenteId) => {
   const [ciclos, setCiclos] = React.useState([])
+  const rol = getRolSistema()
   React.useEffect(() => {
-    api.get('/api/ciclos/', { params: { skip: 0, limit: 50 } })
-      .then((res) => {
-        const payload = res?.data
-        setCiclos(Array.isArray(payload) ? payload : (payload?.data ?? []))
-      })
-      .catch(() => setCiclos([]))
-  }, [])
+    if (rol === 'DOCENTE_APP') {
+      if (!docenteId) return
+      api.get(`/api/docentes/${docenteId}/ciclos`)
+        .then((res) => setCiclos(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setCiclos([]))
+    } else {
+      api.get('/api/ciclos/', { params: { skip: 0, limit: 50 } })
+        .then((res) => {
+          const payload = res?.data
+          setCiclos(Array.isArray(payload) ? payload : (payload?.data ?? []))
+        })
+        .catch(() => setCiclos([]))
+    }
+  }, [docenteId, rol])
   return ciclos
 }
 
-const useCursosPorCiclo = (cicloId) => {
+// Cursos: si es docente, solo los cursos del ciclo en que dio clases.
+const useCursosPorCiclo = (cicloId, docenteId) => {
   const [cursos, setCursos] = React.useState([])
+  const rol = getRolSistema()
   React.useEffect(() => {
     if (!cicloId) { setCursos([]); return }
-    api.get(`/api/cursos/por_ciclo/${cicloId}`)
-      .then((res) => setCursos(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setCursos([]))
-  }, [cicloId])
+    if (rol === 'DOCENTE_APP') {
+      if (!docenteId) return
+      api.get(`/api/docentes/${docenteId}/ciclos/${cicloId}/cursos`)
+        .then((res) => setCursos(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setCursos([]))
+    } else {
+      api.get(`/api/cursos/por_ciclo/${cicloId}`)
+        .then((res) => setCursos(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setCursos([]))
+    }
+  }, [cicloId, docenteId, rol])
   return cursos
 }
 
-const useMateriasPorCurso = (cursoId) => {
+// Materias: si es docente, solo las que dicta en ese curso y ciclo.
+const useMateriasPorCurso = (cicloId, cursoId, docenteId) => {
   const [materias, setMaterias] = React.useState([])
+  const rol = getRolSistema()
   React.useEffect(() => {
     if (!cursoId) { setMaterias([]); return }
-    api.get(`/api/materias/curso/${cursoId}`)
-      .then((res) => setMaterias(res.data || []))
-      .catch(() => setMaterias([]))
-  }, [cursoId])
+    if (rol === 'DOCENTE_APP') {
+      if (!docenteId || !cicloId) return
+      api.get(`/api/docentes/${docenteId}/ciclos/${cicloId}/cursos/${cursoId}/materias`)
+        .then((res) => setMaterias(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setMaterias([]))
+    } else {
+      api.get(`/api/materias/curso/${cursoId}`)
+        .then((res) => setMaterias(res.data || []))
+        .catch(() => setMaterias([]))
+    }
+  }, [cicloId, cursoId, docenteId, rol])
   return materias
 }
 
@@ -338,14 +376,22 @@ export default function PlanillaCalificaciones() {
   const { configs: configGlobal } = useConfigSistema()
   const { configs: configFormato } = useFormatoImpresion('acta_examen')
   const { notaAprobacion } = getRangoNotas(configGlobal)
+  const { idEntidad } = useAuthUser()
 
-  const ciclos   = useCiclos()
-  const cursos   = useCursosPorCiclo(cicloId)
-  const materias = useMateriasPorCurso(cursoId)
+  const ciclos   = useCiclos(idEntidad)
+  const cursos   = useCursosPorCiclo(cicloId, idEntidad)
+  const materias = useMateriasPorCurso(cicloId, cursoId, idEntidad)
   const { data, loading, error } = usePlanillaActa(cicloId, cursoId, materiaId)
 
-  const ciclosOpciones   = ciclos.map((c)  => ({ label: c.nombre_ciclo_lectivo, value: c.id_ciclo_lectivo }))
-  const cursosOpciones   = cursos.map((c)  => ({ label: c.curso, value: c.id_curso }))
+  // Normaliza opciones independientemente de si vienen del endpoint admin o del de docente
+  const ciclosOpciones   = ciclos.map((c)  => ({
+    label: c.nombre_ciclo_lectivo,
+    value: c.id_ciclo_lectivo,
+  }))
+  const cursosOpciones   = cursos.map((c)  => ({
+    label: c.curso,
+    value: c.id_curso,
+  }))
   const materiasOpciones = materias.map((m) => ({
     label: m.nombre?.nombre_materia || m.nombre_materia || `Materia ${m.id_materia}`,
     value: m.id_materia,

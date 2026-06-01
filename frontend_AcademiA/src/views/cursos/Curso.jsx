@@ -9,7 +9,7 @@ import {
 import {
   cilPlus, cilSearch, cilPrint, cilCloudDownload,
   cilChevronBottom, cilChevronRight, cilArrowTop, cilArrowBottom, cilSwapVertical,
-  cilSchool,
+  cilSchool, cilPeople,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import {
@@ -17,29 +17,26 @@ import {
   getSortedRowModel, getFilteredRowModel, flexRender,
 } from '@tanstack/react-table'
 
-import { useCrudModalManager } from '../../hooks/UseCrudModalManager/useCrudModalManager.js'
 import { getTableColumns } from '../../utils/columns'
 import { useCursosCompletoData } from '../../hooks/useCursosCompleto.js'
-import apiCursos from '../../api/apiCursos.jsx'
 
 import TablePagination from '../../components/tablePagination/TablePagination.jsx'
 import { generateTablePDF } from '../../components/tableActions/PDFService'
-import ModalConfirmDel from '../../modals/ModalConfirmDel.jsx'
-import ModalNewEdit from '../../modals/ModalNewEdit.jsx'
+import ModalCurso from './ModalCurso.jsx'
+import ModalDetalleCurso from './ModalDetalleCurso.jsx'
 
 import './Cursos.css'
 
-// ─── Campos extra que se muestran en el panel de expansión ───────────────────
+// ─── Campos extra en el panel de expansión ───────────────────
 const EXPANSION_FIELDS = [
   { key: 'ciclo.nombre_ciclo_lectivo', label: 'Ciclo Lectivo'    },
   { key: 'ciclo.plan.nombre_plan',     label: 'Plan de Estudios' },
 ]
 
-// Acceso seguro a propiedades anidadas con notación de punto
 const getNestedValue = (obj, path) =>
   path.split('.').reduce((acc, key) => acc?.[key], obj) ?? '—'
 
-// ─── Panel animado: se monta siempre, la altura se anima con CSS ─────────────
+// ─── Panel animado ────────────────────────────────────────────
 function AnimatedExpansion({ isOpen, children }) {
   const wrapRef  = useRef(null)
   const innerRef = useRef(null)
@@ -67,36 +64,57 @@ function AnimatedExpansion({ isOpen, children }) {
 
   return (
     <div ref={wrapRef} className="cur-expansion-animated">
-      <div ref={innerRef}>
-        {children}
+      <div ref={innerRef}>{children}</div>
+    </div>
+  )
+}
+
+// ─── Panel de expansión con stats + detalle ───────────────────
+function ExpansionPanel({ row, onVerDetalle }) {
+  const hasAny = EXPANSION_FIELDS.some((f) => getNestedValue(row, f.key) !== '—')
+  return (
+    <div className="cur-expansion-panel">
+      <div className="cur-expansion-inner">
+        {/* Campos de texto */}
+        {hasAny && (
+          <div className="cur-expansion-grid">
+            {EXPANSION_FIELDS.map(({ key, label }) => (
+              <div key={key} className="cur-expansion-field">
+                <span className="cur-expansion-label">{label}</span>
+                <span className="cur-expansion-value">{getNestedValue(row, key)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Stats inline */}
+        <div className="cur-expansion-stats">
+          <div className="cur-exp-stat">
+            <span className="cur-exp-stat-value">{row.total_alumnos ?? '—'}</span>
+            <span className="cur-exp-stat-label">Alumnos inscriptos</span>
+          </div>
+          <div className="cur-exp-stat-sep" />
+          <div className="cur-exp-stat">
+            <span className="cur-exp-stat-value">{row.total_materias ?? '—'}</span>
+            <span className="cur-exp-stat-label">Materias</span>
+          </div>
+        </div>
+
+        {/* Botón ver detalle */}
+        <button
+          className="cur-btn-ver-detalle"
+          onClick={(e) => { e.stopPropagation(); onVerDetalle(row) }}
+        >
+          <CIcon icon={cilPeople} style={{ width: '0.8rem', height: '0.8rem' }} />
+          Ver alumnos y materias
+        </button>
       </div>
     </div>
   )
 }
 
-// ─── Contenido del panel ─────────────────────────────────────────────────────
-function ExpansionPanel({ row }) {
-  const hasAny = EXPANSION_FIELDS.some((f) => getNestedValue(row, f.key) !== '—')
-  return (
-    <div className="cur-expansion-panel">
-      {hasAny ? (
-        <div className="cur-expansion-grid">
-          {EXPANSION_FIELDS.map(({ key, label }) => (
-            <div key={key} className="cur-expansion-field">
-              <span className="cur-expansion-label">{label}</span>
-              <span className="cur-expansion-value">{getNestedValue(row, key)}</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <span className="cur-expansion-empty">Sin datos adicionales registrados.</span>
-      )}
-    </div>
-  )
-}
-
-// ─── Tabla con expansión ─────────────────────────────────────────────────────
-function CursosTable({ table, expandedRows, onToggleRow }) {
+// ─── Tabla con expansión ──────────────────────────────────────
+function CursosTable({ table, expandedRows, onToggleRow, onVerDetalle }) {
   const colCount = table.getHeaderGroups()[0]?.headers.length ?? 1
 
   return (
@@ -178,7 +196,7 @@ function CursosTable({ table, expandedRows, onToggleRow }) {
                   <CTableRow className="cur-expansion-row">
                     <CTableDataCell colSpan={colCount + 1} className="cur-expansion-cell">
                       <AnimatedExpansion isOpen={isExpanded}>
-                        <ExpansionPanel row={row.original} />
+                        <ExpansionPanel row={row.original} onVerDetalle={onVerDetalle} />
                       </AnimatedExpansion>
                     </CTableDataCell>
                   </CTableRow>
@@ -192,12 +210,12 @@ function CursosTable({ table, expandedRows, onToggleRow }) {
   )
 }
 
-// ─── Componente principal ────────────────────────────────────────────────────
+// ─── Componente principal ─────────────────────────────────────
 export default function Curso() {
   const {
     cursosCompletoData: tableData,
-    setCursosCompletoData: setTableData,
     loading,
+    fetchCursosCompleto,
   } = useCursosCompletoData()
 
   const [total, setTotal]               = useState(0)
@@ -206,8 +224,9 @@ export default function Curso() {
   const [sorting, setSorting]           = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedRows, setExpandedRows] = useState({})
+  const [cursoDetalle, setCursoDetalle] = useState(null)
+  const [modalCurso, setModalCurso]     = useState(null) // null = cerrado, {} = nuevo, {curso} = edición
 
-  // Sincroniza el total con los datos cargados
   useEffect(() => {
     setTotal(tableData?.length ?? 0)
   }, [tableData])
@@ -216,28 +235,48 @@ export default function Curso() {
     setExpandedRows((prev) => ({ [rowId]: !prev[rowId] }))
   }, [])
 
-  const {
-    editModal, deleteModal,
-    openEdit, closeEdit,
-    openDelete, closeDelete,
-    handleSave, handleDelete,
-  } = useCrudModalManager({
-    createApi: apiCursos.getCursosAll,
-    updateApi: apiCursos.getCursosAll,
-    deleteApi: apiCursos.getCursosAll,
-    setData: setTableData,
-  })
+  // Recarga la tabla tras crear/editar un curso
+  const handleCursoSaved = useCallback(() => {
+    fetchCursosCompleto()
+  }, [fetchCursosCompleto])
 
   const columns = useMemo(() => getTableColumns(
     [
       { accessorKey: 'curso',                      header: 'Curso'            },
       { accessorKey: 'ciclo.nombre_ciclo_lectivo', header: 'Ciclo Lectivo'    },
       { accessorKey: 'ciclo.plan.nombre_plan',     header: 'Plan de Estudios' },
+      {
+        accessorKey: 'total_alumnos',
+        header: 'Alumnos',
+        cell: ({ getValue }) => {
+          const v = getValue()
+          return (
+            <span className="cur-stat-pill cur-stat-pill--alumnos">
+              <CIcon icon={cilPeople} style={{ width: '0.7rem', height: '0.7rem' }} />
+              {v ?? '—'}
+            </span>
+          )
+        },
+      },
+      {
+        accessorKey: 'total_materias',
+        header: 'Materias',
+        cell: ({ getValue }) => {
+          const v = getValue()
+          return (
+            <span className="cur-stat-pill cur-stat-pill--materias">
+              {v ?? '—'}
+            </span>
+          )
+        },
+      },
     ],
-    openDelete,
-    openEdit,
+    // confirmDelete — sin modal independiente: vacío por ahora
+    () => {},
+    // handleClickEditar — abre el ModalCurso con la fila completa
+    (row) => setModalCurso(row),
     { showSelection: false },
-  ), [])
+  ), [setModalCurso])
 
   const table = useReactTable({
     data: tableData || [],
@@ -271,8 +310,6 @@ export default function Curso() {
         {/* ── Encabezado ── */}
         <CCardHeader className="cur-card-header-main">
           <div className="cur-header-left-col">
-
-            {/* Ícono + título + subtítulo */}
             <div className="cur-header-brand">
               <div className="cur-header-brand-icon">
                 <CIcon icon={cilSchool} className="cur-brand-icon" />
@@ -283,7 +320,6 @@ export default function Curso() {
               </div>
             </div>
 
-            {/* Buscador debajo del subtítulo */}
             <div className="cur-search-box">
               <CIcon icon={cilSearch} className="cur-search-icon-inline" />
               <input
@@ -295,66 +331,29 @@ export default function Curso() {
                 aria-label="Buscar curso"
               />
               {searchTerm && (
-                <button className="cur-search-x" onClick={() => setSearchTerm('')} aria-label="Limpiar">
-                  ×
-                </button>
+                <button className="cur-search-x" onClick={() => setSearchTerm('')} aria-label="Limpiar">×</button>
               )}
             </div>
-
           </div>
 
-          {/* Acciones — derecha */}
           <div className="cur-header-actions-col">
-
-            {/* Badge total */}
             <span className="cur-total-pill">
               {total} {total === 1 ? 'curso' : 'cursos'}
             </span>
-
             <div className="cur-header-divider" />
-
-            {/* Imprimir */}
-            <CButton
-              color="secondary"
-              variant="outline"
-              size="sm"
-              disabled={isGenerating}
-              onClick={() => handlePDF(false)}
-              className="cur-action-btn-top"
-            >
-              {isGenerating
-                ? <CSpinner size="sm" className="me-1" />
-                : <CIcon icon={cilPrint} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
-              }
+            <CButton color="secondary" variant="outline" size="sm" disabled={isGenerating} onClick={() => handlePDF(false)} className="cur-action-btn-top">
+              {isGenerating ? <CSpinner size="sm" className="me-1" /> : <CIcon icon={cilPrint} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />}
               Imprimir
             </CButton>
-
-            {/* Exportar PDF */}
-            <CButton
-              color="secondary"
-              variant="outline"
-              size="sm"
-              disabled={isGenerating}
-              onClick={() => handlePDF(true)}
-              className="cur-action-btn-top"
-            >
+            <CButton color="secondary" variant="outline" size="sm" disabled={isGenerating} onClick={() => handlePDF(true)} className="cur-action-btn-top">
               <CIcon icon={cilCloudDownload} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
               Exportar
             </CButton>
-
             <div className="cur-header-divider" />
-
-            {/* Nuevo curso */}
-            <CButton
-              color="primary"
-              size="sm"
-              className="cur-btn-new-top"
-              onClick={() => openEdit()}
-            >
+            <CButton color="primary" size="sm" className="cur-btn-new-top" onClick={() => setModalCurso({})}>
               <CIcon icon={cilPlus} className="me-1" style={{ width: '0.875rem', height: '0.875rem' }} />
               Nuevo Curso
             </CButton>
-
           </div>
         </CCardHeader>
 
@@ -369,6 +368,7 @@ export default function Curso() {
               table={table}
               expandedRows={expandedRows}
               onToggleRow={toggleRow}
+              onVerDetalle={setCursoDetalle}
             />
           )}
         </CCardBody>
@@ -383,24 +383,22 @@ export default function Curso() {
 
       </CCard>
 
-      {/* ── Modales ── */}
-      <ModalNewEdit
-        visible={editModal.visible}
-        onClose={closeEdit}
-        title={editModal.item ? 'Editar Curso' : 'Nuevo Curso'}
-        initialData={editModal.item || {}}
-        onSave={handleSave}
-        fields={[
-          { name: 'curso', label: 'Nombre del Curso', type: 'text' },
-        ]}
-      />
+      {/* ── Modal crear/editar curso ── */}
+      {modalCurso !== null && (
+        <ModalCurso
+          curso={modalCurso?.id_curso ? modalCurso : null}
+          onClose={() => setModalCurso(null)}
+          onSaved={handleCursoSaved}
+        />
+      )}
 
-      <ModalConfirmDel
-        visible={deleteModal.visible}
-        onClose={closeDelete}
-        onConfirm={handleDelete}
-        userId={deleteModal.id}
-      />
+      {/* ── Modal detalle de curso ── */}
+      {cursoDetalle && (
+        <ModalDetalleCurso
+          curso={cursoDetalle}
+          onClose={() => setCursoDetalle(null)}
+        />
+      )}
 
     </CContainer>
   )

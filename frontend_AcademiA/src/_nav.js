@@ -4,7 +4,8 @@ import { CIcon } from '@coreui/icons-react'
 import { cilSchool, cilUser, cilAccountLogout, cilBook, cilHome, cilContact, cilDescription, cilBell, cilSettings, cilPrint } from '@coreui/icons'
 import { CNavItem, CNavTitle, CNavGroup } from '@coreui/react'
 
-import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../src/constants/Roles';
+import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../src/constants/Roles'
+import { parsePermisos } from '../src/views/configuracion/ConfiguracionGeneral/navPermisosCatalogo'
 
 // --------------------------------------------------------------------------------
 // 1. DEFINICIÓN DEL MENÚ CON PERMISOS
@@ -19,6 +20,7 @@ const fullNavigation = [
         component: CNavItem,
         name: 'Inicio',
         to: '/home',
+        navKey: 'nav_inicio',
         icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE],
     },
@@ -31,8 +33,8 @@ const fullNavigation = [
         icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
         roles: [ROL_ADMIN],
         items: [
-            { component: CNavItem, name: 'Gestión de Usuarios', to: '/usuarios', roles: [ROL_ADMIN] },
-            { component: CNavItem, name: 'Informes', to: '/usuarios/informes', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Gestión de Usuarios', to: '/usuarios', navKey: 'nav_usuarios_gestion', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Informes', to: '/usuarios/informes', navKey: 'nav_usuarios_informes', roles: [ROL_ADMIN] },
         ],
     },
 
@@ -44,9 +46,9 @@ const fullNavigation = [
         icon: <CIcon icon={cilContact} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_DOCENTE],
         items: [
-            { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Gestión de Materias', to: '/materias', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Informes', to: '/cursos/informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Gestión de Cursos', to: '/cursos', navKey: 'nav_cursos_gestion', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Gestión de Materias', to: '/materias', navKey: 'nav_materias_gestion', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informes', to: '/cursos/informes', navKey: 'nav_cursos_informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
         ],
     },
 
@@ -58,9 +60,9 @@ const fullNavigation = [
         icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_DOCENTE],
         items: [
-            { component: CNavItem, name: 'Gestión de Docentes', to: '/docentes', roles: [ROL_ADMIN] },
-            { component: CNavItem, name: 'Carga de notas', to: '/docentes/cargaNotas', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Informes', to: '/docentes/informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Gestión de Docentes', to: '/docentes', navKey: 'nav_docentes_gestion', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Carga de notas', to: '/docentes/cargaNotas', navKey: 'nav_docentes_carga_notas', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informes', to: '/docentes/informes', navKey: 'nav_docentes_informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
         ],
     },
 
@@ -72,11 +74,11 @@ const fullNavigation = [
         icon: <CIcon icon={cilBook} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_DOCENTE],
         items: [
-            { component: CNavItem, name: 'Gestión de Personal', to: '/personal', roles: [ROL_ADMIN] },
-            { component: CNavItem, name: 'Asistencia', to: '/asistencia', roles: [ROL_ADMIN] },
-            { component: CNavItem, name: 'Inscripción a ciclo lectivo', to: '/inscripcion', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Materias Previas', to: '/gestion/materias-previas', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Informes', to: '/gestion/informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Gestión de Personal', to: '/personal', navKey: 'nav_gestion_personal', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Asistencia', to: '/asistencia', navKey: 'nav_gestion_asistencia', roles: [ROL_ADMIN] },
+            { component: CNavItem, name: 'Inscripción a ciclo lectivo', to: '/inscripcion', navKey: 'nav_gestion_inscripcion', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Materias Previas', to: '/gestion/materias-previas', navKey: 'nav_gestion_previas', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informes', to: '/gestion/informes', navKey: 'nav_gestion_informes', roles: [ROL_ADMIN, ROL_DOCENTE] },
         ],
     },
 
@@ -88,12 +90,12 @@ const fullNavigation = [
         icon: <CIcon icon={cilSchool} customClassName="nav-icon" />,
         roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE],
         items: [
-            { component: CNavItem, name: 'Gestión de Estudiantes', to: '/estudiante', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Trayectoria', to: '/estudiante/trayectoria', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Boletín de Calificaciones', to: '/estudiante/boletin', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Planilla de Calificaciones', to: '/estudiante/planilla-calificaciones', roles: [ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Informe de Asistencia', to: '/estudiante/informe-asistencia', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
-            { component: CNavItem, name: 'Informes', to: '/estudiante/informes', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Gestión de Estudiantes', to: '/estudiante', navKey: 'nav_estudiantes_gestion', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Trayectoria', to: '/estudiante/trayectoria', navKey: 'nav_estudiantes_trayectoria', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Boletín de Calificaciones', to: '/estudiante/boletin', navKey: 'nav_estudiantes_boletin', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Planilla de Calificaciones', to: '/estudiante/planilla-calificaciones', navKey: 'nav_estudiantes_planilla', roles: [ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informe de Asistencia', to: '/estudiante/informe-asistencia', navKey: 'nav_estudiantes_asistencia', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
+            { component: CNavItem, name: 'Informes', to: '/estudiante/informes', navKey: 'nav_estudiantes_informes', roles: [ROL_ALUMNO, ROL_ADMIN, ROL_DOCENTE] },
         ],
     },
 
@@ -102,6 +104,7 @@ const fullNavigation = [
         component: CNavItem,
         name: 'Notificaciones',
         to: '/configuracion/notificaciones',
+        navKey: 'nav_notificaciones',
         icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
         roles: [ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE],
     },
@@ -184,46 +187,58 @@ const getNavItems = () => {
     const userJson = localStorage.getItem('user');
     const user = userJson ? JSON.parse(userJson) : null;
 
-    // Extraer *TODOS* los códigos de rol del usuario (soporte multirrol) NO IMPLEMENTADO
-    //  Extrae solo un rol, como un objeto único, no como un array.
-
     let userRoles = [];
 
-
-    console.log('React version:', React.version);
-    console.log('React instance:', React);
-
-    
-    // --- LÓGICA DE EXTRACCIÓN DE ROLES ---
-
-    // Prioridad al campo rol_sistema que viene del backend.
-    // Este campo contiene el Rol del Sistema (ADMIN_SISTEMA) que ahora usaremos.
     if (user && user.rol_sistema) {
-        // El rol_sistema es un string simple. Lo envolvemos en un array.
         userRoles = [user.rol_sistema];
-        console.log('✅ Estructura ROL_SISTEMA (nuevo) detectada.');
-
-    }
-    // Fallback (Alternativa) / Verificar la estructura actual (OBJETO único)
-    // Mantenemos esto si user.tipos_usuario es la estructura preferida para multirrol.
-    else if (user && user.tipos_usuario && Array.isArray(user.tipos_usuario)) {
+    } else if (user && user.tipos_usuario && Array.isArray(user.tipos_usuario)) {
         userRoles = user.tipos_usuario.map(tipo => tipo.cod_tipo_usuario);
-        console.log('⚠️ Estructura MULTI-ROL (tipos_usuario antiguo) detectada.');
     }
 
-    console.log('🔍 _nav.js - Usuario en localStorage:', user);
-    console.log('🔍 _nav.js - Roles detectados (multirrol):', userRoles);
+    if (userRoles.length === 0) return [];
 
-    if (userRoles.length === 0) {
-        console.log('❌ No se encontraron roles → Menú vacío');
-        return [];
+    // Cargar permisos de navegación configurados para cada rol del usuario
+    let configRaw = {}
+    try {
+        const cfgJson = localStorage.getItem('nav_config')
+        if (cfgJson) configRaw = JSON.parse(cfgJson)
+    } catch { /* sin permisos persistidos → se usan defaults */ }
+
+    // Construir mapa de permisos activos para los roles del usuario
+    const permisosActivos = {}
+    for (const rol of userRoles) {
+        const mapa = parsePermisos(configRaw[`nav_permisos_${rol}`] ?? null, rol)
+        for (const [key, val] of Object.entries(mapa)) {
+            // Un ítem se muestra si AL MENOS UNO de los roles del usuario lo habilita
+            if (val) permisosActivos[key] = true
+        }
     }
 
-    // Filtrar el menú completo con el array de roles del usuario
-    const finalNavItems = filterNavItems(fullNavigation, userRoles);
-    console.log('✅ Menú filtrado con ítems finales:', finalNavItems.length);
+    // Filtrar primero por roles, luego por permisos configurados
+    const porRoles = filterNavItems(fullNavigation, userRoles);
 
-    return finalNavItems;
+    const filtrarPorPermisos = (items) =>
+        items
+            .map(item => {
+                if (item.items) {
+                    return { ...item, items: filtrarPorPermisos(item.items) }
+                }
+                return item
+            })
+            .filter(item => {
+                // Ítems sin navKey (títulos, logout) siempre visibles
+                if (!item.navKey) return true
+                // Si no hay config guardada, mostrar todo (defaults)
+                if (Object.keys(configRaw).length === 0) return true
+                return permisosActivos[item.navKey] === true
+            })
+            // Eliminar grupos que quedaron vacíos
+            .filter(item => {
+                if (item.component === CNavGroup && item.items && item.items.length === 0) return false
+                return true
+            })
+
+    return filtrarPorPermisos(porRoles)
 };
 
 export default getNavItems;

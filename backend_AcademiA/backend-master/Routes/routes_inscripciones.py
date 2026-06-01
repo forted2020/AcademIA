@@ -1,9 +1,9 @@
 # Routes/routes_inscripciones.py
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from database import get_db
-from models import Inscripcion, Materia, TipoInscripcion
+from models import Inscripcion, Materia, TipoInscripcion, Curso, Entidad, NombreMateria
 from schemas import UserAuthData
 from auth import get_current_user
 from datetime import date
@@ -37,7 +37,19 @@ def inscribir_lote(
     if current_user.rol_sistema not in ["ADMIN_SISTEMA", "DOCENTE_APP"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Sin permisos para inscribir alumnos.")
 
-    # Obtener las materias del curso destino en el ciclo destino
+    # Verificar que el curso destino pertenezca al ciclo destino
+    curso_destino = db.query(Curso).filter(
+        Curso.id_curso == payload.id_curso_destino,
+        Curso.id_ciclo_lectivo == payload.id_ciclo_lectivo,
+    ).first()
+
+    if not curso_destino:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El curso destino no pertenece al ciclo lectivo seleccionado.",
+        )
+
+    # Obtener las materias del curso destino
     materias = db.query(Materia).filter(
         Materia.id_curso == payload.id_curso_destino,
     ).all()
@@ -61,7 +73,6 @@ def inscribir_lote(
 
     for alumno in payload.alumnos:
         for materia in materias:
-            # Evitar duplicados: verificar si ya existe inscripción activa
             existe = db.query(Inscripcion).filter(
                 Inscripcion.id_entidad == alumno.id_entidad,
                 Inscripcion.id_materia == materia.id_materia,
@@ -95,4 +106,33 @@ def inscribir_lote(
 @router.get("/tipos/")
 def get_tipos_inscripcion(db: Session = Depends(get_db)):
     tipos = db.query(TipoInscripcion).all()
-    return [{"id_tipo_insc": t.id_tipo_insc, "nombre_tip_insc": t.nombre_tipo_inc or ""} for t in tipos]
+    return [{"id_tipo_insc": t.id_tipo_insc, "nombre_tip_insc": t.nombre_tip_insc or ""} for t in tipos]
+
+
+# Devuelve los id_entidad de alumnos ya inscriptos activamente en un curso+ciclo.
+# El frontend lo usa para marcar visualmente a los alumnos ya inscriptos antes de confirmar.
+@router.get("/ya-inscriptos")
+def get_ya_inscriptos(
+    id_curso: int,
+    id_ciclo_lectivo: int,
+    db: Session = Depends(get_db),
+    current_user: UserAuthData = Depends(get_current_user),
+):
+    if current_user.rol_sistema not in ["ADMIN_SISTEMA", "DOCENTE_APP"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Sin permisos.")
+
+    # Buscar entidades que tienen al menos una inscripción activa en una materia
+    # de ese curso y ciclo
+    ids = (
+        db.query(Inscripcion.id_entidad)
+        .join(Materia, Materia.id_materia == Inscripcion.id_materia)
+        .filter(
+            Materia.id_curso == id_curso,
+            Inscripcion.id_ciclo_lectivo == id_ciclo_lectivo,
+            Inscripcion.deleted_at.is_(None),
+        )
+        .distinct()
+        .all()
+    )
+
+    return {"ids": [row.id_entidad for row in ids]}

@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CContainer } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilBook,
@@ -56,54 +57,59 @@ export default function DocentesHome() {
   // ── Skeleton ─────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="doc-home__card">
-        <div className="doc-home__header">
-          <div className="doc-home__brand-icon"><CIcon icon={cilBook} /></div>
-          <div className="doc-home__title-wrap">
-            <h1 className="doc-home__title">Dashboard Docente</h1>
-            <p className="doc-home__subtitle">Cargando datos…</p>
+      <CContainer fluid className="py-3">
+        <div className="doc-home__card">
+          <div className="doc-home__header">
+            <div className="doc-home__brand-icon"><CIcon icon={cilBook} /></div>
+            <div className="doc-home__title-wrap">
+              <h1 className="doc-home__title">Dashboard Docente</h1>
+              <p className="doc-home__subtitle">Cargando datos…</p>
+            </div>
+          </div>
+          <div className="doc-home__body">
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted,#64748b)', fontSize: '0.875rem' }}>
+              Obteniendo información del ciclo activo…
+            </div>
           </div>
         </div>
-        <div className="doc-home__body">
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted,#64748b)', fontSize: '0.875rem' }}>
-            Obteniendo información del ciclo activo…
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
   // ── Error ─────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="doc-home__card">
-        <div className="doc-home__header">
-          <div className="doc-home__brand-icon"><CIcon icon={cilBook} /></div>
-          <div className="doc-home__title-wrap">
-            <h1 className="doc-home__title">Dashboard Docente</h1>
+      <CContainer fluid className="py-3">
+        <div className="doc-home__card">
+          <div className="doc-home__header">
+            <div className="doc-home__brand-icon"><CIcon icon={cilBook} /></div>
+            <div className="doc-home__title-wrap">
+              <h1 className="doc-home__title">Dashboard Docente</h1>
+            </div>
+          </div>
+          <div className="doc-home__body">
+            <EmptyState icon={cilWarning} iconVariant="warn" title="Error al cargar el panel" sub={error} />
+            <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+              <button
+                onClick={cargarDatos}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  fontSize: '0.8125rem', color: 'var(--acad-blue,#0369a1)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                }}
+              >
+                <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
+                Reintentar
+              </button>
+            </div>
           </div>
         </div>
-        <div className="doc-home__body">
-          <EmptyState icon={cilWarning} iconVariant="warn" title="Error al cargar el panel" sub={error} />
-          <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
-            <button
-              onClick={cargarDatos}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                fontSize: '0.8125rem', color: 'var(--acad-blue,#0369a1)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}
-            >
-              <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
   return (
+    <CContainer fluid className="py-3">
     <div className="doc-home__card">
 
       {/* ── Header ───────────────────────────────────────────────── */}
@@ -239,5 +245,6 @@ export default function DocentesHome() {
 
       </div>
     </div>
+    </CContainer>
   )
 }

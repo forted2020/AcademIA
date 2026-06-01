@@ -32,12 +32,12 @@ import './Docentes.css'
 
 // ─── Campos extra que se muestran en el panel de expansión ───────────────────
 const EXPANSION_FIELDS = [
-  { key: 'domicilio',    label: 'Domicilio'    },
-  { key: 'localidad',    label: 'Localidad'    },
+  { key: 'domicilio', label: 'Domicilio' },
+  { key: 'localidad', label: 'Localidad' },
   { key: 'nacionalidad', label: 'Nacionalidad' },
-  { key: 'cel',          label: 'Celular'      },
-  { key: 'dni',          label: 'Documento'    },
-  { key: 'created_at',   label: 'Fecha de Alta', format: 'date' },
+  { key: 'cel', label: 'Celular' },
+  { key: 'dni', label: 'Documento' },
+  { key: 'created_at', label: 'Fecha de Alta', format: 'date' },
 ]
 
 const fmtDate = (val) => {
@@ -49,29 +49,29 @@ const fmtDate = (val) => {
 
 // ─── Panel animado: se monta siempre, la altura se anima con CSS ─────────────
 function AnimatedExpansion({ isOpen, children }) {
-  const wrapRef  = useRef(null)
+  const wrapRef = useRef(null)
   const innerRef = useRef(null)
 
   useEffect(() => {
-    const wrap  = wrapRef.current
+    const wrap = wrapRef.current
     const inner = innerRef.current
     if (!wrap || !inner) return
 
     if (isOpen) {
       // Abre: de 0 → altura real del contenido
-      wrap.style.height  = '0px'
+      wrap.style.height = '0px'
       wrap.style.opacity = '0'
       // Fuerza un reflow para que la transición arranque desde 0
       void wrap.offsetHeight
-      wrap.style.height  = `${inner.scrollHeight}px`
+      wrap.style.height = `${inner.scrollHeight}px`
       wrap.style.opacity = '1'
       const onEnd = () => { wrap.style.height = 'auto' }
       wrap.addEventListener('transitionend', onEnd, { once: true })
     } else {
       // Cierra: fija la altura actual antes de animar a 0
-      wrap.style.height  = `${wrap.scrollHeight}px`
+      wrap.style.height = `${wrap.scrollHeight}px`
       void wrap.offsetHeight
-      wrap.style.height  = '0px'
+      wrap.style.height = '0px'
       wrap.style.opacity = '0'
     }
   }, [isOpen])
@@ -126,7 +126,9 @@ function ExpansionPanel({ row, isOpen }) {
           ) : materiasData.materias.length > 0 ? (
             <div className="doc-expansion-materias">
               {materiasData.materias.map((m) => (
-                <span key={m} className="doc-materia-chip">{m}</span>
+                <span key={m.id} className="doc-materia-chip">
+                  {m.nombre} - {m.curso}
+                </span>
               ))}
             </div>
           ) : (
@@ -168,11 +170,11 @@ function DocentesTable({ table, expandedRows, onToggleRow, onEdit, onDelete }) {
                     {header.column.getCanSort() && (
                       <span className="doc-sort-icon">
                         {{
-                          asc:  <CIcon icon={cilArrowTop}    size="sm" />,
+                          asc: <CIcon icon={cilArrowTop} size="sm" />,
                           desc: <CIcon icon={cilArrowBottom} size="sm" />,
                         }[header.column.getIsSorted()] ?? (
-                          <CIcon icon={cilSwapVertical} size="sm" className="doc-sort-neutral" />
-                        )}
+                            <CIcon icon={cilSwapVertical} size="sm" className="doc-sort-neutral" />
+                          )}
                       </span>
                     )}
                   </span>
@@ -246,10 +248,10 @@ function DocentesTable({ table, expandedRows, onToggleRow, onEdit, onDelete }) {
 
 // ─── Componente principal ────────────────────────────────────────────────────
 export default function Docentes() {
-  const [tableData, setTableData]       = useState([])
-  const [total, setTotal]               = useState(0)
-  const [searchTerm, setSearchTerm]     = useState('')
-  const [pagination, setPagination]     = useState({ pageIndex: 0, pageSize: 10 })
+  const [tableData, setTableData] = useState([])
+  const [total, setTotal] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedRows, setExpandedRows] = useState({})
 
@@ -272,13 +274,13 @@ export default function Docentes() {
   const columns = useMemo(() => getTableColumns(
     [
       { accessorKey: 'apellido', header: 'Apellido' },
-      { accessorKey: 'nombre',   header: 'Nombre' },
+      { accessorKey: 'nombre', header: 'Nombre' },
       {
         accessorKey: 'fec_nac',
         header: 'Fecha Nac.',
         cell: (info) => formatDisplayDate(info.getValue()),
       },
-      { accessorKey: 'email',   header: 'Email' },
+      { accessorKey: 'email', header: 'Email' },
       { accessorKey: 'tel_cel', header: 'Tel/Cel' },
     ],
     openDelete,
@@ -288,12 +290,12 @@ export default function Docentes() {
 
   // Fetch server-side
   useEffect(() => {
-    const skip  = pagination.pageIndex * pagination.pageSize
+    const skip = pagination.pageIndex * pagination.pageSize
     const limit = pagination.pageSize
     getDocentes({ params: { skip, limit } })
       .then((res) => {
         const payload = res?.data
-        const items   = Array.isArray(payload) ? payload : (payload?.data ?? [])
+        const items = Array.isArray(payload) ? payload : (payload?.data ?? [])
         setTableData(items)
         setTotal(payload?.total ?? items.length)
         setExpandedRows({})   // Cierra expansiones al cambiar de página

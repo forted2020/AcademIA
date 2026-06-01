@@ -6,7 +6,7 @@ from sqlalchemy import extract  # Para filtrar por año
 from typing import List
 
 # --- Importaciones del proyecto ---
-from models import Inasistencia
+from models import Inasistencia, Materia, Curso, CicloLectivo
 import schemas
 from database import localSession
 from Services.config_service import get_config_int
@@ -27,6 +27,55 @@ def get_db():
 # ---------------------------------------------------------------
 
 # El parámetro de la ruta recibe id_entidad y year como parte de la URL.
+@router.get("/{id_entidad}/ciclo/{id_ciclo}", response_model=schemas.InasistenciaResponse)
+def get_asistencias_por_ciclo(
+    id_entidad: int,
+    id_ciclo: int,
+    db: Session = Depends(get_db)
+):
+    """Inasistencias de un alumno filtradas por ciclo lectivo (via Materia → Curso → CicloLectivo)."""
+    ciclo = db.query(CicloLectivo).filter(CicloLectivo.id_ciclo_lectivo == id_ciclo).first()
+    if not ciclo:
+        raise HTTPException(status_code=404, detail="Ciclo lectivo no encontrado.")
+
+    inasistencias = (
+        db.query(Inasistencia)
+        .join(Materia, Materia.id_materia == Inasistencia.id_materia)
+        .join(Curso, Curso.id_curso == Materia.id_curso)
+        .filter(
+            Inasistencia.id_entidad == id_entidad,
+            Curso.id_ciclo_lectivo == id_ciclo,
+        )
+        .all()
+    )
+
+    total_inasistencia       = sum((i.tipo_obj.valor if i.tipo_obj else 0) for i in inasistencias)
+    total_inasistencia_justif = sum((i.tipo_obj.valor if i.tipo_obj else 0) for i in inasistencias if i.justificada)
+
+    umbral_reincorporacion = get_config_int(db, "inasistencias_umbral_reincorporacion", 20)
+    umbral_libre           = get_config_int(db, "inasistencias_umbral_libre", 28)
+    total_computable       = total_inasistencia - total_inasistencia_justif
+
+    return {
+        "totalInasistencia": total_inasistencia,
+        "totalInasistenciaJustif": total_inasistencia_justif,
+        "detailedRecords": [
+            {
+                "date":      i.fecha_inasistencia.strftime("%d/%m/%Y"),
+                "type":      i.tipo_obj.descripcion if i.tipo_obj else "Desconocido",
+                "value":     i.tipo_obj.valor if i.tipo_obj else 0.0,
+                "justified": bool(i.justificada),
+                "reason":    i.motivo_inasistencia or "",
+            }
+            for i in sorted(inasistencias, key=lambda x: x.fecha_inasistencia)
+        ],
+        "umbralReincorporacion":       umbral_reincorporacion,
+        "umbralLibre":                 umbral_libre,
+        "requiereActaReincorporacion": total_computable >= umbral_reincorporacion,
+        "caracterLibre":               total_computable >= umbral_libre,
+    }
+
+
 @router.get("/{id_entidad}/{year}", response_model=schemas.InasistenciaResponse)
 def get_asistencias_entidad(
     id_entidad: int,  # Parámetro de ruta

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Dashboard Admin · AcademIA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "kpiStyle": "minimal",
+  "layout": "B",
+  "dataState": "full"
+}/*EDITMODE-END*/;
+
+// ─────────── Respuesta mock de GET /api/dashboard/resumen ───────────
+const RESUMEN = {
+  ciclo_activo: "2025",
+  id_ciclo_activo: 3,
+  ciclo_anterior: "2024",
+  total_alumnos: 142,
+  total_alumnos_prev: 138,
+  total_docentes: 18,
+  total_docentes_prev: 17,
+  total_inscripciones: 890,
+  total_inscripciones_prev: 845,
+  total_previas: 47,
+  total_previas_prev: 52,
+  cursos_activos: 6,
+};
+
+const ALUMNOS_POR_CURSO = [
+  { label: "1° A", value: 28 },
+  { label: "2° A", value: 26 },
+  { label: "3° A", value: 24 },
+  { label: "3° B", value: 22 },
+  { label: "4° A", value: 23 },
+  { label: "5° A", value: 19 },
+];
+
+const PREVIAS_TOP = [
+  { materia: "Química II",    cantidad: 14, curso: "4° A" },
+  { materia: "Matemática II", cantidad: 11, curso: "4° A / B" },
+  { materia: "Geografía",     cantidad:  9, curso: "3° A / B" },
+  { materia: "Física",        cantidad:  7, curso: "5° A" },
+  { materia: "Inglés III",    cantidad:  6, curso: "4° A" },
+];
+
+const ACTIVIDAD = [
+  { icon: "user",      who: "Sec. González",   text: "creó la inscripción de Lucas Bonomi en 3° B",          when: "hace 12 min" },
+  { icon: "edit",      who: "Prof. Bertotti",  text: "cargó 23 notas del 2° trimestre — Matemática III",      when: "hace 1 h" },
+  { icon: "file",      who: "Sistema",         text: "generó 8 constancias de regular para 5° A",              when: "hace 3 h" },
+  { icon: "settings",  who: "Admin",           text: "abrió el ciclo lectivo 2025 (id 3)",                      when: "ayer" },
+  { icon: "upload",    who: "Sec. González",   text: "subió listado de inasistencias del turno mañana",         when: "ayer" },
+];
+
+function delta(curr, prev) {
+  const d = curr - prev;
+  const sign = d > 0 ? "+" : "";
+  const pct = prev ? Math.round((d / prev) * 100) : 0;
+  return { num: sign + d, pct: sign + pct + "%" };
+}
+
+function KpiRow({ variant, onPick }) {
+  const dA = delta(RESUMEN.total_alumnos, RESUMEN.total_alumnos_prev);
+  const dD = delta(RESUMEN.total_docentes, RESUMEN.total_docentes_prev);
+  const dI = delta(RESUMEN.total_inscripciones, RESUMEN.total_inscripciones_prev);
+  const dP = delta(RESUMEN.total_previas, RESUMEN.total_previas_prev);
+  const items = [
+    { key: "alu", title: "Alumnos",       value: RESUMEN.total_alumnos,       color: "success",   icon: "users",      subtext: "vs " + RESUMEN.total_alumnos_prev + " en " + RESUMEN.ciclo_anterior, delta: dA.num },
+    { key: "doc", title: "Docentes",      value: RESUMEN.total_docentes,      color: "info",      icon: "user",       subtext: "vs " + RESUMEN.total_docentes_prev + " en " + RESUMEN.ciclo_anterior, delta: dD.num },
+    { key: "ins", title: "Inscripciones", value: RESUMEN.total_inscripciones, color: "primary",   icon: "clipboard",  subtext: "Ciclo " + RESUMEN.ciclo_activo, delta: dI.pct },
+    { key: "prv", title: "Previas",       value: RESUMEN.total_previas,       color: "danger",    icon: "alert",      subtext: "vs " + RESUMEN.total_previas_prev + " (↓)",     delta: dP.num },
+    { key: "cur", title: "Cursos activos",value: RESUMEN.cursos_activos,      color: "secondary", icon: "building",   subtext: "1° a 6° año", delta: "0" },
+  ];
+  return (
+    <div className="acd-grid acd-grid--kpi-5">
+      {items.map((it) => (
+        <StatCard key={it.key} variant={variant} {...it} onClick={() => onPick(it.key)} />
+      ))}
+    </div>
+  );
+}
+
+function AlumnosCursoChart() {
+  return (
+    <Section
+      title="Alumnos por curso · ciclo 2025"
+      icon="chart"
+      action={<button className="acd-section__action">Detalle →</button>}
+      blueTitle
+    >
+      <BarChart data={ALUMNOS_POR_CURSO} />
+      <div style={{ display: "flex", gap: "1.5rem", marginTop: "1rem", paddingTop: "0.875rem", borderTop: "1px solid var(--acad-border-light)", fontSize: "0.75rem", color: "var(--acad-text-muted)" }}>
+        <span><strong style={{ color: "var(--acad-navy)" }}>{RESUMEN.total_alumnos}</strong> alumnos en {ALUMNOS_POR_CURSO.length} cursos</span>
+        <span>Promedio <strong style={{ color: "var(--acad-navy)" }}>{Math.round(RESUMEN.total_alumnos / ALUMNOS_POR_CURSO.length)}</strong> por curso</span>
+      </div>
+    </Section>
+  );
+}
+
+function PreviasTop({ onAction }) {
+  const max = PREVIAS_TOP[0].cantidad;
+  return (
+    <Section
+      title="Distribución de previas · top 5"
+      icon="alert"
+      action={<button className="acd-section__action" onClick={() => onAction("Listado completo de previas")}>Ver todas ({RESUMEN.total_previas}) →</button>}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+        {PREVIAS_TOP.map((p, i) => (
+          <div key={p.materia} style={{ display: "grid", gridTemplateColumns: "24px 1fr auto", alignItems: "center", gap: "0.75rem" }}>
+            <span style={{
+              width: 22, height: 22, fontSize: "0.6875rem",
+              background: "var(--acad-bg-subtle)", color: "var(--acad-text-muted)",
+              borderRadius: 999, display: "grid", placeItems: "center", fontWeight: 700,
+              border: "1px solid var(--acad-border-light)",
+            }}>{i + 1}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.25rem" }}>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ fontWeight: 600, color: "var(--acad-navy)", fontSize: "0.875rem" }}>{p.materia}</span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)", marginLeft: "0.5rem" }}>{p.curso}</span>
+                </div>
+              </div>
+              <div style={{ height: 8, background: "var(--acad-border-light)", borderRadius: 999, overflow: "hidden" }}>
+                <div style={{
+                  width: ((p.cantidad / max) * 100) + "%", height: "100%",
+                  background: i === 0 ? "var(--bs-danger)" : i === 1 ? "var(--bs-warning)" : "var(--acad-blue)",
+                  transition: "width 0.5s ease",
+                }} />
+              </div>
+            </div>
+            <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--acad-navy)", fontVariantNumeric: "tabular-nums", minWidth: 32, textAlign: "right" }}>
+              {p.cantidad}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function ActividadSistema() {
+  return (
+    <Section title="Actividad reciente del sistema" icon="clock">
+      <ul className="acd-list">
+        {ACTIVIDAD.map((a, i) => (
+          <li key={i} className="acd-list__item" style={{ alignItems: "flex-start" }}>
+            <span style={{
+              width: "1.75rem", height: "1.75rem", flex: "0 0 auto",
+              background: "var(--acad-blue-pale)", color: "var(--acad-blue)",
+              borderRadius: 999, display: "grid", placeItems: "center", marginTop: 2,
+            }}>
+              <Icon name={a.icon} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: "0.8125rem", lineHeight: 1.4 }}>
+              <strong style={{ color: "var(--acad-navy)" }}>{a.who}</strong> {a.text}
+            </span>
+            <span className="acd-list__meta" style={{ whiteSpace: "nowrap" }}>{a.when}</span>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function AccesosRapidos({ onAction }) {
+  return (
+    <Section title="Accesos rápidos · gestión" icon="dashboard">
+      <div className="acd-grid acd-grid--kpi-4" style={{ gap: "0.75rem" }}>
+        <ActionTile icon="alert"     label="Materias Previas"      sub="Gestión y aprobación"      onClick={() => onAction("Materias Previas")} />
+        <ActionTile icon="clipboard" label="Inscripciones"          sub="Alta, baja, traslado"      onClick={() => onAction("Inscripciones")} />
+        <ActionTile icon="list"      label="Informes y listados"    sub="Boletines, asistencia"     onClick={() => onAction("Informes")} />
+        <ActionTile icon="settings"  label="Configuración"          sub="Ciclos, cursos, usuarios"  onClick={() => onAction("Configuración")} />
+      </div>
+    </Section>
+  );
+}
+
+// ─────────── Layouts A / B / C ───────────
+function LayoutA({ t, onPick, onAction }) {
+  // Plan: KPIs — gráfico + previas + actividad — accesos
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} onPick={onPick} />
+      <div className="acd-grid acd-grid--main-side">
+        <AlumnosCursoChart />
+        <PreviasTop onAction={onAction} />
+      </div>
+      <ActividadSistema />
+      <AccesosRapidos onAction={onAction} />
+    </div>
+  );
+}
+
+function LayoutB({ t, onPick, onAction }) {
+  // Énfasis en gestión: accesos arriba + foco analítico al lado
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} onPick={onPick} />
+      <AccesosRapidos onAction={onAction} />
+      <div className="acd-grid acd-grid--2">
+        <AlumnosCursoChart />
+        <PreviasTop onAction={onAction} />
+      </div>
+      <ActividadSistema />
+    </div>
+  );
+}
+
+function LayoutC({ t, onPick, onAction }) {
+  // Tres columnas balanceadas
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} onPick={onPick} />
+      <AlumnosCursoChart />
+      <div className="acd-grid acd-grid--2">
+        <PreviasTop onAction={onAction} />
+        <ActividadSistema />
+      </div>
+      <AccesosRapidos onAction={onAction} />
+    </div>
+  );
+}
+
+// ─────────── App ───────────
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [showToast, toast] = useToast();
+
+  const onPickKpi = (k) => {
+    const map = {
+      alu: "Alumnos — listado completo",
+      doc: "Docentes — gestión de cuentas",
+      ins: "Inscripciones del ciclo " + RESUMEN.ciclo_activo,
+      prv: "Materias Previas — gestión",
+      cur: "Cursos activos · ciclo " + RESUMEN.ciclo_activo,
+    };
+    showToast(map[k]);
+  };
+  const onAction = (label) => showToast(label);
+
+  const Layout = t.layout === "B" ? LayoutB : t.layout === "C" ? LayoutC : LayoutA;
+
+  return (
+    <div className="acd-page">
+      <RoleBar current="admin" />
+
+      <div className="acd-card">
+        <PageHeader
+          icon="dashboard"
+          subtitle="PANEL DE GESTIÓN — ADMIN"
+          title="Resumen del sistema"
+          meta={<>
+            <span className="acd-badge acd-badge--blue">Ciclo {RESUMEN.ciclo_activo}</span>
+            <span style={{ fontSize: "0.8125rem", color: "var(--acad-text-muted)" }}>{RESUMEN.cursos_activos} cursos · {RESUMEN.total_docentes} docentes · {RESUMEN.total_alumnos} alumnos</span>
+          </>}
+        />
+        <Layout t={t} onPick={onPickKpi} onAction={onAction} />
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Layout" />
+        <TweakRadio label="Variante" value={t.layout}
+          options={LAYOUT_OPTIONS}
+          onChange={(v) => setTweak("layout", v)} />
+
+        <TweakSection label="KPI cards" />
+        <TweakRadio label="Estilo" value={t.kpiStyle}
+          options={KPI_OPTIONS}
+          onChange={(v) => setTweak("kpiStyle", v)} />
+      </TweaksPanel>
+
+      {toast}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

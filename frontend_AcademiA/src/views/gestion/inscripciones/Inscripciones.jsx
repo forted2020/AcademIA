@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CCardFooter,
-  CContainer, CButton, CSpinner,
+  CCard, CCardHeader, CCardBody,
+  CContainer,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPeople, cilOptions } from '@coreui/icons'
+import { cilPeople } from '@coreui/icons'
 
 import { InscripcionesConfig } from './InscripcionesConfig'
 import GenericEnrollment from '../../../components/enrollment/GenericEnrollment'
@@ -38,23 +38,18 @@ export default function Inscripciones() {
               </div>
             </div>
 
-            {/* Selector de tipo de inscripción debajo del subtítulo */}
+            {/* Selector de tipo de inscripción: dropdown debajo del subtítulo */}
             <div className="insc-mode-selector">
-              <label className="insc-mode-label">
-                <CIcon icon={cilOptions} className="insc-mode-label-icon" />
-                {InscripcionesConfig.mainSelector.label}
-              </label>
-              <div className="insc-mode-pills">
+              <span className="insc-mode-label">{InscripcionesConfig.mainSelector.label}</span>
+              <select
+                className="insc-mode-select"
+                value={selectedModeKey}
+                onChange={(e) => setSelectedModeKey(e.target.value)}
+              >
                 {InscripcionesConfig.mainSelector.options.map((opt) => (
-                  <button
-                    key={opt.value}
-                    className={`insc-mode-pill${selectedModeKey === opt.value ? ' is-active' : ''}`}
-                    onClick={() => setSelectedModeKey(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
           </div>

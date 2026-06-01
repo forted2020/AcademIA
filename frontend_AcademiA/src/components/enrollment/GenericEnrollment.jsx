@@ -1,20 +1,19 @@
 // frontend_AcademiA/src/components/enrollment/GenericEnrollment.jsx
 
-import React, { useState, useEffect } from 'react'
-import {
-  CSpinner, CButton, CAlert,
-} from '@coreui/react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { CSpinner, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilUser, cilArrowRight, cilArrowLeft,
   cilChevronDoubleRight, cilChevronDoubleLeft,
-  cilCheckAlt,
+  cilCheckAlt, cilWarning,
 } from '@coreui/icons'
 
 import api from '../../api/api.js'
+import { useToast } from '../../context/ToastContext'
 import './GenericEnrollment.css'
 
-// ── Select con el mismo formato que ActaExamen ────────────
+// ── Select con indicador de paso ──────────────────────────
 function FilterSelect({ label, value, onChange, options, placeholder, disabled, step }) {
   const isReady = !disabled
   return (
@@ -55,11 +54,12 @@ function EstadoBadge({ estado }) {
 }
 
 // ── Item de alumno ────────────────────────────────────────
-function AlumnoItem({ item, selected, onClick }) {
+function AlumnoItem({ item, selected, onClick, yaInscripto }) {
   return (
     <div
-      className={`enr-item${selected ? ' is-selected' : ''}`}
+      className={`enr-item${selected ? ' is-selected' : ''}${yaInscripto ? ' is-ya-inscripto' : ''}`}
       onClick={onClick}
+      title={yaInscripto ? 'Este alumno ya está inscripto en el curso destino' : undefined}
     >
       <div className="enr-item-avatar">
         <CIcon icon={cilUser} className="enr-item-avatar-icon" />
@@ -71,13 +71,18 @@ function AlumnoItem({ item, selected, onClick }) {
           {item.dni}
         </span>
       </div>
-      <EstadoBadge estado={item.estado} />
+      <div className="enr-item-badges">
+        <EstadoBadge estado={item.estado} />
+        {yaInscripto && (
+          <span className="enr-ya-inscripto-badge">Ya inscripto</span>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Panel de lista ────────────────────────────────────────
-function ListPanel({ title, count, items, selectedIds, onToggle, searchPlaceholder, emptyText }) {
+function ListPanel({ title, count, items, selectedIds, onToggle, searchPlaceholder, emptyText, yaInscriptosIds }) {
   const [search, setSearch] = useState('')
 
   const filtered = items.filter((i) => {
@@ -123,6 +128,7 @@ function ListPanel({ title, count, items, selectedIds, onToggle, searchPlacehold
               item={item}
               selected={selectedIds.has(item.id_entidad)}
               onClick={() => onToggle(item.id_entidad)}
+              yaInscripto={yaInscriptosIds?.has(item.id_entidad)}
             />
           ))
         )}
@@ -131,38 +137,62 @@ function ListPanel({ title, count, items, selectedIds, onToggle, searchPlacehold
   )
 }
 
+// ── Indicador de progreso de pasos ───────────────────────
+function ProgresoFiltros({ origenCompleto, destinoCompleto }) {
+  const pasos = [
+    { label: 'Elegí el origen', done: origenCompleto },
+    { label: 'Seleccioná alumnos', done: origenCompleto },
+    { label: 'Elegí el destino', done: destinoCompleto },
+    { label: 'Confirmá', done: false },
+  ]
+  const activo = pasos.findIndex((p) => !p.done)
+
+  return (
+    <div className="enr-progreso">
+      {pasos.map((p, i) => (
+        <React.Fragment key={i}>
+          <div className={`enr-progreso-paso${p.done ? ' is-done' : i === activo ? ' is-active' : ''}`}>
+            <div className="enr-progreso-circulo">
+              {p.done ? <i className="pi pi-check" style={{ fontSize: '0.6rem' }} /> : i + 1}
+            </div>
+            <span className="enr-progreso-label">{p.label}</span>
+          </div>
+          {i < pasos.length - 1 && (
+            <div className={`enr-progreso-linea${p.done ? ' is-done' : ''}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  )
+}
+
 // ── Componente principal ──────────────────────────────────
 export default function GenericEnrollment({ config }) {
-  // ── Valores de los selectores ──────────────────────────
-  const [selections, setSelections] = useState({})
+  const { showSuccess, showError, showWarn } = useToast()
 
-  // ── Datos cargados para cada selector ─────────────────
-  const [optionsMap, setOptionsMap] = useState({})
-
-  // ── PickList ───────────────────────────────────────────
-  const [sourceList, setSourceList] = useState([])
-  const [targetList, setTargetList] = useState([])
+  const [selections, setSelections]     = useState({})
+  const [optionsMap, setOptionsMap]     = useState({})
+  const [sourceList, setSourceList]     = useState([])
+  const [targetList, setTargetList]     = useState([])
   const [selectedSource, setSelectedSource] = useState(new Set())
   const [selectedTarget, setSelectedTarget] = useState(new Set())
-  const [loadingSource, setLoadingSource] = useState(false)
-  const [confirmando, setConfirmando] = useState(false)
-  const [resultado, setResultado] = useState(null) // { tipo: 'success'|'error', mensaje: '' }
+  const [loadingSource, setLoadingSource]   = useState(false)
+  const [yaInscriptosIds, setYaInscriptosIds] = useState(new Set())
+  const [confirmando, setConfirmando]   = useState(false)
 
   const filters = config.filters ?? []
 
-  // Carga las opciones de cada filtro, respetando dependencias
+  // ── Cargar opciones de selectores (respeta dependencias) ──
+  // Separado del trigger de alumnos para evitar recargas innecesarias
   useEffect(() => {
     filters.forEach((f) => {
-      // Si depende de otro selector y ese no tiene valor, limpiar y salir
       if (f.dependsOn && !selections[f.dependsOn]) {
         setOptionsMap((prev) => ({ ...prev, [f.key]: [] }))
         return
       }
-
       const endpoint = typeof f.endpoint === 'function'
         ? f.endpoint(selections)
         : f.endpoint
-
       if (!endpoint) return
 
       api.get(`/${endpoint}`)
@@ -175,24 +205,17 @@ export default function GenericEnrollment({ config }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(selections)])
 
-  const handleSelect = (key, value) => {
-    setSelections((prev) => {
-      const next = { ...prev, [key]: value }
-      // Limpiar selectores que dependen del que cambió
-      filters.forEach((f) => {
-        if (f.dependsOn === key) {
-          next[f.key] = null
-        }
-      })
-      return next
-    })
-  }
-
-  // Carga alumnos cuando los filtros necesarios están completos
+  // ── Cargar alumnos del curso ORIGEN (solo cuando curso_origen cambia) ──
+  const cursoOrigenRef = useRef(null)
   useEffect(() => {
+    const cursoOrigen = selections.curso_origen
+    if (cursoOrigen === cursoOrigenRef.current) return
+    cursoOrigenRef.current = cursoOrigen
+
     const endpoint = config.getSourceEndpoint?.(selections)
     if (!endpoint) {
       setSourceList([])
+      setTargetList([])
       return
     }
     setLoadingSource(true)
@@ -200,13 +223,41 @@ export default function GenericEnrollment({ config }) {
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : (res.data?.data ?? [])
         setSourceList(data)
+        setTargetList([])
+        setSelectedSource(new Set())
+        setSelectedTarget(new Set())
       })
       .catch(() => setSourceList([]))
       .finally(() => setLoadingSource(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(selections)])
+  }, [selections.curso_origen])
 
-  // ── Movimientos del PickList ───────────────────────────
+  // ── Cargar alumnos ya inscriptos en el DESTINO ──────────
+  useEffect(() => {
+    const endpoint = config.getYaInscriptosEndpoint?.(selections)
+    if (!endpoint) {
+      setYaInscriptosIds(new Set())
+      return
+    }
+    api.get(`/${endpoint}`)
+      .then((res) => {
+        setYaInscriptosIds(new Set(res.data?.ids ?? []))
+      })
+      .catch(() => setYaInscriptosIds(new Set()))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selections.curso_destino, selections.ciclo_destino])
+
+  const handleSelect = (key, value) => {
+    setSelections((prev) => {
+      const next = { ...prev, [key]: value }
+      filters.forEach((f) => {
+        if (f.dependsOn === key) next[f.key] = null
+      })
+      return next
+    })
+  }
+
+  // ── Movimientos ───────────────────────────────────────
   const toggleSelected = (set, setFn, id) => {
     setFn((prev) => {
       const next = new Set(prev)
@@ -241,90 +292,131 @@ export default function GenericEnrollment({ config }) {
     setSelectedTarget(new Set())
   }
 
-  // ── Confirmar inscripción ──────────────────────────────
+  // ── Confirmar inscripción ─────────────────────────────
   const handleConfirmar = async () => {
-    if (!config.postEndpoint || targetList.length === 0) return
-
     const cicloDest = Number(selections.ciclo_destino)
     const cursoDest = Number(selections.curso_destino)
     const tipoInsc  = Number(selections.id_tipo_insc)
 
     if (!cicloDest || !cursoDest || !tipoInsc) {
-      setResultado({ tipo: 'warning', mensaje: 'Completá todos los filtros de destino antes de confirmar.' })
+      showWarn('Completá todos los filtros de destino antes de confirmar.')
       return
     }
+    if (targetList.length === 0) return
 
     setConfirmando(true)
-    setResultado(null)
-
-    const payload = {
-      alumnos: targetList.map((a) => ({ id_entidad: a.id_entidad })),
-      id_ciclo_lectivo: cicloDest,
-      id_curso_destino: cursoDest,
-      id_tipo_insc: tipoInsc,
-    }
-
     try {
-      const res = await api.post(`/${config.postEndpoint}`, payload)
-      const { inscripciones_creadas, inscripciones_omitidas, mensaje } = res.data
-      setResultado({ tipo: 'success', mensaje })
-      // Limpiar lista destino y devolver alumnos al origen
+      const res = await api.post(`/${config.postEndpoint}`, {
+        alumnos: targetList.map((a) => ({ id_entidad: a.id_entidad })),
+        id_ciclo_lectivo: cicloDest,
+        id_curso_destino: cursoDest,
+        id_tipo_insc: tipoInsc,
+      })
+      const { inscripciones_creadas, inscripciones_omitidas } = res.data
+      showSuccess(
+        `${inscripciones_creadas} inscripción${inscripciones_creadas !== 1 ? 'es' : ''} creada${inscripciones_creadas !== 1 ? 's' : ''}.` +
+        (inscripciones_omitidas > 0 ? ` ${inscripciones_omitidas} ya existían.` : '')
+      )
+      // Devolver los inscriptos al origen y actualizar ya-inscriptos
       setSourceList((prev) => [...prev, ...targetList])
       setTargetList([])
       setSelectedSource(new Set())
       setSelectedTarget(new Set())
+      // Recargar ya-inscriptos para que los badges se actualicen
+      const endpointYa = config.getYaInscriptosEndpoint?.(selections)
+      if (endpointYa) {
+        api.get(`/${endpointYa}`)
+          .then((r) => setYaInscriptosIds(new Set(r.data?.ids ?? [])))
+          .catch(() => {})
+      }
     } catch (err) {
       const raw = err?.response?.data?.detail
-      let detalle
-      if (Array.isArray(raw)) {
-        detalle = raw.map((e) => `${e.campo ?? ''}: ${e.mensaje ?? e.msg ?? ''}`).join(' | ')
-      } else if (typeof raw === 'string') {
-        detalle = raw
-      } else {
-        detalle = 'Error al confirmar la inscripción.'
-      }
-      setResultado({ tipo: 'danger', mensaje: detalle })
+      const msg = Array.isArray(raw)
+        ? raw.map((e) => `${e.campo ?? ''}: ${e.mensaje ?? e.msg ?? ''}`).join(' | ')
+        : (typeof raw === 'string' ? raw : 'Error al confirmar la inscripción.')
+      showError(msg)
     } finally {
       setConfirmando(false)
     }
   }
 
-  // ── Determina si un selector está habilitado ───────────
-  const isEnabled = (f) => {
-    if (!f.dependsOn) return true
-    return !!selections[f.dependsOn]
+  // ── Helpers de render ─────────────────────────────────
+  const isEnabled = (f) => !f.dependsOn || !!selections[f.dependsOn]
+
+  const filtersByGroup = filters.reduce((acc, f) => {
+    const g = f.group ?? '__flat__'
+    if (!acc[g]) acc[g] = []
+    acc[g].push(f)
+    return acc
+  }, {})
+
+  const renderFilterSelect = (f, stepLabel) => {
+    const opts = (optionsMap[f.key] ?? []).map((item) => ({
+      value: item[f.optionValue],
+      label: item[f.optionLabel],
+    }))
+    const enabled = isEnabled(f)
+    const prevLabel = f.dependsOn
+      ? filters.find((x) => x.key === f.dependsOn)?.label?.toLowerCase() ?? 'el anterior'
+      : ''
+    return (
+      <FilterSelect
+        key={f.key}
+        step={stepLabel}
+        label={f.label}
+        value={selections[f.key] ?? ''}
+        onChange={(val) => handleSelect(f.key, val)}
+        options={opts}
+        placeholder={enabled ? `Seleccioná ${f.label.toLowerCase()}` : `Primero elegí ${prevLabel}`}
+        disabled={!enabled}
+      />
+    )
   }
 
-  // ── Step number por posición ───────────────────────────
-  const stepNumber = (idx) => idx + 1
+  const origenCompleto = !!(selections.ciclo_origen && selections.curso_origen)
+  const destinoCompleto = !!(selections.ciclo_destino && selections.curso_destino && selections.id_tipo_insc)
+  const destinoIncompleto = !destinoCompleto && targetList.length > 0
+
+  const yaInscriptosEnTarget = targetList.filter((a) => yaInscriptosIds.has(a.id_entidad)).length
 
   return (
     <div className="enr-wrapper">
 
-      {/* ── Filtros con el mismo formato de ActaExamen ── */}
-      <div className="acta-filters-row">
-        {filters.map((f, idx) => {
-          const opts = (optionsMap[f.key] ?? []).map((item) => ({
-            value: item[f.optionValue],
-            label: item[f.optionLabel],
-          }))
-          const enabled = isEnabled(f)
-          const hasValue = !!selections[f.key]
+      {/* ── Barra de progreso ── */}
+      <ProgresoFiltros origenCompleto={origenCompleto} destinoCompleto={destinoCompleto} />
 
-          return (
-            <FilterSelect
-              key={f.key}
-              step={stepNumber(idx)}
-              label={f.label}
-              value={selections[f.key] ?? ''}
-              onChange={(val) => handleSelect(f.key, val)}
-              options={opts}
-              placeholder={enabled ? `Seleccioná ${f.label.toLowerCase()}` : `Primero elegí ${filters[idx - 1]?.label?.toLowerCase() ?? 'el anterior'}`}
-              disabled={!enabled}
-            />
-          )
-        })}
+      {/* ── Filtros: Origen y Destino alineados con el picklist ── */}
+      <div className="enr-filter-groups">
+        {/* Grupo Origen */}
+        <div className="enr-filter-group">
+          <span className="enr-filter-group-label">Origen</span>
+          <div className="enr-filter-group-fields">
+            {(filtersByGroup['origen'] ?? []).map((f, i) => renderFilterSelect(f, i + 1))}
+          </div>
+        </div>
+
+        <div className="enr-filter-groups-spacer" />
+
+        {/* Grupo Destino */}
+        <div className="enr-filter-group">
+          <span className="enr-filter-group-label">Destino</span>
+          <div className="enr-filter-group-fields enr-filter-group-fields--destino">
+            {(filtersByGroup['destino'] ?? []).map((f, i) => renderFilterSelect(f, i + 1))}
+          </div>
+        </div>
       </div>
+
+      {/* ── Aviso si hay alumnos ya inscriptos en el destino ── */}
+      {yaInscriptosIds.size > 0 && sourceList.length > 0 && (
+        <div className="enr-aviso-inscriptos">
+          <CIcon icon={cilWarning} className="enr-aviso-icon" />
+          <span>
+            <strong>{yaInscriptosIds.size}</strong> alumno{yaInscriptosIds.size !== 1 ? 's' : ''} del
+            curso origen {yaInscriptosIds.size !== 1 ? 'ya están inscriptos' : 'ya está inscripto'} en
+            el curso destino y se marcan en naranja.
+          </span>
+        </div>
+      )}
 
       {/* ── PickList ── */}
       {loadingSource ? (
@@ -333,7 +425,6 @@ export default function GenericEnrollment({ config }) {
         </div>
       ) : (
         <div className="enr-picklist">
-
           <ListPanel
             title={config.pickListConfig?.headerSource ?? 'Disponibles'}
             count={sourceList.length}
@@ -341,7 +432,8 @@ export default function GenericEnrollment({ config }) {
             selectedIds={selectedSource}
             onToggle={(id) => toggleSelected(selectedSource, setSelectedSource, id)}
             searchPlaceholder="Buscar por nombre o DNI…"
-            emptyText="Completá los filtros para ver los alumnos disponibles."
+            emptyText="Seleccioná un curso de origen para ver los alumnos."
+            yaInscriptosIds={yaInscriptosIds}
           />
 
           <div className="enr-controls">
@@ -387,35 +479,34 @@ export default function GenericEnrollment({ config }) {
             onToggle={(id) => toggleSelected(selectedTarget, setSelectedTarget, id)}
             searchPlaceholder="Buscar en seleccionados…"
             emptyText="Seleccioná alumnos del panel izquierdo."
+            yaInscriptosIds={yaInscriptosIds}
           />
-
         </div>
       )}
 
-      {/* ── Resultado de la operación ── */}
-      {resultado && (
-        <CAlert
-          color={resultado.tipo}
-          dismissible
-          onClose={() => setResultado(null)}
-          style={{ marginBottom: 0, fontSize: '0.875rem' }}
-        >
-          {resultado.mensaje}
-        </CAlert>
-      )}
-
-      {/* ── Botón confirmar ── */}
+      {/* ── Footer — botón confirmar ── */}
       <div className="enr-footer">
-        <span className="enr-footer-info">
-          {targetList.length > 0
-            ? <><strong>{targetList.length}</strong> {targetList.length === 1 ? 'alumno listo' : 'alumnos listos'} para inscribir</>
-            : 'Seleccioná los alumnos a inscribir'
-          }
-        </span>
+        <div className="enr-footer-info">
+          {targetList.length > 0 ? (
+            <>
+              <strong>{targetList.length}</strong> alumno{targetList.length !== 1 ? 's' : ''} listo{targetList.length !== 1 ? 's' : ''} para inscribir
+              {yaInscriptosEnTarget > 0 && (
+                <span className="enr-footer-warn">
+                  <CIcon icon={cilWarning} style={{ width: '0.8rem', height: '0.8rem' }} />
+                  {yaInscriptosEnTarget} ya inscripto{yaInscriptosEnTarget !== 1 ? 's' : ''} (se omitirán)
+                </span>
+              )}
+            </>
+          ) : (
+            'Seleccioná los alumnos a inscribir'
+          )}
+        </div>
+
         <CButton
           className="enr-btn-confirm"
-          disabled={targetList.length === 0 || confirmando}
+          disabled={targetList.length === 0 || confirmando || !destinoCompleto}
           onClick={handleConfirmar}
+          title={destinoIncompleto ? 'Completá el ciclo, curso y tipo de inscripción de destino' : undefined}
         >
           {confirmando
             ? <CSpinner size="sm" className="me-2" />

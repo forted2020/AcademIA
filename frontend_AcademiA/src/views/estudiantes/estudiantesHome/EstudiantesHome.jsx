@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CContainer } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilSchool,
@@ -27,11 +28,12 @@ export default function EstudiantesHome() {
   const navigate            = useNavigate()
   const { idEntidad, nombre } = useAuthUser()
 
-  const [ciclo,    setCiclo]    = useState(null)
-  const [materias, setMaterias] = useState([])
-  const [previas,  setPrevias]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState(null)
+  const [ciclo,       setCiclo]       = useState(null)
+  const [nombreCurso, setNombreCurso] = useState(null)
+  const [materias,    setMaterias]    = useState([])
+  const [previas,     setPrevias]     = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState(null)
 
   const cargarDatos = useCallback(async () => {
     if (!idEntidad) return
@@ -46,7 +48,8 @@ export default function EstudiantesHome() {
 
       // 2. Obtener el curso del alumno en el ciclo activo
       const cursoRes = await api.get(`/api/estudiantes/${idEntidad}/ciclo/${id_ciclo_activo}/curso`)
-      const { id_curso } = cursoRes.data
+      const { id_curso, nombre_curso } = cursoRes.data
+      setNombreCurso(nombre_curso || null)
 
       // 3. Si tiene curso, obtener las materias de ese curso
       let materiasData = []
@@ -81,54 +84,60 @@ export default function EstudiantesHome() {
   // ── Skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="alu-home__card">
-        <div className="alu-home__header">
-          <div className="alu-home__brand-icon"><CIcon icon={cilSchool} /></div>
-          <div className="alu-home__title-wrap">
-            <h1 className="alu-home__title">Mi Panel</h1>
-            <p className="alu-home__subtitle">Cargando datos…</p>
+      <CContainer fluid className="py-3">
+        <div className="alu-home__card">
+          <div className="alu-home__header">
+            <div className="alu-home__brand-icon"><CIcon icon={cilSchool} /></div>
+            <div className="alu-home__title-wrap">
+              <p className="alu-home__header-label">Dashboard Alumno/a</p>
+              <h1 className="alu-home__title">Cargando datos…</h1>
+            </div>
+          </div>
+          <div className="alu-home__body">
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted,#64748b)', fontSize: '0.875rem' }}>
+              Obteniendo información de tu ciclo…
+            </div>
           </div>
         </div>
-        <div className="alu-home__body">
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--acad-text-muted,#64748b)', fontSize: '0.875rem' }}>
-            Obteniendo información de tu ciclo…
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
   // ── Error ──────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="alu-home__card">
-        <div className="alu-home__header">
-          <div className="alu-home__brand-icon"><CIcon icon={cilSchool} /></div>
-          <div className="alu-home__title-wrap">
-            <h1 className="alu-home__title">Mi Panel</h1>
+      <CContainer fluid className="py-3">
+        <div className="alu-home__card">
+          <div className="alu-home__header">
+            <div className="alu-home__brand-icon"><CIcon icon={cilSchool} /></div>
+            <div className="alu-home__title-wrap">
+              <p className="alu-home__header-label">Dashboard Alumno/a</p>
+              <h1 className="alu-home__title">Error al cargar</h1>
+            </div>
+          </div>
+          <div className="alu-home__body">
+            <EmptyState icon={cilWarning} iconVariant="warn" title="Error al cargar el panel" sub={error} />
+            <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+              <button
+                onClick={cargarDatos}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  fontSize: '0.8125rem', color: 'var(--acad-blue,#0369a1)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                }}
+              >
+                <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
+                Reintentar
+              </button>
+            </div>
           </div>
         </div>
-        <div className="alu-home__body">
-          <EmptyState icon={cilWarning} iconVariant="warn" title="Error al cargar el panel" sub={error} />
-          <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
-            <button
-              onClick={cargarDatos}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                fontSize: '0.8125rem', color: 'var(--acad-blue,#0369a1)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}
-            >
-              <CIcon icon={cilReload} style={{ width: '0.875rem', height: '0.875rem' }} />
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
+      </CContainer>
     )
   }
 
   return (
+    <CContainer fluid className="py-3">
     <div className="alu-home__card">
 
       {/* ── Header ───────────────────────────────────────────────── */}
@@ -137,10 +146,13 @@ export default function EstudiantesHome() {
           <CIcon icon={cilSchool} />
         </div>
         <div className="alu-home__title-wrap">
-          <h1 className="alu-home__title">Hola, {nombre}</h1>
-          <p className="alu-home__subtitle">Mi panel de estudiante</p>
+          <p className="alu-home__header-label">Dashboard Alumno/a</p>
+          <h1 className="alu-home__title">Bienvenida, {nombre}</h1>
         </div>
-        {ciclo && <span className="alu-home__badge">Ciclo {ciclo}</span>}
+        <div className="alu-home__header-meta">
+          {ciclo && <span className="alu-home__badge">Ciclo {ciclo}</span>}
+          {nombreCurso && <span className="alu-home__header-curso">{nombreCurso}</span>}
+        </div>
       </div>
 
       {/* ── Body ─────────────────────────────────────────────────── */}
@@ -288,5 +300,6 @@ export default function EstudiantesHome() {
 
       </div>
     </div>
+    </CContainer>
   )
 }

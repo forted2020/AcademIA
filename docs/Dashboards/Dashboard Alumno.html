@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Dashboard Alumno · AcademIA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "kpiStyle": "classic",
+  "layout": "B",
+  "dataState": "full"
+}/*EDITMODE-END*/;
+
+// ─────────── Datos del prototipo (mock fiel a los endpoints del plan) ───────────
+const ALUMNO = {
+  nombre: "Sofía Martínez",
+  ciclo: "2025",
+  promedio: 8.4,
+  asistencia: 92,      // %
+  inasistencias: 6,    // días
+  inasistJustif: 4,    // justificadas
+};
+
+const MATERIAS_INSCRIPTAS = [
+  { nombre: "Matemática III", curso: "5° A", profe: "Prof. R. Ortiz" },
+  { nombre: "Literatura", curso: "5° A", profe: "Prof. L. Vega" },
+  { nombre: "Historia Argentina", curso: "5° A", profe: "Prof. M. Núñez" },
+  { nombre: "Física", curso: "5° A", profe: "Prof. C. Pérez" },
+  { nombre: "Inglés Avanzado", curso: "5° A", profe: "Prof. K. Long" },
+  { nombre: "Biología", curso: "5° A", profe: "Prof. S. Roca" },
+  { nombre: "Educación Cívica", curso: "5° A", profe: "Prof. D. Yáñez" },
+];
+
+const PREVIAS = [
+  { materia: "Química II", año: "4° A", estado: "Pendiente", tipo: "regular" },
+  { materia: "Geografía", año: "3° B", estado: "En proceso", tipo: "regular" },
+];
+
+const PROXIMAS_MESAS = [
+  { materia: "Química II", fecha: "12 Jun", hora: "08:00", aula: "Lab. 2", dias: 8 },
+  { materia: "Geografía",  fecha: "19 Jun", hora: "10:30", aula: "Aula 14", dias: 15 },
+  { materia: "Física (recuperatorio)", fecha: "26 Jun", hora: "09:00", aula: "Aula 7", dias: 22, opt: true },
+];
+
+// ─────────── Helpers ───────────
+function asistenciaVariant(pct) {
+  if (pct >= 85) return "success";
+  if (pct >= 75) return "warning";
+  return "danger";
+}
+
+// ─────────── Bloques reutilizables ───────────
+function KpiRow({ variant, data, onPick }) {
+  // 4 KPIs por defecto — colapsa nicely en mobile
+  const items = [
+    { key: "ins",  title: "Materias inscriptas", value: data.inscriptas, color: "primary", icon: "book", subtext: "Ciclo " + ALUMNO.ciclo, delta: "+1" },
+    { key: "prv",  title: "Materias previas",    value: data.previas,    color: data.previas > 0 ? "danger" : "success", icon: "alert", subtext: data.previas === 0 ? "Sin pendientes" : "Por aprobar", delta: data.previas > 0 ? "−1" : "✓" },
+    { key: "asi",  title: "% Asistencia",        value: data.asistencia + "%", color: asistenciaVariant(data.asistencia), icon: "calendar", subtext: data.inasistencias + " inasist. (" + data.inasistJustif + " justif.)", delta: data.asistencia >= 85 ? "OK" : "↓" },
+    { key: "prm",  title: "Promedio del ciclo",  value: data.promedio.toFixed(1), color: "info", icon: "trend", subtext: "vs 7.9 ciclo anterior", delta: "+0.5" },
+  ];
+  return (
+    <div className="acd-grid acd-grid--kpi-4">
+      {items.map((it) => (
+        <StatCard key={it.key}
+          variant={variant}
+          title={it.title}
+          value={it.value}
+          color={it.color}
+          icon={it.icon}
+          subtext={it.subtext}
+          delta={it.delta}
+          onClick={() => onPick(it.key)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PreviasSection({ items }) {
+  if (!items.length) {
+    return (
+      <Section title="Materias previas" icon="alert">
+        <EmptyState
+          title="¡Sin previas pendientes!"
+          sub="Estás al día con todas tus materias. Buen trabajo."
+          icon="check2"
+        />
+      </Section>
+    );
+  }
+  return (
+    <Section
+      title="Materias previas"
+      icon="alert"
+      action={<button className="acd-section__action">Ver detalle →</button>}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {items.map((p) => (
+          <div key={p.materia}
+               style={{
+                 display: "flex", alignItems: "center", justifyContent: "space-between",
+                 gap: "1rem", padding: "0.75rem 0.875rem",
+                 background: "var(--acad-bg-subtle)",
+                 border: "1px solid var(--acad-border-light)",
+                 borderRadius: "var(--acad-radius-sm)",
+               }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
+              <span style={{
+                width: "0.5rem", height: "2.25rem",
+                background: p.estado === "Pendiente" ? "var(--bs-danger)" : "var(--bs-warning)",
+                borderRadius: 999, flex: "0 0 auto",
+              }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--acad-navy)" }}>{p.materia}</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)" }}>{p.año} · {p.tipo}</div>
+              </div>
+            </div>
+            <span className={"acd-badge " + (p.estado === "Pendiente" ? "acd-badge--red" : "acd-badge--amber")}>
+              {p.estado}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function MesasSection({ items }) {
+  return (
+    <Section
+      title="Próximas mesas / exámenes"
+      icon="calendar"
+      action={<button className="acd-section__action">Calendario completo →</button>}
+    >
+      <ul className="acd-list">
+        {items.map((m) => (
+          <li key={m.materia} className="acd-list__item" style={{ paddingTop: "0.625rem", paddingBottom: "0.625rem" }}>
+            <div style={{
+              width: "2.5rem", flex: "0 0 auto", textAlign: "center",
+              padding: "0.25rem 0.375rem", borderRadius: "var(--acad-radius-sm)",
+              background: "var(--acad-blue-pale)", color: "var(--acad-blue)",
+              fontSize: "0.6875rem", fontWeight: 700, lineHeight: 1.1,
+            }}>
+              <div style={{ fontSize: "1rem", fontWeight: 700 }}>{m.fecha.split(" ")[0]}</div>
+              <div style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.fecha.split(" ")[1]}</div>
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--acad-navy)" }}>{m.materia}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)" }}>
+                {m.hora} · {m.aula}
+              </div>
+            </div>
+            <span className={"acd-badge " + (m.dias <= 10 ? "acd-badge--amber" : "acd-badge--neutral")}>
+              en {m.dias} días
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function AsistenciaCard({ pct, inasist, justif }) {
+  const variant = asistenciaVariant(pct);
+  return (
+    <Section title="Asistencia · ciclo en curso" icon="check2">
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+        <div>
+          <span style={{ fontSize: "2.25rem", fontWeight: 700, color: "var(--acad-navy)", letterSpacing: "-0.02em" }}>{pct}%</span>
+          <span style={{ fontSize: "0.875rem", color: "var(--acad-text-muted)", marginLeft: "0.5rem" }}>presente</span>
+        </div>
+        <span className={"acd-badge " + (variant === "success" ? "acd-badge--green" : variant === "warning" ? "acd-badge--amber" : "acd-badge--red")}>
+          {variant === "success" ? "Sin riesgo" : variant === "warning" ? "Atención" : "En riesgo"}
+        </span>
+      </div>
+      <Progress value={pct} variant={variant} />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.625rem", fontSize: "0.75rem", color: "var(--acad-text-muted)" }}>
+        <span>{inasist} inasistencias ({justif} justificadas)</span>
+        <span>Mínimo regular: 75%</span>
+      </div>
+    </Section>
+  );
+}
+
+function MateriasInscriptasSection({ items }) {
+  return (
+    <Section
+      title="Materias inscriptas"
+      icon="books"
+      action={<button className="acd-section__action">Ver todas →</button>}
+    >
+      <ul className="acd-list">
+        {items.slice(0, 5).map((m) => (
+          <li key={m.nombre} className="acd-list__item">
+            <span className="acd-list__bullet" />
+            <span style={{ minWidth: 0, flex: 1 }}>
+              <span style={{ fontWeight: 500, color: "var(--acad-navy)" }}>{m.nombre}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)", marginLeft: "0.5rem" }}>· {m.profe}</span>
+            </span>
+            <span className="acd-list__meta">{m.curso}</span>
+          </li>
+        ))}
+        {items.length > 5 && (
+          <li style={{ fontSize: "0.75rem", color: "var(--acad-text-muted)", padding: "0.25rem 0.625rem" }}>
+            + {items.length - 5} más
+          </li>
+        )}
+      </ul>
+    </Section>
+  );
+}
+
+function AccesosRapidos({ onAction }) {
+  return (
+    <Section title="Accesos rápidos" icon="dashboard">
+      <div className="acd-grid acd-grid--kpi-3" style={{ gap: "0.75rem" }}>
+        <ActionTile icon="clipboard"  label="Boletín"            sub="Ver notas por trimestre"  onClick={() => onAction("Boletín")} />
+        <ActionTile icon="calendar"   label="Asistencias"        sub="Informe diario completo"  onClick={() => onAction("Informe de asistencia")} />
+        <ActionTile icon="file"       label="Constancia regular" sub="Descargar PDF"            onClick={() => onAction("Constancia generada")} />
+      </div>
+    </Section>
+  );
+}
+
+// ─────────── Layouts A / B / C ───────────
+function LayoutA({ t, data, onPick, onAction }) {
+  // Plan original: KPIs arriba — previas + mesas — accesos
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+      <div className="acd-grid acd-grid--main-side">
+        <PreviasSection items={data.previasList} />
+        <MesasSection items={PROXIMAS_MESAS} />
+      </div>
+      <div className="acd-grid acd-grid--main-side">
+        <MateriasInscriptasSection items={MATERIAS_INSCRIPTAS} />
+        <AsistenciaCard pct={data.asistencia} inasist={data.inasistencias} justif={data.inasistJustif} />
+      </div>
+      <AccesosRapidos onAction={onAction} />
+    </div>
+  );
+}
+
+function LayoutB({ t, data, onPick, onAction }) {
+  // Hero a la izquierda (asistencia destacada + accesos) — KPIs y secciones a la derecha
+  return (
+    <div className="acd-card__body acd-rise">
+      <div className="acd-grid acd-grid--side-main">
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <AsistenciaCard pct={data.asistencia} inasist={data.inasistencias} justif={data.inasistJustif} />
+          <Section title="Accesos rápidos" icon="dashboard">
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <ActionTile icon="clipboard"  label="Boletín"            sub="Ver notas por trimestre" onClick={() => onAction("Boletín")} />
+              <ActionTile icon="calendar"   label="Asistencias"        sub="Informe diario"          onClick={() => onAction("Informe de asistencia")} />
+              <ActionTile icon="file"       label="Constancia regular" sub="Descargar PDF"            onClick={() => onAction("Constancia generada")} />
+            </div>
+          </Section>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+          <PreviasSection items={data.previasList} />
+          <MesasSection items={PROXIMAS_MESAS} />
+          <MateriasInscriptasSection items={MATERIAS_INSCRIPTAS} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LayoutC({ t, data, onPick, onAction }) {
+  // Feed denso vertical, KPIs arriba + accesos rápidos en lugar de la barra de asistencia
+  return (
+    <div className="acd-card__body acd-rise">
+      <KpiRow variant={t.kpiStyle} data={data} onPick={onPick} />
+      <AccesosRapidos onAction={onAction} />
+      <div className="acd-grid acd-grid--2">
+        <PreviasSection items={data.previasList} />
+        <MesasSection items={PROXIMAS_MESAS} />
+      </div>
+      <MateriasInscriptasSection items={MATERIAS_INSCRIPTAS} />
+    </div>
+  );
+}
+
+// ─────────── App ───────────
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [showToast, toast] = useToast();
+
+  const previasList = t.dataState === "empty" ? [] : PREVIAS;
+  const data = {
+    inscriptas: MATERIAS_INSCRIPTAS.length,
+    previas: previasList.length,
+    asistencia: t.dataState === "risk" ? 71 : ALUMNO.asistencia,
+    inasistencias: t.dataState === "risk" ? 18 : ALUMNO.inasistencias,
+    inasistJustif: ALUMNO.inasistJustif,
+    promedio: ALUMNO.promedio,
+    previasList,
+  };
+
+  const onPickKpi = (k) => {
+    const map = {
+      ins: "Materias inscriptas — abriendo lista",
+      prv: data.previas ? "Materias previas — abriendo detalle" : "¡Sin previas!",
+      asi: "Asistencia — abriendo informe completo",
+      prm: "Promedio — abriendo boletín",
+    };
+    showToast(map[k]);
+  };
+  const onAction = (label) => showToast(label);
+
+  const Layout = t.layout === "B" ? LayoutB : t.layout === "C" ? LayoutC : LayoutA;
+
+  return (
+    <div className="acd-page">
+      <RoleBar current="alumno" />
+
+      <div className="acd-card">
+        <PageHeader
+          icon="graduation"
+          subtitle="DASHBOARD ALUMNO/A"
+          title={"Bienvenida, " + ALUMNO.nombre.split(" ")[0]}
+          meta={<>
+            <span className="acd-badge acd-badge--blue">Ciclo {ALUMNO.ciclo}</span>
+            <span style={{ fontSize: "0.8125rem", color: "var(--acad-text-muted)" }}>5° Año · Turno mañana</span>
+          </>}
+        />
+        <Layout t={t} data={data} onPick={onPickKpi} onAction={onAction} />
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Layout" />
+        <TweakRadio label="Variante" value={t.layout}
+          options={LAYOUT_OPTIONS}
+          onChange={(v) => setTweak("layout", v)} />
+
+        <TweakSection label="KPI cards" />
+        <TweakRadio label="Estilo" value={t.kpiStyle}
+          options={KPI_OPTIONS}
+          onChange={(v) => setTweak("kpiStyle", v)} />
+
+        <TweakSection label="Datos" />
+        <TweakSelect label="Estado" value={t.dataState}
+          options={[
+            { value: "full",  label: "Con previas + asistencia OK" },
+            { value: "empty", label: "Sin previas (estado vacío)" },
+            { value: "risk",  label: "Asistencia en riesgo" },
+          ]}
+          onChange={(v) => setTweak("dataState", v)} />
+      </TweaksPanel>
+
+      {toast}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

@@ -45,8 +45,8 @@ async def get_estudiantes(
     db: Session = Depends(get_db),
     current_user: UserAuthData = Depends(get_current_user),
 ):
-    if current_user.tipo_rol.tipo_entidad != 'ADMIN_SISTEMA':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos de administrador.")
+    if current_user.rol_sistema not in ('ADMIN_SISTEMA', 'DOCENTE_APP'):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tenés permisos para listar estudiantes.")
 
     query = db.query(EntidadORM).filter(
         EntidadORM.tipo_entidad.has(TipoEntidad.tipo_entidad == "ESTUDIANTE"),
@@ -291,7 +291,8 @@ def get_curso_de_estudiante_en_ciclo(id_entidad: int, id_ciclo: int, db: Session
         .first()
     )
     if inscripcion and inscripcion.materia:
-        return {"id_curso": inscripcion.materia.id_curso}
+        curso = db.query(CursoORM).filter(CursoORM.id_curso == inscripcion.materia.id_curso).first()
+        return {"id_curso": inscripcion.materia.id_curso, "nombre_curso": curso.curso if curso else None}
 
     # Fallback: obtener curso desde las notas del estudiante en ese ciclo
     nota = (
@@ -305,9 +306,10 @@ def get_curso_de_estudiante_en_ciclo(id_entidad: int, id_ciclo: int, db: Session
         .first()
     )
     if nota and nota.materia:
-        return {"id_curso": nota.materia.id_curso}
+        curso = db.query(CursoORM).filter(CursoORM.id_curso == nota.materia.id_curso).first()
+        return {"id_curso": nota.materia.id_curso, "nombre_curso": curso.curso if curso else None}
 
-    return {"id_curso": None}
+    return {"id_curso": None, "nombre_curso": None}
 
 
 @router.get("/{id_ciclo}/{id_estudiante}/materias", response_model=List[MateriaResponse])    # El prefijo /api/estudiantes/ ya se añade en main.py

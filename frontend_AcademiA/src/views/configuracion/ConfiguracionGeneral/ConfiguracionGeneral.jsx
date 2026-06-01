@@ -5,7 +5,7 @@ import CIcon from '@coreui/icons-react'
 import {
   cilSettings, cilBuilding, cilHistory, cilWarning,
   cilCheckCircle, cilCheck, cilPhone, cilAt, cilLocationPin,
-  cilUser, cilPeople, cilEducation, cilCalendar,
+  cilUser, cilPeople, cilEducation, cilCalendar, cilLockLocked,
 } from '@coreui/icons'
 import {
   CContainer, CCard, CCardHeader, CCardBody,
@@ -16,7 +16,12 @@ import {
 import {
   getConfigSistema, updateConfigSistema, uploadLogo, deleteLogo,
   getModoInscripcion, updateModoInscripcion, getHistorialModoInscripcion,
+  updateNavPermisos,
 } from '../../../api/apiFormatos'
+import {
+  NAV_CATALOG, parsePermisos, serializePermisos, getDefaultsParaRol,
+} from './navPermisosCatalogo'
+import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../../../constants/Roles'
 import SeccionInstitucion from '../formatosImpresion/components/SeccionInstitucion'
 import './ConfiguracionGeneral.css'
 
@@ -150,6 +155,21 @@ export default function ConfiguracionGeneral() {
   const [errorModo, setErrorModo]           = useState(null)
   const [okModo, setOkModo]               = useState(null)
 
+  // — Pestaña Permisos de Navegación —
+  const ROLES_EDITABLES = [
+    { rol: ROL_ADMIN,   label: 'Administrador',  color: '#7c3aed' },
+    { rol: ROL_DOCENTE, label: 'Docente',         color: '#0369a1' },
+    { rol: ROL_ALUMNO,  label: 'Alumno/a',        color: '#0d9488' },
+  ]
+  const [navPermisos, setNavPermisos] = useState(() =>
+    Object.fromEntries(ROLES_EDITABLES.map(({ rol }) => [rol, getDefaultsParaRol(rol)]))
+  )
+  const [navPermisosGuardados, setNavPermisosGuardados] = useState(null)
+  const [rolActivoPermisos, setRolActivoPermisos] = useState(ROL_ADMIN)
+  const [guardandoPermisos, setGuardandoPermisos] = useState(false)
+  const [okPermisos, setOkPermisos] = useState(false)
+  const [errorPermisos, setErrorPermisos] = useState(null)
+
   // — Modal —
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -171,9 +191,22 @@ export default function ConfiguracionGeneral() {
     setErrorConfig(null)
     try {
       const res = await getConfigSistema()
-      const datos = { ...DEFAULTS_CONFIG, ...(res.data?.configs ?? {}) }
+      const rawConfigs = res.data?.configs ?? {}
+      const datos = { ...DEFAULTS_CONFIG, ...rawConfigs }
       setConfig(datos)
       setConfigGuardada(datos)
+
+      // Cargar permisos de nav guardados para cada rol
+      const permisosIniciales = Object.fromEntries(
+        ROLES_EDITABLES.map(({ rol }) => [
+          rol,
+          parsePermisos(rawConfigs[`nav_permisos_${rol}`] ?? null, rol),
+        ])
+      )
+      setNavPermisos(permisosIniciales)
+      setNavPermisosGuardados(permisosIniciales)
+      // Persistir en localStorage para que _nav.js lo consuma sin fetch adicional
+      localStorage.setItem('nav_config', JSON.stringify(rawConfigs))
     } catch {
       setErrorConfig('No se pudo cargar la configuración.')
     } finally {
@@ -287,6 +320,41 @@ export default function ConfiguracionGeneral() {
     }
   }
 
+  const guardarPermisos = async () => {
+    setGuardandoPermisos(true)
+    setErrorPermisos(null)
+    setOkPermisos(false)
+    try {
+      // Persiste los permisos de los 3 roles en un solo PUT
+      const configs = {}
+      for (const { rol } of ROLES_EDITABLES) {
+        configs[`nav_permisos_${rol}`] = serializePermisos(navPermisos[rol])
+      }
+      await updateConfigSistema(configs)
+      const nuevosGuardados = JSON.parse(JSON.stringify(navPermisos))
+      setNavPermisosGuardados(nuevosGuardados)
+      // Actualizar localStorage para que _nav.js lo refleje al próximo render del sidebar
+      const cfgActual = JSON.parse(localStorage.getItem('nav_config') || '{}')
+      for (const { rol } of ROLES_EDITABLES) {
+        cfgActual[`nav_permisos_${rol}`] = configs[`nav_permisos_${rol}`]
+      }
+      localStorage.setItem('nav_config', JSON.stringify(cfgActual))
+      setOkPermisos(true)
+      setTimeout(() => setOkPermisos(false), 4000)
+    } catch (e) {
+      setErrorPermisos(e?.response?.data?.detail ?? 'Error al guardar los permisos.')
+    } finally {
+      setGuardandoPermisos(false)
+    }
+  }
+
+  const togglePermiso = (rol, key) => {
+    setNavPermisos((prev) => ({
+      ...prev,
+      [rol]: { ...prev[rol], [key]: !prev[rol][key] },
+    }))
+  }
+
   const solicitarCambioModo = () => {
     if (modoSeleccionado === modoActual) return
     setErrorModo(null)
@@ -322,6 +390,8 @@ export default function ConfiguracionGeneral() {
   const hayCambiosConfig = JSON.stringify(_sinAcademicas(config)) !== JSON.stringify(_sinAcademicas(configGuardada))
   const hayCambiosAcademico = CLAVES_ACADEMICAS.some((k) => String(config[k] ?? '') !== String(configGuardada[k] ?? ''))
   const hayCambiosModo   = modoSeleccionado !== modoActual
+  const hayCambiosPermisos = navPermisosGuardados !== null &&
+    JSON.stringify(navPermisos) !== JSON.stringify(navPermisosGuardados)
 
   const labelModo = (v) => MODOS.find((m) => m.value === v)?.label ?? v
 
@@ -379,6 +449,17 @@ export default function ConfiguracionGeneral() {
                 {hayCambiosModo && <span className="cfggen-tab-dot" title="Cambios sin guardar" />}
               </CNavLink>
             </CNavItem>
+            <CNavItem>
+              <CNavLink
+                active={pestana === 'permisos'}
+                onClick={() => setPestana('permisos')}
+                className="cfggen-tab-link"
+              >
+                <CIcon icon={cilLockLocked} className="cfggen-tab-icon" />
+                Permisos
+                {hayCambiosPermisos && <span className="cfggen-tab-dot" title="Cambios sin guardar" />}
+              </CNavLink>
+            </CNavItem>
           </CNav>
 
           <CTabContent className="cfggen-tab-content">
@@ -395,9 +476,64 @@ export default function ConfiguracionGeneral() {
                   {okConfig    && <InlineAlert type="success">Configuración guardada correctamente.</InlineAlert>}
 
                   <CRow className="g-3">
-                    {/* Columna izquierda: marca visual + logo + colores */}
+                    {/* Columna izquierda: identidad institucional, marca visual y pie de página
+                        agrupados con el mismo patrón visual que la columna derecha. */}
                     <CCol md={5}>
-                      <SeccionInstitucion configGlobal={config} onChange={setConfig} />
+                      <div className="cfggen-grupo">
+                        <div className="cfggen-grupo-titulo">Institución</div>
+                        <div className="cfggen-grupo-campos">
+                          <div className="cfggen-campo">
+                            <label className="cfggen-label">Nombre de la institución</label>
+                            <div className="cfggen-input-wrap">
+                              <input
+                                className="cfggen-input"
+                                type="text"
+                                value={config.nombre_institucion ?? ''}
+                                onChange={(e) => setConfig(prev => ({ ...prev, nombre_institucion: e.target.value }))}
+                                placeholder="Ej: Escuela Secundaria N° 12"
+                              />
+                            </div>
+                          </div>
+                          <div className="cfggen-campo">
+                            <label className="cfggen-label">Subtítulo</label>
+                            <div className="cfggen-input-wrap">
+                              <input
+                                className="cfggen-input"
+                                type="text"
+                                value={config.subtitulo_institucion ?? ''}
+                                onChange={(e) => setConfig(prev => ({ ...prev, subtitulo_institucion: e.target.value }))}
+                                placeholder="Ej: Educación Secundaria Obligatoria"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Marca visual: SeccionInstitucion sigue siendo la responsable
+                          del bloque de logo + colores. La envolvemos en el patrón cfggen-grupo
+                          para mantener coherencia con la columna derecha. */}
+                      <div className="cfggen-grupo">
+                        <div className="cfggen-grupo-titulo">Marca visual</div>
+                        <div className="cfggen-marca-visual">
+                          <SeccionInstitucion configGlobal={config} onChange={setConfig} variant="embedded" />
+                        </div>
+                      </div>
+
+                      <div className="cfggen-grupo">
+                        <div className="cfggen-grupo-titulo">Pie de página</div>
+                        <div className="cfggen-grupo-campos">
+                          <div className="cfggen-campo">
+                            <label className="cfggen-label">Texto del pie</label>
+                            <textarea
+                              className="cfggen-input"
+                              rows={2}
+                              value={config.texto_pie_global ?? ''}
+                              onChange={(e) => setConfig(prev => ({ ...prev, texto_pie_global: e.target.value }))}
+                              placeholder="Aparece al pie de todos los documentos"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </CCol>
 
                     {/* Columna derecha: datos institucionales agrupados */}
@@ -688,6 +824,108 @@ export default function ConfiguracionGeneral() {
                           </div>
                         ))}
                       </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </CTabPane>
+
+            {/* ══ PESTAÑA PERMISOS DE NAVEGACIÓN ══ */}
+            <CTabPane visible={pestana === 'permisos'}>
+              {cargandoConfig ? (
+                <div className="cfggen-loading">
+                  <CSpinner size="sm" /> Cargando configuración...
+                </div>
+              ) : (
+                <>
+                  {errorPermisos && <InlineAlert type="error">{errorPermisos}</InlineAlert>}
+                  {okPermisos    && <InlineAlert type="success">Permisos guardados correctamente.</InlineAlert>}
+
+                  <div className="cfggen-permisos-intro">
+                    <CIcon icon={cilLockLocked} className="cfggen-permisos-intro-icon" />
+                    <div>
+                      <strong>Control de acceso al menú</strong>
+                      <p>
+                        Definí qué secciones puede ver cada tipo de usuario en la barra lateral.
+                        Los cambios se aplican la próxima vez que el usuario recargue la aplicación.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Selector de rol */}
+                  <div className="cfggen-permisos-rol-tabs">
+                    {ROLES_EDITABLES.map(({ rol, label, color }) => (
+                      <button
+                        key={rol}
+                        className={`cfggen-permisos-rol-btn${rolActivoPermisos === rol ? ' is-active' : ''}`}
+                        style={rolActivoPermisos === rol ? { '--rol-color': color } : {}}
+                        onClick={() => setRolActivoPermisos(rol)}
+                      >
+                        <span
+                          className="cfggen-permisos-rol-dot"
+                          style={{ background: color }}
+                        />
+                        {label}
+                        {/* Indicador de cambios pendientes en este rol */}
+                        {navPermisosGuardados &&
+                          JSON.stringify(navPermisos[rol]) !== JSON.stringify(navPermisosGuardados[rol]) && (
+                          <span className="cfggen-tab-dot" title="Cambios sin guardar" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Grupos de ítems para el rol activo */}
+                  <div className="cfggen-permisos-grupos">
+                    {NAV_CATALOG.map((grupo) => (
+                      <div key={grupo.grupo} className="cfggen-permisos-grupo">
+                        <div className="cfggen-permisos-grupo-titulo">{grupo.grupo}</div>
+                        <div className="cfggen-permisos-items">
+                          {grupo.items.map((item) => {
+                            const habilitado = navPermisos[rolActivoPermisos]?.[item.key] ?? false
+                            // El ítem no aplica por defecto a este rol → mostrar como "no disponible" en gris
+                            const esNativo = item.rolesDefault.includes(rolActivoPermisos)
+                            return (
+                              <div
+                                key={item.key}
+                                className={`cfggen-permisos-item${habilitado ? ' is-on' : ''}${!esNativo ? ' is-extended' : ''}`}
+                                onClick={() => togglePermiso(rolActivoPermisos, item.key)}
+                              >
+                                <div className="cfggen-permisos-item-info">
+                                  <span className="cfggen-permisos-item-label">{item.label}</span>
+                                  <span className="cfggen-permisos-item-desc">{item.descripcion}</span>
+                                  {!esNativo && (
+                                    <span className="cfggen-permisos-item-tag">Extendido</span>
+                                  )}
+                                </div>
+                                <div
+                                  className={`cfggen-toggle${habilitado ? ' cfggen-toggle--on' : ''}`}
+                                  role="switch"
+                                  aria-checked={habilitado}
+                                >
+                                  <div className="cfggen-toggle-thumb" />
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="cfggen-footer">
+                    <button
+                      className="cfggen-btn-guardar"
+                      onClick={guardarPermisos}
+                      disabled={guardandoPermisos || !hayCambiosPermisos}
+                    >
+                      {guardandoPermisos
+                        ? <><CSpinner size="sm" className="cfggen-spinner" /> Guardando...</>
+                        : <><CIcon icon={cilCheck} style={{ width: '0.875rem', height: '0.875rem' }} /> Guardar permisos</>
+                      }
+                    </button>
+                    {!hayCambiosPermisos && !okPermisos && (
+                      <span className="cfggen-sin-cambios">Sin cambios pendientes</span>
                     )}
                   </div>
                 </>

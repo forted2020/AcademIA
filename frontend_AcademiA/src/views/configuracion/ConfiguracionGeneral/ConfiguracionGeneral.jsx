@@ -22,6 +22,7 @@ import {
   NAV_CATALOG, parsePermisos, serializePermisos, getDefaultsParaRol,
 } from './navPermisosCatalogo'
 import { ROL_ADMIN, ROL_ALUMNO, ROL_DOCENTE } from '../../../constants/Roles'
+
 import SeccionInstitucion from '../formatosImpresion/components/SeccionInstitucion'
 import './ConfiguracionGeneral.css'
 

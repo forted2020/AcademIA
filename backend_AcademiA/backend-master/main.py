@@ -21,8 +21,10 @@ import auth
 
 from Routes import  routes_docentes, routes_inasistencias
 from Routes.routes_notificaciones import router as router_notificaciones
-from Routes.routes_configuracion import router as router_configuracion
-from Routes.routes_formatos import router as router_formatos
+
+# from Routes.routes_configuracion import router as router_configuracion
+
+# from Routes.routes_formatos import router as router_formatos
 
 from Routes.routes_materias import router as materias_router
 from Routes.routes_periodos import router as periodos_router
@@ -182,8 +184,11 @@ app.include_router(router_notificaciones, prefix="/api")
 app.include_router(router_inscripciones, prefix="/api")
 app.include_router(router_previas, prefix="/api", tags=["Materias Previas"])
 app.include_router(router_informes, prefix="/api", tags=["Informes y Listados"])
-app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
-app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
+
+# app.include_router(router_configuracion, prefix="/api/configuracion", tags=["Configuración del Sistema"])
+# app.include_router(router_formatos, prefix="/api/formatos-impresion", tags=["Formatos de Impresión"])
+#  app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
+
 app.include_router(router_dashboard, prefix="/api", tags=["Dashboard"])
 
 

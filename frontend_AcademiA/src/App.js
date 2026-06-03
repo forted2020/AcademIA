@@ -56,7 +56,10 @@ const PlanillaCalificaciones = React.lazy(() => import('./views/estudiantes/Plan
 const MateriasPrevias = React.lazy(() => import('./views/gestion/previas/MateriasPrevias'))
 const InformeAsistencia = React.lazy(() => import('./views/estudiantes/InformeAsistencia'))
 const ConfiguracionNotificaciones = React.lazy(() => import('./views/configuracion/ConfiguracionNotificaciones'))
-const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
+
+//const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/FormatosImpresion'))
+const FormatosImpresion = React.lazy(() => import('./views/configuracion/formatosImpresion/templates/actaExamen.template'))
+
 const ConfiguracionGeneral = React.lazy(() => import('./views/configuracion/ConfiguracionGeneral/ConfiguracionGeneral'))
 
 //  Usar React.lazy permite cargar el código de las páginas sólo cuando se vsite por el usuario. Mejora el tiempo de carga inicial de la aplicación.

@@ -2,7 +2,7 @@
 // Template de la Planilla de Calificaciones (renombrada en Fase 4).
 // El código de BD se mantiene como 'acta_examen' por compatibilidad.
 
-import { datosMuestra } from './datosMuestra'
+// import { datosMuestra } from './datosMuestra'
 
 const DEFAULTS_GLOBALES = {
   nombre_institucion: 'Institución Educativa',
@@ -75,7 +75,7 @@ export const actaExamenTemplate = {
     },
   ],
 
-  datosMuestra: datosMuestra.acta_examen,
+ // datosMuestra: datosMuestra.acta_examen,
 
   generarHtml(configGlobal = {}, config = {}, datos = {}) {
     const g = { ...DEFAULTS_GLOBALES, ...configGlobal }

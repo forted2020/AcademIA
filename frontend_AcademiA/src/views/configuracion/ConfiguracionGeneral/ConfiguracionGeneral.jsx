@@ -17,6 +17,7 @@ import {
   getConfigSistema, updateConfigSistema, uploadLogo, deleteLogo,
   getModoInscripcion, updateModoInscripcion, getHistorialModoInscripcion,
 } from '../../../api/apiFormatos'
+
 import SeccionInstitucion from '../formatosImpresion/components/SeccionInstitucion'
 import './ConfiguracionGeneral.css'
 

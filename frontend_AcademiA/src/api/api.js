@@ -3,7 +3,8 @@
 import axios from 'axios';
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const secureApiUrl = typeof window !== 'undefined' && window.location.protocol === 'https:' && apiUrl.startsWith('http://')
+const isLocalhostUrl = apiUrl.startsWith('http://localhost') || apiUrl.startsWith('http://127.0.0.1');
+const secureApiUrl = apiUrl.startsWith('http://') && !isLocalhostUrl
   ? apiUrl.replace(/^http:\/\//, 'https://')
   : apiUrl;
 

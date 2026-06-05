@@ -12,7 +12,8 @@ import { isTokenExpired } from './utils/isTokenExpired'
 import InterceptorSetup from './components/InterceptorSetup'
 
 // Estilos de PrimeReact — tema base cargado estáticamente para evitar flash sin estilos
-import "primereact/resources/themes/lara-light-blue/theme.css";
+import primereactThemeLight from 'primereact/resources/themes/lara-light-blue/theme.css?url';
+import primereactThemeDark from 'primereact/resources/themes/lara-dark-blue/theme.css?url';
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
@@ -205,8 +206,8 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
 
 }
 
-const PRIMEREACT_LIGHT = 'primereact/resources/themes/lara-light-blue/theme.css'
-const PRIMEREACT_DARK = 'primereact/resources/themes/lara-dark-blue/theme.css'
+const PRIMEREACT_LIGHT = primereactThemeLight
+const PRIMEREACT_DARK = primereactThemeDark
 
 const syncPrimeReactTheme = (isDark) => {
   const linkId = 'primereact-theme'

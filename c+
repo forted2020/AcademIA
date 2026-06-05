@@ -1,0 +1,18 @@
+*   [33m22b85c7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/fase/8.1-dashboard-alumno[m[33m, [m[1;32mfase/8.1-dashboard-alumno[m[33m, [m[1;32mdevelop[m[33m)[m Merge main into fase/8.1-dashboard-alumno
+[31m|[m[32m\[m  
+[31m|[m * [33m4f5f7e9[m Correccion errores 3
+[31m|[m * [33m0e6f92a[m Solucion problemas
+[31m|[m * [33mde26706[m Solucion error router
+[31m|[m * [33m72e75c0[m .
+[31m|[m * [33mfbb1683[m Correccion back
+* [32m|[m [33ma29a2f8[m feat: add document formatting components and templates for printing
+* [32m|[m [33m9dfd7f5[m fix(dashboard-docente): reescribir consulta materias-actuales sin outerjoin complejo
+* [32m|[m [33mdab8d59[m fix(dashboard-alumno): usar /api/ciclos/activo en lugar de /api/dashboard/resumen
+* [32m|[m [33m2c05ca0[m feat(dashboard-alumno): Panel de inicio para ALUMNO_APP
+* [32m|[m [33mfbc8fd7[m[33m ([m[1;32mfase/8.2-dashboard-docente[m[33m)[m feat(dashboard-docente): Panel de gestión para DOCENTE_APP
+[32m|[m[32m/[m  
+*   [33mef50e54[m Merge fase/8.3-dashboard-admin: Panel de gestión admin completo
+[33m|[m[34m\[m  
+[33m|[m * [33m2a961dd[m[33m ([m[1;32mfase/8.3-dashboard-admin[m[33m)[m feat(dashboard-admin): Panel de gestión completo para ADMIN_SISTEMA
+[33m|[m * [33mb1d27ec[m[33m ([m[1;32mfase/6-informes-faltantes[m[33m)[m fase 6: 5 informes operativos + hub configurado
+[33m|[m * [33m8180fad[m[33m ([m[1;32mfase/7.2-materias-previas[m[33m)[m fase 7.2: materias previas con flag en t_inscripciones

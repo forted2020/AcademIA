@@ -2,7 +2,11 @@
 
 import axios from 'axios';
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const envApiUrl = import.meta.env.VITE_API_URL;
+const defaultApiUrl = typeof window !== 'undefined' && !window.location.hostname.match(/^(localhost|127\.0\.0\.1)$/)
+  ? 'https://academia-production-adb4.up.railway.app'
+  : 'http://localhost:8000';
+const apiUrl = envApiUrl || defaultApiUrl;
 const isLocalhostUrl = apiUrl.startsWith('http://localhost') || apiUrl.startsWith('http://127.0.0.1');
 const secureApiUrl = apiUrl.startsWith('http://') && !isLocalhostUrl
   ? apiUrl.replace(/^http:\/\//, 'https://')

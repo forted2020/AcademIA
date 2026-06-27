@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import {
-  CCard, CCardHeader, CCardBody,
-  CCol, CRow, CFormInput, CFormLabel,
+    CCard, CCardHeader, CCardBody,
+    CCol, CRow, CFormInput, CFormLabel,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilNotes } from '@coreui/icons'
@@ -20,6 +20,11 @@ import { EditableCellProvider } from '../../context/editableCellContext/Editable
 import apiMaterias from '../../api/apiMaterias.jsx'
 import apiCursos from '../../api/apiCursos.jsx'
 import CeldaEditable from '../../components/notas/CeldaEditable.jsx'
+
+// 1. Primero, añade la importación al principio de tu archivo (ajusta los "../" si es necesario)
+import escudoLogo from '../../assets/brand/Escudo_Esc_CAE-uai-258x327.png';
+
+
 
 import './CargaNotas.css'
 
@@ -80,7 +85,7 @@ export default function CargaNotaAlumno() {
 
     // Fecha editable del encabezado de planilla — formato dd/mm/aa
     const hoy = new Date()
-    const fechaInicial = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${String(hoy.getFullYear()).slice(-2)}`
+    const fechaInicial = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${String(hoy.getFullYear()).slice(-2)}`
     const [fechaPlanilla, setFechaPlanilla] = useState(fechaInicial)
     const [editandoFecha, setEditandoFecha] = useState(false)
 
@@ -242,7 +247,7 @@ export default function CargaNotaAlumno() {
 
         return getTableColumns(
             [...baseColumns, ...dynamicNotesColumns, ...resultColumns],
-            () => {},
+            () => { },
             null,
             { showSelection: false, showActions: false }
         );
@@ -268,14 +273,14 @@ export default function CargaNotaAlumno() {
     })
 
     // ==================== DATOS DERIVADOS ====================
-    const cicloSeleccionado   = ciclos.find(c => c.id_ciclo_lectivo === parseInt(selectedCicloId))
-    const cursoSeleccionado   = cursos.find(c => c.id_curso === parseInt(selectedCursoId))
+    const cicloSeleccionado = ciclos.find(c => c.id_ciclo_lectivo === parseInt(selectedCicloId))
+    const cursoSeleccionado = cursos.find(c => c.id_curso === parseInt(selectedCursoId))
     const materiaSeleccionada = materias.find(m => m.id_materia === parseInt(materiaId))
 
     const datosPlanilla = {
-        ciclo:   cicloSeleccionado?.nombre_ciclo_lectivo || 'Sin seleccionar',
-        curso:   cursoSeleccionado?.curso || 'Sin seleccionar',
-        turno:   cursoSeleccionado?.turno || 'Sin seleccionar',
+        ciclo: cicloSeleccionado?.nombre_ciclo_lectivo || 'Sin seleccionar',
+        curso: cursoSeleccionado?.curso || 'Sin seleccionar',
+        turno: cursoSeleccionado?.turno || 'Sin seleccionar',
         materia: materiaSeleccionada?.nombre?.nombre_materia || 'Sin seleccionar',
     }
 
@@ -420,11 +425,21 @@ export default function CargaNotaAlumno() {
 
                         {/* ENCABEZADO DE LA PLANILLA — sin modificar */}
                         <CRow className="mb-3 align-items-center">
+
+
                             <CCol xs={2} className="text-center">
-                                <div className="bg-light border d-flex align-items-center justify-content-center" style={{ width: '60px', height: '80px', margin: '0 auto' }}>
-                                    <small className="text-muted" style={{ fontSize: '10px' }}>LOGO</small>
+                                <div 
+                                    className="d-flex align-items-center justify-content-center" 
+                                    style={{ width: '80px', height: '100px', margin: '0 auto' }}>
+                                    <img
+                                        src={escudoLogo}
+                                        alt="Escudo Escuela"
+                                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                    />
                                 </div>
                             </CCol>
+
+                     
                             <CCol xs={10}>
                                 <h5 className="text-center fw-bold mb-3">PLANILLAS DE CALIFICACIONES - CL: {datosPlanilla.ciclo}</h5>
                                 <div className="border">
